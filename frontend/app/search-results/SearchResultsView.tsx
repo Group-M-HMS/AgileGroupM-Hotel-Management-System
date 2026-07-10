@@ -20,7 +20,15 @@ function fetchAvailableRooms(guests: number): Promise<Room[]> {
   });
 }
 
-export function SearchResultsView({ guests }: { guests: number }) {
+export function SearchResultsView({
+  guests,
+  checkIn,
+  checkOut,
+}: {
+  guests: number;
+  checkIn: string;
+  checkOut: string;
+}) {
   const [status, setStatus] = useState<Status>("loading");
   const [rooms, setRooms] = useState<Room[]>([]);
 
@@ -61,5 +69,5 @@ export function SearchResultsView({ guests }: { guests: number }) {
 
   if (status === "empty") return <EmptyResultsState />;
 
-  return <RoomResultsList rooms={rooms} />;
+  return <RoomResultsList rooms={rooms} checkIn={checkIn} checkOut={checkOut} guests={guests} />;
 }
