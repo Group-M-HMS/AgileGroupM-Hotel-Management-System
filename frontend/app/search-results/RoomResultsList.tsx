@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Room } from "./mockRooms";
 import { AmenityIcon } from "@/app/room/amenityIcons";
@@ -12,7 +12,7 @@ function RoomThumbnail({ room }: { room: Room }) {
 
   if (failed) {
     return (
-      <div className="flex h-28 w-40 shrink-0 items-center justify-center rounded-2xl bg-sand font-outfit text-error text-jungle/50">
+      <div className="flex h-full w-44 shrink-0 items-center justify-center rounded-2xl bg-sand font-outfit text-error text-jungle/50 sm:w-56">
         No image
       </div>
     );
@@ -25,7 +25,7 @@ function RoomThumbnail({ room }: { room: Room }) {
       alt={room.title}
       loading="lazy"
       onError={() => setFailed(true)}
-      className="h-full min-h-32 w-36 shrink-0 self-stretch rounded-2xl object-cover sm:w-44"
+      className="h-full w-44 shrink-0 self-stretch rounded-2xl object-cover sm:w-56"
     />
   );
 }
@@ -44,20 +44,20 @@ function RoomCard({
   const detailsHref = `/room/${room.id}?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${guests}`;
 
   return (
-    <div className="flex w-full gap-4 rounded-3xl bg-white px-4 py-3 shadow-soft transition-shadow hover:shadow-soft-lg">
+    <div className="flex h-36 w-full gap-6 rounded-3xl bg-white p-2 shadow-soft transition-shadow hover:shadow-soft-lg">
       <RoomThumbnail room={room} />
-      <div className="flex flex-1 flex-col justify-start gap-2">
-        <h3 className="font-lora text-[20px] font-medium text-jungle-dark">
+      <div className="flex flex-1 flex-col justify-between gap-2 overflow-hidden py-3">
+        <h3 className="truncate font-lora text-[20px] font-medium text-jungle-dark">
           {room.title}
         </h3>
-        <p className="font-outfit text-meta text-jungle/70">
+        <p className="line-clamp-2 font-outfit text-field text-jungle/70">
           {room.shortDescription}
         </p>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="flex items-center gap-1 font-outfit text-[12px] text-jungle/50">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 overflow-hidden">
+          <span className="flex items-center gap-1 font-outfit text-meta text-jungle/50">
             <span
               className="material-symbols-outlined text-jungle/50"
-              style={{ fontSize: "14px" }}
+              style={{ fontSize: "16px" }}
               aria-hidden="true"
             >
               group
@@ -67,7 +67,7 @@ function RoomCard({
           {room.topAmenities.map(amenity => (
             <span
               key={amenity}
-              className="flex items-center gap-1 font-outfit text-[12px] text-jungle/50"
+              className="flex items-center gap-1 font-outfit text-meta text-jungle/50"
             >
               <AmenityIcon name={amenity} />
               {amenity}
@@ -75,10 +75,10 @@ function RoomCard({
           ))}
         </div>
       </div>
-      <div className="flex shrink-0 flex-col items-end justify-between gap-2">
-        <p className="whitespace-nowrap font-outfit text-[22px] font-semibold text-jungle-dark">
+      <div className="flex shrink-0 flex-col items-end justify-between gap-2 py-3 pr-3">
+        <p className="whitespace-nowrap font-lora text-[26px] font-normal text-jungle-dark">
           ${room.pricePerNight}{" "}
-          <span className="text-[12px] font-normal text-jungle/50">/ night</span>
+          <span className="font-outfit text-meta font-normal text-jungle/50">/ night</span>
         </p>
         <Link
           href={detailsHref}
@@ -105,6 +105,10 @@ export function RoomResultsList({
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(rooms.length / PAGE_SIZE));
   const visibleRooms = rooms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rooms]);
 
   return (
     <div className="flex w-full flex-col gap-6">

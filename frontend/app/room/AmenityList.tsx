@@ -10,7 +10,7 @@ export function AmenityList({ amenities }: { amenities: Record<string, boolean> 
   return (
     <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {included.map(([name]) => (
-        <li key={name} className="flex items-center gap-2 font-outfit text-field text-jungle">
+        <li key={name} className="flex items-center gap-2 font-outfit text-[16px] font-medium text-jungle/80">
           <AmenityIcon name={name} />
           {name}
         </li>

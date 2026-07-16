@@ -2,7 +2,7 @@
 
 :root {
   color-scheme: light;
-  --background: #ffffff;
+  --background: #F4F3F0;
   --foreground: #171717;
 }
 
@@ -37,6 +37,11 @@
   --spacing-social:     60px;   /* social icon button */
   --spacing-checkbox:   22px;
   --spacing-field-x:    22px;   /* input horizontal padding */
+
+  /* Shared page-frame horizontal padding — Navbar, Footer, and page content
+     columns all align on this scale. Generates px-page-x / lg:px-page-x-lg. */
+  --spacing-page-x:     24px;
+  --spacing-page-x-lg:  56px;
 
   /* Radii */
   --radius-input:       26px;

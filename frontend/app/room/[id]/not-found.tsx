@@ -7,7 +7,7 @@ export default function RoomNotFound() {
     <>
       <Navbar />
       <div className="pt-16">
-        <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 py-24 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-page-x py-24 text-center lg:px-page-x-lg">
           <h1 className="font-lora text-heading-sm font-medium text-jungle-dark sm:text-heading-md">
             Room not found
           </h1>

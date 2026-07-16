@@ -30,10 +30,7 @@ export default async function SearchResultsPage({
     <>
       <Navbar />
       <div className="pt-16">
-        <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-          <h1 className="mb-8 font-lora text-heading-sm font-medium text-jungle-dark sm:text-heading-md">
-            Available Rooms
-          </h1>
+        <div className="mx-auto max-w-7xl px-page-x pt-12 pb-24 lg:px-page-x-lg">
           <SearchResultsView guests={guests} checkIn={checkIn} checkOut={checkOut} />
         </div>
       </div>

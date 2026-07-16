@@ -30,7 +30,7 @@ function Twitter({ className }: { className?: string }) {
 export function Footer() {
   return (
     <footer className="bg-jungle-dark text-sand pt-16 pb-8">
-      <div className="px-6 lg:px-14">
+      <div className="mx-auto max-w-7xl px-page-x lg:px-page-x-lg">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="col-span-1 md:col-span-1">
             <Link

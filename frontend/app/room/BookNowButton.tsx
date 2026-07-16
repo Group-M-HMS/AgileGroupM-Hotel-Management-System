@@ -17,15 +17,15 @@ export function BookNowButton({
 
   if (missingDates) {
     return (
-      <div className="flex flex-col items-end gap-1">
+      <div className="flex flex-col items-stretch gap-1">
         <button
           type="button"
           disabled
-          className="rounded-btn bg-jungle-dark px-6 py-2.5 font-outfit text-meta font-semibold text-sand-light opacity-40"
+          className="block w-full rounded-btn bg-jungle-dark px-6 py-2.5 font-outfit text-[16px] font-semibold text-sand-light opacity-40"
         >
           Book Now
         </button>
-        <p className="max-w-xs text-right font-outfit text-[12px] text-jungle/70">
+        <p className="text-center font-outfit text-[13px] text-jungle/50">
           Select check-in and check-out dates from search before booking.
         </p>
       </div>
@@ -37,7 +37,7 @@ export function BookNowButton({
   return (
     <Link
       href={checkoutHref}
-      className="rounded-btn bg-jungle-dark px-6 py-2.5 text-center font-outfit text-meta font-semibold text-sand-light transition-opacity hover:opacity-90"
+      className="block w-full rounded-btn bg-jungle-dark px-6 py-2.5 text-center font-outfit text-[16px] font-semibold text-sand-light transition-opacity hover:opacity-90"
     >
       Book Now
     </Link>
