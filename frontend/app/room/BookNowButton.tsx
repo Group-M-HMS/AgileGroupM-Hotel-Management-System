@@ -6,11 +6,13 @@ export function BookNowButton({
   roomId,
   checkIn,
   checkOut,
+  guests,
   price,
 }: {
   roomId: string;
   checkIn: string;
   checkOut: string;
+  guests: string;
   price: number;
 }) {
   const missingDates = !checkIn || !checkOut;
@@ -32,7 +34,7 @@ export function BookNowButton({
     );
   }
 
-  const checkoutHref = `/checkout?roomId=${encodeURIComponent(roomId)}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&price=${price}`;
+  const checkoutHref = `/checkout?roomId=${encodeURIComponent(roomId)}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${encodeURIComponent(guests)}&price=${price}`;
 
   return (
     <Link

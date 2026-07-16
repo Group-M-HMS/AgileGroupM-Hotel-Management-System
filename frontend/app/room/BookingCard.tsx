@@ -18,6 +18,7 @@ export function BookingCard({
   roomId,
   checkIn,
   checkOut,
+  guests,
 }: {
   price: number;
   maxAdults: number;
@@ -27,6 +28,7 @@ export function BookingCard({
   roomId: string;
   checkIn: string;
   checkOut: string;
+  guests: string;
 }) {
   return (
     <div className="flex flex-col gap-4 rounded-3xl border border-sand bg-white px-6 pb-6 pt-3 shadow-soft">
@@ -56,6 +58,7 @@ export function BookingCard({
         roomId={roomId}
         checkIn={checkIn}
         checkOut={checkOut}
+        guests={guests}
         price={price}
       />
     </div>

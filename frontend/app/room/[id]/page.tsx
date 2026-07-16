@@ -117,6 +117,7 @@ export default async function RoomDetailsPage({
                 roomId={room.id}
                 checkIn={checkIn}
                 checkOut={checkOut}
+                guests={guests}
               />
             </div>
           </div>
