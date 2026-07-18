@@ -40,7 +40,7 @@ export function Navbar() {
   'bg-jungle-dark shadow-soft';
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${bgColor}`}>
-      <div className="px-6 lg:px-14">
+      <div className="mx-auto max-w-7xl px-page-x lg:px-page-x-lg">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
