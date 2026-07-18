@@ -1,18 +1,8 @@
 import { BookNowButton } from "./BookNowButton";
 
-function formatMaxGuests(maxAdults: number, maxChildren: number): string {
-  const adultsPart = `${maxAdults} ${maxAdults === 1 ? "Adult" : "Adults"}`;
-  if (maxChildren === 0) {
-    return adultsPart;
-  }
-  const childrenPart = `${maxChildren} ${maxChildren === 1 ? "Child" : "Children"}`;
-  return `${adultsPart}, ${childrenPart}`;
-}
-
 export function BookingCard({
   price,
-  maxAdults,
-  maxChildren,
+  maxOccupancy,
   sizeSqm,
   bedType,
   roomId,
@@ -20,8 +10,7 @@ export function BookingCard({
   checkOut,
 }: {
   price: number;
-  maxAdults: number;
-  maxChildren: number;
+  maxOccupancy: number;
   sizeSqm: number;
   bedType: { count: number; type: string };
   roomId: string;
@@ -38,7 +27,7 @@ export function BookingCard({
         <div className="flex items-center justify-between">
           <span className="font-normal">Max Guests</span>
           <span className="font-medium">
-            {formatMaxGuests(maxAdults, maxChildren)}
+            {maxOccupancy} {maxOccupancy === 1 ? "Guest" : "Guests"}
           </span>
         </div>
         <div className="flex items-center justify-between">

@@ -110,8 +110,7 @@ export default async function RoomDetailsPage({
             <div className="w-full shrink-0 lg:sticky lg:top-24 lg:w-[320px]">
               <BookingCard
                 price={room.pricePerNight}
-                maxAdults={room.maxAdults}
-                maxChildren={room.maxChildren}
+                maxOccupancy={room.maxOccupancy}
                 sizeSqm={room.sizeSqm}
                 bedType={room.bedType}
                 roomId={room.id}
