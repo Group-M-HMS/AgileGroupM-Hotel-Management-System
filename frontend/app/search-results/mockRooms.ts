@@ -374,3 +374,6 @@ export const mockRooms: Room[] = [
     reviewCount: 134,
   },
 ];
+
+/** Configured tax rate applied to the booking subtotal (NIBM2-161). No backend yet, so this stands in for a real tax-config source. */
+export const TAX_RATE = 0.1;
