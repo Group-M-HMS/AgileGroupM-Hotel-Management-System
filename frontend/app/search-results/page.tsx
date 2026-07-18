@@ -12,6 +12,10 @@ function parseGuests(value: string | string[] | undefined): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
+function parseDateParam(value: string | string[] | undefined): string {
+  return typeof value === "string" ? value : "";
+}
+
 export default async function SearchResultsPage({
   searchParams,
 }: {
@@ -19,6 +23,8 @@ export default async function SearchResultsPage({
 }) {
   const params = await searchParams;
   const guests = parseGuests(params.guests);
+  const checkIn = parseDateParam(params.checkIn);
+  const checkOut = parseDateParam(params.checkOut);
 
   return (
     <>
@@ -28,7 +34,7 @@ export default async function SearchResultsPage({
           <h1 className="mb-8 font-lora text-heading-sm font-medium text-jungle-dark sm:text-heading-md">
             Available Rooms
           </h1>
-          <SearchResultsView guests={guests} />
+          <SearchResultsView guests={guests} checkIn={checkIn} checkOut={checkOut} />
         </div>
       </div>
       <Footer />
