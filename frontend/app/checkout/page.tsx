@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { mockRooms } from "@/app/search-results/mockRooms";
+import { mockRooms, TAX_RATE } from "@/app/search-results/mockRooms";
 import { BookingSummaryHeader } from "./BookingSummaryHeader";
+import { PriceBreakdown } from "./PriceBreakdown";
+import { nightsBetween } from "./nightsBetween";
 
 function parseParam(value: string | string[] | undefined): string {
   return typeof value === "string" ? value : "";
@@ -29,6 +31,7 @@ export default async function CheckoutPage({
   const checkIn = parseParam(query.checkIn);
   const checkOut = parseParam(query.checkOut);
   const guests = parseParam(query.guests);
+  const nights = nightsBetween(checkIn, checkOut);
 
   return (
     <>
@@ -40,10 +43,11 @@ export default async function CheckoutPage({
           checkOut={checkOut}
           guests={guests}
         />
-        <div className="mx-auto max-w-7xl px-page-x pt-12 pb-24 lg:px-page-x-lg">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-page-x pt-12 pb-24 lg:flex-row lg:items-start lg:justify-between lg:px-page-x-lg">
           <p className="font-outfit text-field text-jungle/60">
             Booking form coming soon.
           </p>
+          <PriceBreakdown pricePerNight={room.pricePerNight} nights={nights} taxRate={TAX_RATE} />
         </div>
       </div>
       <Footer />
