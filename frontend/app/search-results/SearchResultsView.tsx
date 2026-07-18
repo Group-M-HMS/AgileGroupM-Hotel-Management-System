@@ -105,7 +105,9 @@ export function SearchResultsView({
     );
   }
 
-  if (status === "empty") return <EmptyResultsState />;
+  if (status === "empty") {
+    return <EmptyResultsState checkIn={checkIn} checkOut={checkOut} guests={guests} />;
+  }
 
   return (
     <div className="flex w-full flex-col">
