@@ -60,6 +60,9 @@ public class Booking {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "special_requests", columnDefinition = "TEXT")
+    private String specialRequests;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
