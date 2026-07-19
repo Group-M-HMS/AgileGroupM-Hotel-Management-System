@@ -15,7 +15,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
         WHERE r.maxOccupancy >= :guests
         AND r.id NOT IN (
             SELECT b.room.id FROM Booking b
-            WHERE b.status = com.nibm.hotelmanagementsystem.entity.Booking$BookingStatus.CONFIRMED
+            WHERE b.status = com.nibm.hotel_management_system.entity.Booking$BookingStatus.CONFIRMED
             AND b.checkIn < :checkOut AND b.checkOut > :checkIn
         )
         """)
