@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Brand fonts — loaded via Google Fonts <link> in layout.tsx */
+/* Brand colours and palette */
+@theme {
+  --font-lora: 'Lora', serif;
+  --font-outfit: 'Outfit', sans-serif;
+  --font-serif: 'Lora', serif;
+
+  --color-jungle-dark:  #1f3d2b;
+  --color-jungle:       #3a5a40;
+  --color-jungle-light: #588157;
+  --color-sage:         #a3b18a;
+  --color-sage-light:   #c8d5b9;
+  --color-sand:         #dad7cd;
+  --color-sand-light:   #f4f3f0;
+
+  --shadow-soft:    0 10px 40px -10px rgba(31, 61, 43, 0.08);
+  --shadow-soft-lg: 0 20px 50px -10px rgba(31, 61, 43, 0.12);
+
+  /* Control sizing — generates h-control, w-social, px-field-x, etc. */
+  --spacing-control:    52px;   /* input/select height */
+  --spacing-btn:        56px;   /* primary CTA height */
+  --spacing-social:     60px;   /* social icon button */
+  --spacing-checkbox:   22px;
+  --spacing-field-x:    22px;   /* input horizontal padding */
+
+  /* Radii */
+  --radius-input:       26px;
+  --radius-btn:         28px;
+  --radius-social:      30px;
+  --radius-checkbox:    7px;
+
+  /* Type scale */
+  --text-field:         15px;   /* inputs, buttons, labels, body */
+  --text-meta:          14.5px; /* checkbox / login / feature text */
+  --text-error:         12px;
+  --text-heading-sm:    38px;   /* mobile heading */
+  --text-heading-md:    46px;   /* tablet heading */
+  --text-heading-lg:    52px;   /* desktop heading */
+}
+
+/* Reusable component classes — single source of truth for control patterns.
+   Each encodes the static base only; stateful border/focus colours (error vs
+   normal) stay as conditional classes appended in the JSX. */
+@layer components {
+  .input-field {
+    @apply h-control w-full rounded-input border-2 bg-white px-field-x
+           font-outfit text-field leading-[normal] text-jungle
+           placeholder:text-jungle/50 outline-none transition-colors;
+  }
+
+  .select-field {
+    @apply h-control w-full appearance-none rounded-input border-2 bg-white
+           pl-field-x pr-[44px] font-outfit text-field leading-[normal]
+           outline-none transition-colors;
+  }
+
+  .btn-primary {
+    @apply flex h-btn w-full cursor-pointer items-center justify-center
+           rounded-btn bg-jungle-dark font-outfit text-field font-semibold
+           leading-[normal] tracking-[1.5px] text-sand-light
+           transition-opacity hover:opacity-90;
+  }
+
+  .btn-social {
+    @apply flex h-social w-social shrink-0 cursor-pointer items-center
+           justify-center rounded-social border-2 border-sand bg-white
+           transition-colors hover:border-sage;
+  }
+
+  .form-checkbox {
+    @apply h-checkbox w-checkbox shrink-0 cursor-pointer appearance-none
+           rounded-checkbox border-2 bg-white transition-colors
+           checked:[background-image:url('data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M3%208l3.5%203.5L13%205%22%20stroke%3D%22%231f3d2b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')]
+           checked:bg-[length:14px_14px] checked:bg-center checked:bg-no-repeat;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
