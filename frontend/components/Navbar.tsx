@@ -25,11 +25,15 @@ export function Navbar() {
     path: '/villa'
   },
   {
+    name: 'Rooms',
+    path: '/rooms'
+  },
+  {
     name: 'Experiences',
     path: '/experiences'
   },
   {
-    name: 'Dashboard',
+    name: 'Sign In',
     path: '/admin'
   }];
 
