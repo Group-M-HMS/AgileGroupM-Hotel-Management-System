@@ -1,24 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, Search } from "lucide-react";
+import { CalendarDays, Search, Users, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function DashboardHero() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState(1);
 
   const router = useRouter();
 
-  const canSearch = Boolean(checkIn && checkOut);
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toLocaleDateString("en-CA");
 
+  // Get the day after check-in for minimum check-out date
+  function getMinCheckOutDate() {
+    if (!checkIn) return today;
+
+    const date = new Date(`${checkIn}T00:00:00`);
+    date.setDate(date.getDate() + 1);
+
+    return date.toLocaleDateString("en-CA");
+  }
+
+  const minCheckOutDate = getMinCheckOutDate();
+
+  // Search is enabled when valid dates and guest count are selected
+  const canSearch = Boolean(
+    checkIn &&
+    checkOut &&
+    guests > 0
+  );
+
+  // Handle room search
   function handleSearch() {
     if (!canSearch) return;
 
     router.push(
       `/search-results?checkIn=${encodeURIComponent(
         checkIn
-      )}&checkOut=${encodeURIComponent(checkOut)}`
+      )}&checkOut=${encodeURIComponent(
+        checkOut
+      )}&guests=${encodeURIComponent(guests)}`
     );
   }
 
@@ -56,18 +80,22 @@ export default function DashboardHero() {
 
           <div className="mt-8 flex flex-wrap gap-4">
 
+            {/* Book Stay Button */}
             <button
               type="button"
               onClick={() =>
                 document
                   .getElementById("search-stay")
-                  ?.scrollIntoView({ behavior: "smooth" })
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  })
               }
               className="rounded-full bg-sage px-7 py-3 font-outfit font-semibold text-jungle-dark transition hover:bg-sage/90"
             >
               Book Your Stay
             </button>
 
+            {/* Explore Experiences */}
             <button
               type="button"
               onClick={() => router.push("/experiences")}
@@ -84,7 +112,7 @@ export default function DashboardHero() {
 
 
       {/* ══════════════════════════════════════════
-          Travel Date Search
+          Travel Search Section
           ══════════════════════════════════════════ */}
       <section
         id="search-stay"
@@ -93,7 +121,7 @@ export default function DashboardHero() {
 
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
 
-          {/* Heading */}
+          {/* Search Heading */}
           <div className="max-w-md">
 
             <p className="font-outfit text-[12px] font-medium uppercase tracking-[3px] text-sage">
@@ -105,18 +133,23 @@ export default function DashboardHero() {
             </h2>
 
             <p className="mt-2 font-outfit text-[14px] leading-[22px] text-jungle/60">
-              Select your check-in and check-out dates to discover available
-              rooms for your stay.
+              Select your travel dates and number of guests to discover
+              available rooms for your stay.
             </p>
 
           </div>
 
 
-          {/* Search Fields */}
+          {/* ══════════════════════════════════════════
+              Search Fields
+              ══════════════════════════════════════════ */}
           <div className="flex w-full flex-col gap-4 md:flex-row xl:w-auto">
 
-            {/* Check-In */}
-            <div className="min-w-[220px]">
+
+            {/* ────────────────────────────────────────
+                Check-In
+                ──────────────────────────────────────── */}
+            <div className="min-w-[200px]">
 
               <label className="mb-2 block font-outfit text-[12px] font-medium uppercase tracking-[1.5px] text-jungle/60">
                 Check-In
@@ -132,15 +165,25 @@ export default function DashboardHero() {
                 <input
                   type="date"
                   value={checkIn}
+
+                  // Disable all past dates
+                  min={today}
+
                   onChange={(e) => {
                     const selectedDate = e.target.value;
 
                     setCheckIn(selectedDate);
 
-                    if (checkOut && selectedDate >= checkOut) {
+                    // If the current checkout is no longer valid,
+                    // clear it and ask the user to select again.
+                    if (
+                      checkOut &&
+                      checkOut <= selectedDate
+                    ) {
                       setCheckOut("");
                     }
                   }}
+
                   className="h-[52px] w-full rounded-full border border-sand bg-sand-light pl-12 pr-5 font-outfit text-[14px] text-jungle-dark outline-none transition focus:border-sage"
                 />
 
@@ -149,8 +192,10 @@ export default function DashboardHero() {
             </div>
 
 
-            {/* Check-Out */}
-            <div className="min-w-[220px]">
+            {/* ────────────────────────────────────────
+                Check-Out
+                ──────────────────────────────────────── */}
+            <div className="min-w-[200px]">
 
               <label className="mb-2 block font-outfit text-[12px] font-medium uppercase tracking-[1.5px] text-jungle/60">
                 Check-Out
@@ -166,9 +211,17 @@ export default function DashboardHero() {
                 <input
                   type="date"
                   value={checkOut}
-                  min={checkIn}
+
+                  // Checkout must be after check-in
+                  min={minCheckOutDate}
+
+                  // Check-in must be selected first
                   disabled={!checkIn}
-                  onChange={(e) => setCheckOut(e.target.value)}
+
+                  onChange={(e) => {
+                    setCheckOut(e.target.value);
+                  }}
+
                   className="h-[52px] w-full rounded-full border border-sand bg-sand-light pl-12 pr-5 font-outfit text-[14px] text-jungle-dark outline-none transition focus:border-sage disabled:cursor-not-allowed disabled:opacity-50"
                 />
 
@@ -177,17 +230,76 @@ export default function DashboardHero() {
             </div>
 
 
-            {/* Search Button */}
+            {/* ────────────────────────────────────────
+                Guests
+                NIBM2-142
+                ──────────────────────────────────────── */}
+            <div className="min-w-[170px]">
+
+              <label className="mb-2 block font-outfit text-[12px] font-medium uppercase tracking-[1.5px] text-jungle/60">
+                Guests
+              </label>
+
+              <div className="relative">
+
+                {/* Guest Icon */}
+                <Users
+                  size={19}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sage"
+                />
+
+                {/* Guest Selection */}
+                <select
+                  value={guests}
+                  onChange={(e) =>
+                    setGuests(Number(e.target.value))
+                  }
+                  className="h-[52px] w-full appearance-none rounded-full border border-sand bg-sand-light pl-12 pr-10 font-outfit text-[14px] text-jungle-dark outline-none transition focus:border-sage"
+                >
+                  <option value={1}>
+                    1 Guest
+                  </option>
+
+                  <option value={2}>
+                    2 Guests
+                  </option>
+
+                  <option value={3}>
+                    3 Guests
+                  </option>
+
+                  <option value={4}>
+                    4 Guests
+                  </option>
+                </select>
+
+                {/* Dropdown Icon */}
+                <ChevronDown
+                  size={17}
+                  className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-jungle/50"
+                />
+
+              </div>
+
+            </div>
+
+
+            {/* ────────────────────────────────────────
+                Search Button
+                ──────────────────────────────────────── */}
             <div className="flex items-end">
 
               <button
                 type="button"
                 disabled={!canSearch}
                 onClick={handleSearch}
-                className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-sage px-7 font-outfit text-[14px] font-semibold text-jungle-dark transition hover:bg-sage/90 disabled:cursor-not-allowed disabled:opacity-40 md:w-auto"
+                className="flex h-[52px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-sage px-7 font-outfit text-[14px] font-semibold text-jungle-dark transition hover:bg-sage/90 disabled:cursor-not-allowed disabled:opacity-40 md:w-auto"
               >
+
                 <Search size={18} />
+
                 Search Rooms
+
               </button>
 
             </div>
