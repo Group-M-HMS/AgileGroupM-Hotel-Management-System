@@ -69,7 +69,7 @@ export function Navbar() {
               </Link>
             )}
             <Link
-              href="/book"
+              href="/booking"
               className="bg-sage hover:bg-sage-light text-jungle-dark px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5">
 
               Book Stay
