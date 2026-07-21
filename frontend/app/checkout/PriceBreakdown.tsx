@@ -24,23 +24,18 @@ function BreakdownRow({
 }
 
 export function PriceBreakdown({
-  pricePerNight,
-  nights,
-  taxRate,
+  quote,
 }: {
-  pricePerNight: number;
-  nights: number;
-  taxRate: number;
+  quote: { nightlyRate: number; nights: number; subtotal: number; tax: number; total: number };
 }) {
-  const subtotal = pricePerNight * nights;
-  const tax = subtotal * taxRate;
-  const total = subtotal + tax;
+  const { nightlyRate, nights, subtotal, tax, total } = quote;
+  const taxRate = subtotal > 0 ? tax / subtotal : 0;
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-3 rounded-3xl bg-white p-6 shadow-soft">
       <h2 className="font-lora text-[20px] font-medium text-jungle-dark">Price Breakdown</h2>
       <BreakdownRow
-        label={`$${pricePerNight} x ${nights} night${nights === 1 ? "" : "s"}`}
+        label={`$${nightlyRate} x ${nights} night${nights === 1 ? "" : "s"}`}
         value={`$${subtotal.toFixed(2)}`}
       />
       <BreakdownRow label={`Tax (${Math.round(taxRate * 100)}%)`} value={`$${tax.toFixed(2)}`} />

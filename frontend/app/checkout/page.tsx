@@ -2,10 +2,36 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { mockRooms, TAX_RATE } from "@/app/search-results/mockRooms";
 import { BookingSummaryHeader } from "./BookingSummaryHeader";
 import { PriceBreakdown } from "./PriceBreakdown";
-import { nightsBetween } from "./nightsBetween";
+
+const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
+const PRICING_SERVICE_URL = process.env.NEXT_PUBLIC_PRICING_SERVICE_URL ?? "http://localhost:8083";
+
+type Quote = {
+  nightlyRate: number;
+  nights: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+};
+
+async function fetchRoomTitle(roomId: string): Promise<string | null> {
+  const response = await fetch(`${ROOM_SERVICE_URL}/api/rooms/${roomId}`);
+  if (!response.ok) return null;
+  const room = await response.json();
+  return room.name;
+}
+
+async function fetchQuote(roomId: string, checkIn: string, checkOut: string): Promise<Quote | null> {
+  const response = await fetch(`${PRICING_SERVICE_URL}/api/pricing/quote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ roomId: Number(roomId), checkIn, checkOut }),
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
 
 function parseParam(value: string | string[] | undefined): string {
   return typeof value === "string" ? value : "";
@@ -22,23 +48,24 @@ export default async function CheckoutPage({
 }) {
   const query = await searchParams;
   const roomId = parseParam(query.roomId);
-  const room = mockRooms.find(r => r.id === roomId);
-
-  if (!room) {
-    notFound();
-  }
-
   const checkIn = parseParam(query.checkIn);
   const checkOut = parseParam(query.checkOut);
   const guests = parseParam(query.guests);
-  const nights = nightsBetween(checkIn, checkOut);
+
+  const roomTitle = await fetchRoomTitle(roomId);
+
+  if (!roomTitle) {
+    notFound();
+  }
+
+  const quote = await fetchQuote(roomId, checkIn, checkOut);
 
   return (
     <>
       <Navbar />
       <div className="bg-sand-light pt-16">
         <BookingSummaryHeader
-          roomTitle={room.title}
+          roomTitle={roomTitle}
           checkIn={checkIn}
           checkOut={checkOut}
           guests={guests}
@@ -47,7 +74,13 @@ export default async function CheckoutPage({
           <p className="font-outfit text-field text-jungle/60">
             Booking form coming soon.
           </p>
-          <PriceBreakdown pricePerNight={room.pricePerNight} nights={nights} taxRate={TAX_RATE} />
+          {quote ? (
+            <PriceBreakdown quote={quote} />
+          ) : (
+            <p className="font-outfit text-field text-jungle/60">
+              We couldn&apos;t load pricing for this stay right now.
+            </p>
+          )}
         </div>
       </div>
       <Footer />

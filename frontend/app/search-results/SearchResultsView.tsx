@@ -1,24 +1,53 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { mockRooms, type Room } from "./mockRooms";
+import type { Room } from "./mockRooms";
 import { ResultsLoadingSkeleton } from "./ResultsLoadingSkeleton";
 import { RoomResultsList } from "./RoomResultsList";
 import { EmptyResultsState } from "./EmptyResultsState";
 import { SortFilterBar, type SortOption } from "./SortFilterBar";
 
-type Status = "loading" | "success" | "empty" | "timeout";
+type Status = "loading" | "success" | "empty" | "timeout" | "error";
 
-const FETCH_DELAY_MS = 700;
 const TIMEOUT_MS = 10_000;
+const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
 
-// TODO: replace with a real call to GET /rooms/search once NIBM2-199 ships.
-function fetchAvailableRooms(guests: number): Promise<Room[]> {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(mockRooms.filter(room => room.maxOccupancy >= guests));
-    }, FETCH_DELAY_MS);
-  });
+// Fields the search endpoint still doesn't return (full room-detail lookup owns these);
+// filled with safe defaults so RoomResultsList/SortFilterBar don't crash.
+// `id` comes back as a numeric Long from the backend; coerced to string to match
+// the Room type and the string-keyed lookups used throughout the frontend.
+function toRoom(apiRoom: {
+  id: number;
+  title: string;
+  thumbnailUrl: string;
+  shortDescription: string;
+  pricePerNight: number;
+  maxOccupancy: number;
+  topAmenities: string[];
+}): Room {
+  return {
+    ...apiRoom,
+    id: String(apiRoom.id),
+    galleryImages: [],
+    sizeSqm: 0,
+    bedType: { count: 0, type: "" },
+    fullDescription: "",
+    amenities: {},
+    rating: 0,
+    reviewCount: 0,
+  };
+}
+
+async function fetchAvailableRooms(checkIn: string, checkOut: string, guests: number): Promise<Room[]> {
+  const params = new URLSearchParams({ checkIn, checkOut, guests: String(guests) });
+  const response = await fetch(`${ROOM_SERVICE_URL}/api/rooms/search?${params}`);
+
+  if (!response.ok) {
+    throw new Error(`Room search failed with status ${response.status}`);
+  }
+
+  const apiRooms = await response.json();
+  return apiRooms.map(toRoom);
 }
 
 export function SearchResultsView({
@@ -77,18 +106,24 @@ export function SearchResultsView({
       if (!cancelled) setStatus("timeout");
     }, TIMEOUT_MS);
 
-    fetchAvailableRooms(guests).then(result => {
-      if (cancelled) return;
-      clearTimeout(timeoutId);
-      setRooms(result);
-      setStatus(result.length > 0 ? "success" : "empty");
-    });
+    fetchAvailableRooms(checkIn, checkOut, guests)
+      .then(result => {
+        if (cancelled) return;
+        clearTimeout(timeoutId);
+        setRooms(result);
+        setStatus(result.length > 0 ? "success" : "empty");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clearTimeout(timeoutId);
+        setStatus("error");
+      });
 
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [guests]);
+  }, [checkIn, checkOut, guests]);
 
   if (status === "loading") return <ResultsLoadingSkeleton />;
 
@@ -100,6 +135,19 @@ export function SearchResultsView({
         </h2>
         <p className="max-w-md font-outfit text-field text-jungle/70">
           Please try your search again in a moment.
+        </p>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="flex w-full flex-col items-center gap-4 rounded-3xl bg-white px-6 py-16 text-center shadow-soft">
+        <h2 className="font-lora text-[24px] font-medium text-jungle-dark">
+          Something went wrong
+        </h2>
+        <p className="max-w-md font-outfit text-field text-jungle/70">
+          We couldn&apos;t load rooms right now. Please try your search again.
         </p>
       </div>
     );
