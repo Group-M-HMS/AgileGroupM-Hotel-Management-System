@@ -9,4 +9,5 @@ public interface RoomAmenityRepository extends JpaRepository<RoomAmenity, Long> 
 
     List<RoomAmenity> findByRoomId(Long roomId);
     boolean existsByRoomId(Long roomId);
+    List<RoomAmenity> findByRoomIdIn(List<Long> roomIds);
 }

@@ -2,6 +2,7 @@ package com.nibm.room_service.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Schema(description = "A room returned from a search, with pricing and capacity info")
 public class RoomResponse {
@@ -21,12 +22,16 @@ public class RoomResponse {
     @Schema(description = "Maximum number of guests this room can accommodate", example = "3")
     private Integer maxOccupancy;
 
-    public RoomResponse(Long id, String title, String thumbnailUrl, BigDecimal pricePerNight, Integer maxOccupancy) {
+    @Schema(description = "Top amenities for this room", example = "[\"Free Wi-Fi\", \"Air Conditioning\"]")
+    private List<String> topAmenities;
+
+    public RoomResponse(Long id, String title, String thumbnailUrl, BigDecimal pricePerNight, Integer maxOccupancy, List<String> topAmenities) {
         this.id = id;
         this.title = title;
         this.thumbnailUrl = thumbnailUrl;
         this.pricePerNight = pricePerNight;
         this.maxOccupancy = maxOccupancy;
+        this.topAmenities = topAmenities;
     }
 
     public Long getId() { return id; }
@@ -34,4 +39,5 @@ public class RoomResponse {
     public String getThumbnailUrl() { return thumbnailUrl; }
     public BigDecimal getPricePerNight() { return pricePerNight; }
     public Integer getMaxOccupancy() { return maxOccupancy; }
+    public List<String> getTopAmenities() { return topAmenities; }
 }
