@@ -5,3 +5,6 @@ SPRINT1_TRACKER.md
 /frontend/.superpowers
 /.remember
 /.superpowers
+target/
+.idea/
+*.iml
