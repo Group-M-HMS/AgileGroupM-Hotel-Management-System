@@ -1,4 +1,4 @@
-package com.nibm.hotel_management_system.controller;
+package com.nibm.room_service.controller;
 
 
 import org.springframework.http.ResponseEntity;

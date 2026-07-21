@@ -1,4 +1,4 @@
-package com.nibm.hotel_management_system.entity;
+package com.nibm.room_service.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;

@@ -1,6 +1,6 @@
-package com.nibm.hotel_management_system.validation;
+package com.nibm.room_service.validation;
 
-import com.nibm.hotel_management_system.dto.RoomSearchRequest;
+import com.nibm.room_service.dto.RoomSearchRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

@@ -1,4 +1,4 @@
-package com.nibm.hotel_management_system.validation;
+package com.nibm.room_service.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

@@ -1,6 +1,6 @@
-package com.nibm.hotel_management_system.dto;
+package com.nibm.room_service.dto;
 
-import com.nibm.hotel_management_system.validation.ValidDateRange;
+import com.nibm.room_service.validation.ValidDateRange;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Min;

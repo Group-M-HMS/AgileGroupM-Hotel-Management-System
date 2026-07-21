@@ -1,8 +1,8 @@
-package com.nibm.hotel_management_system.controller;
+package com.nibm.room_service.controller;
 
-import com.nibm.hotel_management_system.dto.RoomResponse;
-import com.nibm.hotel_management_system.dto.RoomSearchRequest;
-import com.nibm.hotel_management_system.service.RoomService;
+import com.nibm.room_service.dto.RoomResponse;
+import com.nibm.room_service.dto.RoomSearchRequest;
+import com.nibm.room_service.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

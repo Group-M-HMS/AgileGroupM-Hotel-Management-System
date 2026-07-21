@@ -1,4 +1,4 @@
-package com.nibm.hotel_management_system.dto;
+package com.nibm.room_service.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;

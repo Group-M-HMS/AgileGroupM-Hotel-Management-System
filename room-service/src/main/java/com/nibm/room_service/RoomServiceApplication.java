@@ -1,13 +1,13 @@
-package com.nibm.hotel_management_system;
+package com.nibm.room_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HotelManagementSystemApplication {
+public class RoomServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(HotelManagementSystemApplication.class, args);
+		SpringApplication.run(RoomServiceApplication.class, args);
 	}
 
 }

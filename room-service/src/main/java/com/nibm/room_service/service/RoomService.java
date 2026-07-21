@@ -1,9 +1,9 @@
-package com.nibm.hotel_management_system.service;
+package com.nibm.room_service.service;
 
-import com.nibm.hotel_management_system.dto.RoomResponse;
-import com.nibm.hotel_management_system.dto.RoomSearchRequest;
-import com.nibm.hotel_management_system.entity.Room;
-import com.nibm.hotel_management_system.repository.RoomRepository;
+import com.nibm.room_service.dto.RoomResponse;
+import com.nibm.room_service.dto.RoomSearchRequest;
+import com.nibm.room_service.entity.Room;
+import com.nibm.room_service.repository.RoomRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

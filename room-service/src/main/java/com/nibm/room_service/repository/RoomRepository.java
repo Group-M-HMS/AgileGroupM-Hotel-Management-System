@@ -1,6 +1,6 @@
-package com.nibm.hotel_management_system.repository;
+package com.nibm.room_service.repository;
 
-import com.nibm.hotel_management_system.entity.Room;
+import com.nibm.room_service.entity.Room;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +15,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
         WHERE r.maxOccupancy >= :guests
         AND r.id NOT IN (
             SELECT b.room.id FROM Booking b
-            WHERE b.status = com.nibm.hotel_management_system.entity.Booking$BookingStatus.CONFIRMED
+            WHERE b.status = com.nibm.room_service.entity.Booking$BookingStatus.CONFIRMED
             AND b.checkIn < :checkOut AND b.checkOut > :checkIn
         )
         """)
