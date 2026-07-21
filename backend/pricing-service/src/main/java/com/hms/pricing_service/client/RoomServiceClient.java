@@ -32,7 +32,7 @@ public class RoomServiceClient {
                 throw new RoomNotFoundException(roomId);
             }
 
-            return new RoomBasicInfo(response.id(), response.name(), response.basePrice());
+            return new RoomBasicInfo(response.id(), response.name(), response.pricePerNight());
         } catch (WebClientResponseException.NotFound ex) {
             throw new RoomNotFoundException(roomId);
         }
@@ -44,9 +44,8 @@ public class RoomServiceClient {
     private record RoomServiceRoomResponse(
             Long id,
             String name,
-            BigDecimal basePrice,
-            Integer maxOccupancy,
-            String status
+            BigDecimal pricePerNight,
+            Integer maxOccupancy
     ) {
     }
 }

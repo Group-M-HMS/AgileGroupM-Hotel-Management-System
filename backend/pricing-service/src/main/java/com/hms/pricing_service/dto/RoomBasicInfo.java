@@ -4,5 +4,5 @@ import java.math.BigDecimal;
 
 public record RoomBasicInfo(Long id,
                             String name,
-                            BigDecimal basePrice) {
+                            BigDecimal pricePerNight) {
 }

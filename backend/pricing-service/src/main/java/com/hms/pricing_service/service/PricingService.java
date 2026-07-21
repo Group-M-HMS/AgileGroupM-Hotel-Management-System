@@ -45,7 +45,7 @@ public class PricingService {
         int nights = calculateNights(request.checkIn(), request.checkOut());
 
         RoomBasicInfo room = roomServiceClient.getRoomBasicInfo(request.roomId());
-        BigDecimal nightlyRate = room.basePrice().setScale(MONEY_SCALE, ROUNDING);
+        BigDecimal nightlyRate = room.pricePerNight().setScale(MONEY_SCALE, ROUNDING);
 
         BigDecimal subtotal = nightlyRate
                 .multiply(BigDecimal.valueOf(nights))
@@ -66,7 +66,7 @@ public class PricingService {
      */
     public RoomPriceResponse getCurrentRoomPrice(Long roomId) {
         RoomBasicInfo room = roomServiceClient.getRoomBasicInfo(roomId);
-        BigDecimal nightlyRate = room.basePrice().setScale(MONEY_SCALE, ROUNDING);
+        BigDecimal nightlyRate = room.pricePerNight().setScale(MONEY_SCALE, ROUNDING);
         return new RoomPriceResponse(roomId, nightlyRate);
     }
 
