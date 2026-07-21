@@ -13,14 +13,22 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(err ->
-                errors.put(err.getField(), err.getDefaultMessage())
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .orElse("Validation failed");
+        
+        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+                .body(errorBody(org.springframework.http.HttpStatus.BAD_REQUEST, message));
+    }
+
+    private Map<String, Object> errorBody(org.springframework.http.HttpStatus status, String message) {
+        return Map.of(
+                "timestamp", java.time.Instant.now().toString(),
+                "status", status.value(),
+                "error", status.getReasonPhrase(),
+                "message", message
         );
-        ex.getBindingResult().getGlobalErrors().forEach(err ->
-                errors.put("dateRange", err.getDefaultMessage())
-        );
-        return ResponseEntity.badRequest().body(errors);
     }
 }
