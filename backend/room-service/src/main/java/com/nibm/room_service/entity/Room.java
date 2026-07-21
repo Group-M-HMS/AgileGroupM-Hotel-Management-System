@@ -48,4 +48,10 @@ public class Room {
 
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
+
+    @Column(name = "average_rating")
+    private Float averageRating = 0.0f;
+
+    @Column(name = "review_count")
+    private Integer reviewCount = 0;
 }

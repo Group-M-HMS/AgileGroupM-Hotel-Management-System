@@ -16,6 +16,9 @@ public class RoomResponse {
     @Schema(description = "URL to the room's thumbnail image", example = "https://cdn.example.com/rooms/1.jpg")
     private String thumbnailUrl;
 
+    @Schema(description = "Short description of the room", example = "A cozy room with a view")
+    private String shortDescription;
+
     @Schema(description = "Price per night", example = "100.00")
     private BigDecimal pricePerNight;
 
@@ -25,10 +28,11 @@ public class RoomResponse {
     @Schema(description = "Top amenities for this room", example = "[\"Free Wi-Fi\", \"Air Conditioning\"]")
     private List<String> topAmenities;
 
-    public RoomResponse(Long id, String title, String thumbnailUrl, BigDecimal pricePerNight, Integer maxOccupancy, List<String> topAmenities) {
+    public RoomResponse(Long id, String title, String thumbnailUrl, String shortDescription, BigDecimal pricePerNight, Integer maxOccupancy, List<String> topAmenities) {
         this.id = id;
         this.title = title;
         this.thumbnailUrl = thumbnailUrl;
+        this.shortDescription = shortDescription;
         this.pricePerNight = pricePerNight;
         this.maxOccupancy = maxOccupancy;
         this.topAmenities = topAmenities;
@@ -37,6 +41,7 @@ public class RoomResponse {
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public String getThumbnailUrl() { return thumbnailUrl; }
+    public String getShortDescription() { return shortDescription; }
     public BigDecimal getPricePerNight() { return pricePerNight; }
     public Integer getMaxOccupancy() { return maxOccupancy; }
     public List<String> getTopAmenities() { return topAmenities; }

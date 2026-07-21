@@ -34,7 +34,17 @@ public class RoomDetailService {
     @Transactional(readOnly = true)
     public RoomDetailResponse getRoomDetail(Long roomId) {
         Room room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException(roomId));
-        RoomBasicInfo basicInfo = new RoomBasicInfo(room.getId(), room.getTitle(), room.getFullDescription(), room.getMaxOccupancy());
+        RoomBasicInfo basicInfo = new RoomBasicInfo(
+                room.getId(), 
+                room.getTitle(), 
+                room.getFullDescription(), 
+                room.getMaxOccupancy(),
+                room.getSizeSqm(),
+                room.getBedCount(),
+                room.getBedType(),
+                room.getAverageRating(),
+                room.getReviewCount()
+        );
         
         List<RoomImageDto> images = getRoomImages(roomId);
         List<RoomAmenityDto> amenities = getRoomAmenities(roomId);

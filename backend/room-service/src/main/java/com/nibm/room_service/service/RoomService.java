@@ -39,7 +39,7 @@ public class RoomService {
                 .map(r -> {
                     List<String> amenities = amenitiesByRoom.getOrDefault(r.getId(), List.of());
                     List<String> topAmenities = amenities.stream().limit(3).toList();
-                    return new RoomResponse(r.getId(), r.getTitle(), r.getThumbnailUrl(),
+                    return new RoomResponse(r.getId(), r.getTitle(), r.getThumbnailUrl(), r.getShortDescription(),
                             r.getPricePerNight(), r.getMaxOccupancy(), topAmenities);
                 })
                 .toList();
