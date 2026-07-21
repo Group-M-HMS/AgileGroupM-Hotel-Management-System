@@ -1,16 +1,17 @@
-package com.hms.room_detail_service.service;
+package com.nibm.room_service.service;
 
-import com.hms.room_detail_service.client.RoomServiceClient;
-import com.hms.room_detail_service.dto.RoomAmenityDto;
-import com.hms.room_detail_service.dto.RoomBasicInfo;
-import com.hms.room_detail_service.dto.RoomDetailResponse;
-import com.hms.room_detail_service.dto.RoomImageDto;
-import com.hms.room_detail_service.entity.RoomAmenity;
-import com.hms.room_detail_service.entity.RoomImage;
-import com.hms.room_detail_service.repository.RoomAmenityRepository;
-import com.hms.room_detail_service.repository.RoomImageRepository;
+import com.nibm.room_service.dto.RoomAmenityDto;
+import com.nibm.room_service.dto.RoomBasicInfo;
+import com.nibm.room_service.dto.RoomDetailResponse;
+import com.nibm.room_service.dto.RoomImageDto;
+import com.nibm.room_service.entity.RoomAmenity;
+import com.nibm.room_service.entity.RoomImage;
+import com.nibm.room_service.entity.Room;
+import com.nibm.room_service.repository.RoomAmenityRepository;
+import com.nibm.room_service.repository.RoomImageRepository;
+import com.nibm.room_service.repository.RoomRepository;
+import com.nibm.room_service.exception.RoomNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,21 +19,23 @@ import java.util.List;
 @Service
 public class RoomDetailService {
 
-    private final RoomServiceClient roomServiceClient;
+    private final RoomRepository roomRepository;
     private final RoomImageRepository roomImageRepository;
     private final RoomAmenityRepository roomAmenityRepository;
 
-    public RoomDetailService(RoomServiceClient roomServiceClient,
+    public RoomDetailService(RoomRepository roomRepository,
                              RoomImageRepository roomImageRepository,
                              RoomAmenityRepository roomAmenityRepository) {
-        this.roomServiceClient = roomServiceClient;
+        this.roomRepository = roomRepository;
         this.roomImageRepository = roomImageRepository;
         this.roomAmenityRepository = roomAmenityRepository;
     }
 
     @Transactional(readOnly = true)
     public RoomDetailResponse getRoomDetail(Long roomId) {
-        RoomBasicInfo basicInfo = roomServiceClient.getRoomBasicInfo(roomId);
+        Room room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException(roomId));
+        RoomBasicInfo basicInfo = new RoomBasicInfo(room.getId(), room.getTitle(), room.getFullDescription(), room.getMaxOccupancy());
+        
         List<RoomImageDto> images = getRoomImages(roomId);
         List<RoomAmenityDto> amenities = getRoomAmenities(roomId);
         return RoomDetailResponse.of(basicInfo, images, amenities);
@@ -52,7 +55,6 @@ public class RoomDetailService {
                 .toList();
     }
 
-
     @Transactional
     public RoomAmenity addAmenity(Long roomId, String amenityName) {
         RoomAmenity amenity = new RoomAmenity();
@@ -69,6 +71,4 @@ public class RoomDetailService {
         image.setDisplayOrder(displayOrder);
         return roomImageRepository.save(image);
     }
-
-
 }

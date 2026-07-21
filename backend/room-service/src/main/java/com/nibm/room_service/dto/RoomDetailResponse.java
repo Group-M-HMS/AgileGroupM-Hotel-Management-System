@@ -1,4 +1,4 @@
-package com.hms.room_detail_service.dto;
+package com.nibm.room_service.dto;
 
 import java.util.List;
 

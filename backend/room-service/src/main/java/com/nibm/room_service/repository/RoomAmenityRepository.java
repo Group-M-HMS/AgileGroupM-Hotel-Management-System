@@ -1,6 +1,6 @@
-package com.hms.room_detail_service.repository;
+package com.nibm.room_service.repository;
 
-import com.hms.room_detail_service.entity.RoomAmenity;
+import com.nibm.room_service.entity.RoomAmenity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

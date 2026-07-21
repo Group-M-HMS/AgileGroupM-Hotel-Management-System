@@ -1,9 +1,9 @@
-package com.hms.room_detail_service.controller;
+package com.nibm.room_service.controller;
 
-import com.hms.room_detail_service.dto.RoomAmenityDto;
-import com.hms.room_detail_service.dto.RoomDetailResponse;
-import com.hms.room_detail_service.dto.RoomImageDto;
-import com.hms.room_detail_service.service.RoomDetailService;
+import com.nibm.room_service.dto.RoomAmenityDto;
+import com.nibm.room_service.dto.RoomDetailResponse;
+import com.nibm.room_service.dto.RoomImageDto;
+import com.nibm.room_service.service.RoomDetailService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

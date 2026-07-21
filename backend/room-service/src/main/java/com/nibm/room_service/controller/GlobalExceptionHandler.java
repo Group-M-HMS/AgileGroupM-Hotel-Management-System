@@ -2,15 +2,21 @@ package com.nibm.room_service.controller;
 
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.nibm.room_service.exception.RoomNotFoundException;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(RoomNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleRoomNotFound(RoomNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, ex.getMessage()));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
@@ -19,11 +25,11 @@ public class GlobalExceptionHandler {
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .orElse("Validation failed");
         
-        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
-                .body(errorBody(org.springframework.http.HttpStatus.BAD_REQUEST, message));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorBody(HttpStatus.BAD_REQUEST, message));
     }
 
-    private Map<String, Object> errorBody(org.springframework.http.HttpStatus status, String message) {
+    private Map<String, Object> errorBody(HttpStatus status, String message) {
         return Map.of(
                 "timestamp", java.time.Instant.now().toString(),
                 "status", status.value(),

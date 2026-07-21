@@ -1,4 +1,4 @@
-package com.hms.room_detail_service.exception;
+package com.nibm.room_service.exception;
 
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 

@@ -1,4 +1,4 @@
-package com.hms.room_detail_service.entity;
+package com.nibm.room_service.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
