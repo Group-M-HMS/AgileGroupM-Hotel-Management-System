@@ -1,5 +1,7 @@
 package com.nibm.room_service.dto;
 
+import java.math.BigDecimal;
+
 public record RoomBasicInfo (
         Long id,
         String name,
@@ -9,5 +11,6 @@ public record RoomBasicInfo (
         Integer bedCount,
         String bedType,
         Float rating,
-        Integer reviewCount
+        Integer reviewCount,
+        BigDecimal pricePerNight
 ) {}

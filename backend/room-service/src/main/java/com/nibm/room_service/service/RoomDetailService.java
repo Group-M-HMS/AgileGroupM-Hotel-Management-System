@@ -43,7 +43,8 @@ public class RoomDetailService {
                 room.getBedCount(),
                 room.getBedType(),
                 room.getAverageRating(),
-                room.getReviewCount()
+                room.getReviewCount(),
+                room.getPricePerNight()
         );
         
         List<RoomImageDto> images = getRoomImages(roomId);

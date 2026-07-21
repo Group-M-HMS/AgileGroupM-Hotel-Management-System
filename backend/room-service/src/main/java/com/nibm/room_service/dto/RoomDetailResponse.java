@@ -1,5 +1,6 @@
 package com.nibm.room_service.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record RoomDetailResponse(
@@ -11,6 +12,7 @@ public record RoomDetailResponse(
         BedInfo bedType,
         Float rating,
         Integer reviewCount,
+        BigDecimal pricePerNight,
         List<String> images,
         List<String> amenities
 ) {
@@ -28,6 +30,7 @@ public record RoomDetailResponse(
                 new BedInfo(basicInfo.bedCount(), basicInfo.bedType()),
                 basicInfo.rating(),
                 basicInfo.reviewCount(),
+                basicInfo.pricePerNight(),
                 images.stream().map(RoomImageDto::imageUrl).toList(),
                 amenities.stream().map(RoomAmenityDto::amenityName).toList()
         );
