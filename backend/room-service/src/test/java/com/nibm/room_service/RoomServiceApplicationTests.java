@@ -1,10 +1,10 @@
-package com.nibm.hotel_management_system;
+package com.nibm.room_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class HotelManagementSystemApplicationTests {
+class RoomServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

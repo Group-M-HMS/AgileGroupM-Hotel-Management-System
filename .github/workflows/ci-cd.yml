@@ -1,10 +1,14 @@
-name: CI
+name: CI/CD
 
 on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop]
+    branches: [develop, main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/group-m-hms/agilegroupm-hotel-management-system
 
 jobs:
   changes:
@@ -105,3 +109,58 @@ jobs:
           cache: maven
       - run: chmod +x ./mvnw
       - run: ./mvnw -B verify
+
+  build-and-push:
+    needs: [changes, frontend, room-service, pricing-service]
+    # Each of frontend/room-service/pricing-service is skipped (not failed) when its
+    # paths didn't change, so we can't rely on the default success()-based condition —
+    # explicitly allow 'skipped' upstream results through, only block on real failures.
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      (needs.frontend.result == 'success' || needs.frontend.result == 'skipped') &&
+      (needs.room-service.result == 'success' || needs.room-service.result == 'skipped') &&
+      (needs.pricing-service.result == 'success' || needs.pricing-service.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - name: frontend
+            context: frontend
+          - name: room-service
+            context: backend/room-service
+          - name: pricing-service
+            context: backend/pricing-service
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:latest
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_SSH_PORT || 22 }}
+          script: |
+            cd /mnt/data/hotel-management-system
+            docker compose pull
+            docker compose up -d
