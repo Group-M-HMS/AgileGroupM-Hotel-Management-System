@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import type { Room } from "./mockRooms";
 import { AmenityIcon } from "@/app/room/amenityIcons";
@@ -103,12 +103,15 @@ export function RoomResultsList({
   guests: number;
 }) {
   const [page, setPage] = useState(1);
+  const [prevRooms, setPrevRooms] = useState(rooms);
+
+  if (rooms !== prevRooms) {
+    setPrevRooms(rooms);
+    setPage(1);
+  }
+
   const totalPages = Math.max(1, Math.ceil(rooms.length / PAGE_SIZE));
   const visibleRooms = rooms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [rooms]);
 
   return (
     <div className="flex w-full flex-col gap-6">

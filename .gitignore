@@ -8,3 +8,4 @@ SPRINT1_TRACKER.md
 target/
 .idea/
 *.iml
+.env

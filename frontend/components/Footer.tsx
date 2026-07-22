@@ -44,7 +44,7 @@ export function Footer() {
             </Link>
             <p className="text-sm text-sand/80 leading-relaxed mb-6">
               Disconnect from noise. Reconnect with nature. A sustainable
-              eco-retreat nestled in the heart of Sri Lanka's lush rainforests.
+              eco-retreat nestled in the heart of Sri Lanka&apos;s lush rainforests.
             </p>
             <div className="flex space-x-4">
               <a
