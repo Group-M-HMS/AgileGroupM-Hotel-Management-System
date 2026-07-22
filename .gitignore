@@ -9,3 +9,4 @@ target/
 .idea/
 *.iml
 .env
+/deploy/VM_SETUP.md
