@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { BookingSummaryHeader } from "./BookingSummaryHeader";
 import { PriceBreakdown } from "./PriceBreakdown";
+import { GuestInfoForm } from "./GuestInfoForm";
 
 const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
 const PRICING_SERVICE_URL = process.env.NEXT_PUBLIC_PRICING_SERVICE_URL ?? "http://localhost:8083";
@@ -71,9 +72,7 @@ export default async function CheckoutPage({
           guests={guests}
         />
         <div className="mx-auto flex max-w-7xl flex-col gap-8 px-page-x pt-12 pb-24 lg:flex-row lg:items-start lg:justify-between lg:px-page-x-lg">
-          <p className="font-outfit text-field text-jungle/60">
-            Booking form coming soon.
-          </p>
+          <GuestInfoForm roomId={roomId} checkIn={checkIn} checkOut={checkOut} guests={guests} quote={quote} />
           {quote ? (
             <PriceBreakdown quote={quote} />
           ) : (
