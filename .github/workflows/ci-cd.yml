@@ -116,17 +116,23 @@ jobs:
     # are skipped (not failed) when their paths didn't change, so a required check on any one
     # of them directly would leave PRs that don't touch that path waiting forever. This job
     # always runs and fails only on a real job failure, never on an upstream skip.
+    #
+    # The result check below reads `needs` dynamically (toJSON) instead of naming each job, so
+    # adding a new job to the `needs:` list above is the only step required to bring it under
+    # the gate — no second hardcoded list to keep in sync.
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check CI job results
         run: |
-          for result in "${{ needs.frontend.result }}" "${{ needs.room-service.result }}" "${{ needs.pricing-service.result }}"; do
-            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
-              echo "A required CI job did not pass (result: $result)"
-              exit 1
-            fi
-          done
+          echo '${{ toJSON(needs) }}' > needs.json
+          if jq -e '[.[].result] | all(. == "success" or . == "skipped")' needs.json > /dev/null; then
+            echo "All CI jobs passed or were skipped."
+          else
+            echo "One or more required CI jobs did not pass:"
+            jq -r 'to_entries[] | select(.value.result != "success" and .value.result != "skipped") | "  \(.key): \(.value.result)"' needs.json
+            exit 1
+          fi
 
   build-and-push:
     needs: [changes, frontend, room-service, pricing-service]
