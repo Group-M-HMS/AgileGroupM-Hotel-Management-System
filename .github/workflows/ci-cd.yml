@@ -135,16 +135,13 @@ jobs:
           fi
 
   build-and-push:
-    needs: [changes, frontend, room-service, pricing-service]
-    # Each of frontend/room-service/pricing-service is skipped (not failed) when its
-    # paths didn't change, so we can't rely on the default success()-based condition —
-    # explicitly allow 'skipped' upstream results through, only block on real failures.
-    if: >-
-      always() &&
-      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      (needs.frontend.result == 'success' || needs.frontend.result == 'skipped') &&
-      (needs.room-service.result == 'success' || needs.room-service.result == 'skipped') &&
-      (needs.pricing-service.result == 'success' || needs.pricing-service.result == 'skipped')
+    # Depends on ci-gate rather than directly on [changes, frontend, room-service,
+    # pricing-service]: ci-gate's own `if: always()` means it always resolves to a definite
+    # success/failure, never skipped, so it absorbs the "skipped ≠ failed" taint from those
+    # conditional jobs. That lets this job use a plain boolean `if` again instead of
+    # duplicating the success-or-skipped check that ci-gate already does.
+    needs: ci-gate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -183,8 +180,11 @@ jobs:
             ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:latest
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # build-and-push's only need is ci-gate (a hard success/failure boundary — see above), so
+    # a plain boolean `if` is safe here too: the implicit success() only has to check
+    # build-and-push itself, which is never 'skipped'.
     needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     steps:
