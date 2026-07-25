@@ -168,6 +168,15 @@ jobs:
       - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ${{ matrix.context }}
+          # NEXT_PUBLIC_* vars are baked into the client bundle at build time, so the VM's
+          # public address has to be supplied here — setting them in docker-compose's
+          # environment: block at container start would have no effect. `secrets` isn't a
+          # valid context inside strategy.matrix, so this has to live here instead of there.
+          # room-service/pricing-service builds get these as empty/unused build-args, which
+          # is harmless — their Dockerfiles don't declare matching ARGs.
+          build-args: |
+            NEXT_PUBLIC_ROOM_SERVICE_URL=${{ matrix.name == 'frontend' && format('http://{0}:8081', secrets.VM_HOST) || '' }}
+            NEXT_PUBLIC_PRICING_SERVICE_URL=${{ matrix.name == 'frontend' && format('http://{0}:8083', secrets.VM_HOST) || '' }}
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:${{ github.sha }}

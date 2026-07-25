@@ -3,6 +3,14 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 COPY . .
+
+# NEXT_PUBLIC_* vars are baked into the client bundle at build time, not read at container
+# start — they must be supplied as build args here, not as docker-compose environment vars.
+ARG NEXT_PUBLIC_ROOM_SERVICE_URL
+ARG NEXT_PUBLIC_PRICING_SERVICE_URL
+ENV NEXT_PUBLIC_ROOM_SERVICE_URL=$NEXT_PUBLIC_ROOM_SERVICE_URL
+ENV NEXT_PUBLIC_PRICING_SERVICE_URL=$NEXT_PUBLIC_PRICING_SERVICE_URL
+
 RUN npm run build
 
 FROM node:22-alpine AS runtime
