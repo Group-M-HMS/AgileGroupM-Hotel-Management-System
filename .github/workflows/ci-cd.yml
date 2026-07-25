@@ -136,12 +136,17 @@ jobs:
 
   build-and-push:
     # Depends on ci-gate rather than directly on [changes, frontend, room-service,
-    # pricing-service]: ci-gate's own `if: always()` means it always resolves to a definite
-    # success/failure, never skipped, so it absorbs the "skipped ≠ failed" taint from those
-    # conditional jobs. That lets this job use a plain boolean `if` again instead of
-    # duplicating the success-or-skipped check that ci-gate already does.
+    # pricing-service] so there's one source of truth for "did the real work pass" instead of
+    # duplicating that job list here. But GitHub's implicit success() (added automatically to
+    # any `if` that doesn't call a status function) poisons on a skip *anywhere* in the full
+    # transitive dependency chain, not just this job's direct needs — so depending on ci-gate
+    # alone does NOT stop frontend/room-service/pricing-service's skips from propagating.
+    # always() + an explicit check on ci-gate's own result is still required.
     needs: ci-gate
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.ci-gate.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -180,11 +185,15 @@ jobs:
             ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:latest
 
   deploy:
-    # build-and-push's only need is ci-gate (a hard success/failure boundary — see above), so
-    # a plain boolean `if` is safe here too: the implicit success() only has to check
-    # build-and-push itself, which is never 'skipped'.
+    # Same reasoning as build-and-push above: this job's dependency chain transitively
+    # includes ci-gate and the conditional frontend/room-service/pricing-service jobs, so a
+    # bare `if` (implicit success()) still gets poisoned by their skips. always() + an
+    # explicit check on this job's own direct need (build-and-push) is required.
     needs: build-and-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.build-and-push.result == 'success'
     runs-on: ubuntu-latest
     environment: production
     steps:
