@@ -25,11 +25,15 @@ export function Navbar() {
     path: '/villa'
   },
   {
+    name: 'Rooms',
+    path: '/rooms'
+  },
+  {
     name: 'Experiences',
     path: '/experiences'
   },
   {
-    name: 'Dashboard',
+    name: 'Sign In',
     path: '/admin'
   }];
 
@@ -40,7 +44,7 @@ export function Navbar() {
   'bg-jungle-dark shadow-soft';
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${bgColor}`}>
-      <div className="px-6 lg:px-14">
+      <div className="mx-auto max-w-7xl px-page-x lg:px-page-x-lg">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
@@ -65,7 +69,7 @@ export function Navbar() {
               </Link>
             )}
             <Link
-              href="/book"
+              href="/"
               className="bg-sage hover:bg-sage-light text-jungle-dark px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5">
 
               Book Stay

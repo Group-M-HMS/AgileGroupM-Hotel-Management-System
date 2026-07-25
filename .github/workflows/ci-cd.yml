@@ -1,0 +1,191 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [develop, main, frontend, backend]
+  push:
+    branches: [develop, main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/group-m-hms/agilegroupm-hotel-management-system
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      room-service: ${{ steps.filter.outputs.room-service }}
+      pricing-service: ${{ steps.filter.outputs.pricing-service }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            room-service:
+              - 'backend/room-service/**'
+            pricing-service:
+              - 'backend/pricing-service/**'
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  room-service:
+    needs: changes
+    if: needs.changes.outputs.room-service == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hotel_management
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend/room-service
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - run: chmod +x ./mvnw
+      - run: ./mvnw -B verify
+
+  pricing-service:
+    needs: changes
+    if: needs.changes.outputs.pricing-service == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: hms_user
+          POSTGRES_PASSWORD: hms_password
+          POSTGRES_DB: hms_pricing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend/pricing-service
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - run: chmod +x ./mvnw
+      - run: ./mvnw -B verify
+
+  ci-gate:
+    needs: [changes, frontend, room-service, pricing-service]
+    # Single required status check for branch protection: frontend/room-service/pricing-service
+    # are skipped (not failed) when their paths didn't change, so a required check on any one
+    # of them directly would leave PRs that don't touch that path waiting forever. This job
+    # always runs and fails only on a real job failure, never on an upstream skip.
+    #
+    # The result check below reads `needs` dynamically (toJSON) instead of naming each job, so
+    # adding a new job to the `needs:` list above is the only step required to bring it under
+    # the gate — no second hardcoded list to keep in sync.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI job results
+        run: |
+          echo '${{ toJSON(needs) }}' > needs.json
+          if jq -e '[.[].result] | all(. == "success" or . == "skipped")' needs.json > /dev/null; then
+            echo "All CI jobs passed or were skipped."
+          else
+            echo "One or more required CI jobs did not pass:"
+            jq -r 'to_entries[] | select(.value.result != "success" and .value.result != "skipped") | "  \(.key): \(.value.result)"' needs.json
+            exit 1
+          fi
+
+  build-and-push:
+    needs: [changes, frontend, room-service, pricing-service]
+    # Each of frontend/room-service/pricing-service is skipped (not failed) when its
+    # paths didn't change, so we can't rely on the default success()-based condition —
+    # explicitly allow 'skipped' upstream results through, only block on real failures.
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      (needs.frontend.result == 'success' || needs.frontend.result == 'skipped') &&
+      (needs.room-service.result == 'success' || needs.room-service.result == 'skipped') &&
+      (needs.pricing-service.result == 'success' || needs.pricing-service.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - name: frontend
+            context: frontend
+          - name: room-service
+            context: backend/room-service
+          - name: pricing-service
+            context: backend/pricing-service
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:latest
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_SSH_PORT || 22 }}
+          script: |
+            cd /mnt/data/hotel-management-system
+            docker compose pull
+            docker compose up -d

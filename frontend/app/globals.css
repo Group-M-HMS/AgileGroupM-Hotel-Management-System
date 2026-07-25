@@ -2,7 +2,7 @@
 
 :root {
   color-scheme: light;
-  --background: #ffffff;
+  --background: #F4F3F0;
   --foreground: #171717;
 }
 
@@ -37,6 +37,11 @@
   --spacing-social:     60px;   /* social icon button */
   --spacing-checkbox:   22px;
   --spacing-field-x:    22px;   /* input horizontal padding */
+
+  /* Shared page-frame horizontal padding — Navbar, Footer, and page content
+     columns all align on this scale. Generates px-page-x / lg:px-page-x-lg. */
+  --spacing-page-x:     24px;
+  --spacing-page-x-lg:  56px;
 
   /* Radii */
   --radius-input:       26px;
@@ -96,4 +101,20 @@ body {
   font-family: 'Outfit', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Material Symbols icon font — loaded via Google Fonts <link> in layout.tsx */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
 }
