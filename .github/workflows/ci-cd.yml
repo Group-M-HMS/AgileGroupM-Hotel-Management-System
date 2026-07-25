@@ -110,6 +110,24 @@ jobs:
       - run: chmod +x ./mvnw
       - run: ./mvnw -B verify
 
+  ci-gate:
+    needs: [changes, frontend, room-service, pricing-service]
+    # Single required status check for branch protection: frontend/room-service/pricing-service
+    # are skipped (not failed) when their paths didn't change, so a required check on any one
+    # of them directly would leave PRs that don't touch that path waiting forever. This job
+    # always runs and fails only on a real job failure, never on an upstream skip.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI job results
+        run: |
+          for result in "${{ needs.frontend.result }}" "${{ needs.room-service.result }}" "${{ needs.pricing-service.result }}"; do
+            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
+              echo "A required CI job did not pass (result: $result)"
+              exit 1
+            fi
+          done
+
   build-and-push:
     needs: [changes, frontend, room-service, pricing-service]
     # Each of frontend/room-service/pricing-service is skipped (not failed) when its
