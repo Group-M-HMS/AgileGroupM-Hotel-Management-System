@@ -154,10 +154,18 @@ jobs:
         include:
           - name: frontend
             context: frontend
+            # NEXT_PUBLIC_* vars are baked into the client bundle at build time, so the VM's
+            # public address has to be supplied here — setting them in docker-compose's
+            # environment: block at container start would have no effect.
+            build-args: |
+              NEXT_PUBLIC_ROOM_SERVICE_URL=http://${{ secrets.VM_HOST }}:8081
+              NEXT_PUBLIC_PRICING_SERVICE_URL=http://${{ secrets.VM_HOST }}:8083
           - name: room-service
             context: backend/room-service
+            build-args: ""
           - name: pricing-service
             context: backend/pricing-service
+            build-args: ""
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
@@ -168,6 +176,7 @@ jobs:
       - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ${{ matrix.context }}
+          build-args: ${{ matrix.build-args }}
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:${{ github.sha }}
