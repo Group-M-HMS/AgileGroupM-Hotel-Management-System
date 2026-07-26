@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import SelectField from "./SelectField";
+import { FieldError } from "@/components/FieldError";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -160,6 +161,7 @@ export default function SignUpForm() {
               onBlur={() => touch("firstName")}
               className={fieldCls(err("firstName"))}
             />
+            <FieldError message={err("firstName")} />
           </div>
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
             <input
@@ -170,6 +172,7 @@ export default function SignUpForm() {
               onBlur={() => touch("lastName")}
               className={fieldCls(err("lastName"))}
             />
+            <FieldError message={err("lastName")} />
           </div>
         </div>
 
@@ -184,6 +187,7 @@ export default function SignUpForm() {
               onBlur={() => touch("email")}
               className={fieldCls(err("email"))}
             />
+            <FieldError message={err("email")} />
           </div>
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
             <input
@@ -194,6 +198,7 @@ export default function SignUpForm() {
               onBlur={() => touch("phone")}
               className={fieldCls(err("phone"))}
             />
+            <FieldError message={err("phone")} />
           </div>
         </div>
 
@@ -227,6 +232,7 @@ export default function SignUpForm() {
             onBlur={() => touch("address")}
             className={fieldCls(err("address"))}
           />
+          <FieldError message={err("address")} />
         </div>
 
         {/* Password + Confirm */}
@@ -250,6 +256,7 @@ export default function SignUpForm() {
                 <EyeIcon open={showPassword} />
               </button>
             </div>
+            <FieldError message={err("password")} />
           </div>
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
             <div className="relative">
@@ -270,6 +277,7 @@ export default function SignUpForm() {
                 <EyeIcon open={showConfirm} />
               </button>
             </div>
+            <FieldError message={err("confirmPassword")} />
           </div>
         </div>
       </div>
@@ -290,6 +298,7 @@ export default function SignUpForm() {
             <span className="font-outfit text-meta font-semibold text-jungle">Terms &amp; Conditions</span>
           </label>
         </div>
+        <FieldError message={err("terms")} />
       </div>
 
       {/* ── Create Account ── */}
