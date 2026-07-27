@@ -33,6 +33,10 @@ export function Navbar() {
     path: '/experiences'
   },
   {
+    name: 'Manage Booking',
+    path: '/manage-booking'
+  },
+  {
     name: 'Sign In',
     path: '/admin'
   }];

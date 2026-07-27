@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FieldError } from "@/components/FieldError";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -120,6 +121,7 @@ export default function LoginForm() {
             onBlur={() => touch("email")}
             className={fieldCls(err("email"))}
           />
+          <FieldError message={err("email")} />
         </div>
 
         {/* Password */}
@@ -142,6 +144,7 @@ export default function LoginForm() {
               <EyeIcon open={showPassword} />
             </button>
           </div>
+          <FieldError message={err("password")} />
           <div className="flex justify-end">
             <a
               href="/forgot-password"

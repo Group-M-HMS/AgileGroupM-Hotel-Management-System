@@ -1,5 +1,7 @@
 "use client";
 
+import { FieldError } from "@/components/FieldError";
+
 function ChevronDown() {
   // eslint-disable-next-line @next/next/no-img-element
   return (
@@ -48,6 +50,7 @@ export default function SelectField({
           <ChevronDown />
         </div>
       </div>
+      <FieldError message={error} />
     </div>
   );
 }
