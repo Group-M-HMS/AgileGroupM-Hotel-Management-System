@@ -1,13 +1,22 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, Leaf } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const isHome = pathname === '/';
+
+  function handleSignOut() {
+    logout();
+    setMobileMenuOpen(false);
+    router.push('/');
+  }
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -35,10 +44,6 @@ export function Navbar() {
   {
     name: 'Manage Booking',
     path: '/manage-booking'
-  },
-  {
-    name: 'Sign In',
-    path: '/admin'
   }];
 
   const bgColor = isHome ?
@@ -72,6 +77,22 @@ export function Navbar() {
                 {link.name}
               </Link>
             )}
+            {user ?
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="text-sm font-medium tracking-wide text-sand-light hover:text-sage transition-colors">
+
+                Sign Out
+              </button> :
+
+            <Link
+              href="/login"
+              className={`text-sm font-medium tracking-wide transition-colors ${pathname === '/login' ? 'text-sage' : 'text-sand-light hover:text-sage'}`}>
+
+                Sign In
+              </Link>
+            }
             <Link
               href="/"
               className="bg-sage hover:bg-sage-light text-jungle-dark px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5">
@@ -110,6 +131,23 @@ export function Navbar() {
                 {link.name}
               </Link>
           )}
+            {user ?
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="block w-full px-3 py-2 text-left rounded-md text-base font-medium text-sand-light hover:text-sage hover:bg-jungle/50">
+
+                Sign Out
+              </button> :
+
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === '/login' ? 'text-sage bg-jungle' : 'text-sand-light hover:text-sage hover:bg-jungle/50'}`}>
+
+                Sign In
+              </Link>
+            }
             <Link
             href="/book"
             onClick={() => setMobileMenuOpen(false)}
