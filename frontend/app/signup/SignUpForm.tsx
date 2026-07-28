@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import SelectField from "./SelectField";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { PasswordRequirements } from "./PasswordRequirements";
 import { FieldError } from "@/components/FieldError";
+import { useAuth } from "@/lib/AuthContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -11,9 +13,6 @@ type Fields = {
   lastName: string;
   email: string;
   phone: string;
-  nationality: string;
-  gender: string;
-  address: string;
   password: string;
   confirmPassword: string;
   terms: boolean;
@@ -39,12 +38,6 @@ function validate(f: Fields): Errors {
 
   if (!f.phone.trim()) e.phone = "Phone number is required";
   else if (!/^\+?[\d\s\-()+]{7,15}$/.test(f.phone)) e.phone = "Enter a valid phone number";
-
-  if (!f.nationality) e.nationality = "Please select your nationality";
-  if (!f.gender) e.gender = "Please select your gender";
-
-  if (!f.address.trim()) e.address = "Address is required";
-  else if (f.address.trim().length < 5) e.address = "Please enter your full address";
 
   if (!f.password) e.password = "Password is required";
   else if (f.password.length < 8) e.password = "At least 8 characters required";
@@ -81,27 +74,31 @@ function EyeIcon({ open }: { open: boolean }) {
   );
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const NATIONALITIES = ["Sri Lankan", "British", "American", "Australian", "Indian", "Other"];
-const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function SignUpForm() {
+  const router = useRouter();
+  const { user, login } = useAuth();
   const [fields, setFields] = useState<Fields>({
     firstName: "", lastName: "", email: "", phone: "",
-    nationality: "", gender: "", address: "",
     password: "", confirmPassword: "", terms: false,
   });
+
+  useEffect(() => {
+    if (user) router.replace("/dashboard");
+  }, [user, router]);
   const [errors, setErrors] = useState<Errors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function set(field: keyof Fields, value: string | boolean) {
     const next = { ...fields, [field]: value };
     setFields(next);
+    setSubmitError(null);
     if (touched[field]) {
       const e = validate(next);
       setErrors(prev => ({ ...prev, [field]: e[field] }));
@@ -114,7 +111,7 @@ export default function SignUpForm() {
     setErrors(prev => ({ ...prev, [field]: e[field] }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const allTouched = Object.fromEntries(
       Object.keys(fields).map(k => [k, true])
@@ -122,9 +119,28 @@ export default function SignUpForm() {
     setTouched(allTouched);
     const errs = validate(fields);
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      // TODO: call sign-up API
-      console.log("Submitting", fields);
+    if (Object.keys(errs).length > 0) return;
+
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        setSubmitError(body?.message ?? "We couldn't create your account right now. Please try again.");
+        return;
+      }
+      const { user } = await response.json();
+      login(user);
+      router.push("/dashboard");
+    } catch {
+      setSubmitError("We couldn't create your account right now. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -202,39 +218,6 @@ export default function SignUpForm() {
           </div>
         </div>
 
-        {/* Nationality + Gender */}
-        <div className="flex w-full flex-col gap-[14px] sm:flex-row">
-          <SelectField
-            placeholder="Nationality*"
-            options={NATIONALITIES}
-            value={fields.nationality}
-            onChange={v => set("nationality", v)}
-            onBlur={() => touch("nationality")}
-            error={err("nationality")}
-          />
-          <SelectField
-            placeholder="Gender*"
-            options={GENDERS}
-            value={fields.gender}
-            onChange={v => set("gender", v)}
-            onBlur={() => touch("gender")}
-            error={err("gender")}
-          />
-        </div>
-
-        {/* Address */}
-        <div className="flex w-full flex-col gap-[4px]">
-          <input
-            type="text"
-            placeholder="Address*"
-            value={fields.address}
-            onChange={e => set("address", e.target.value)}
-            onBlur={() => touch("address")}
-            className={fieldCls(err("address"))}
-          />
-          <FieldError message={err("address")} />
-        </div>
-
         {/* Password + Confirm */}
         <div className="flex w-full flex-col gap-[14px] sm:flex-row">
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
@@ -244,6 +227,7 @@ export default function SignUpForm() {
                 placeholder="Password*"
                 value={fields.password}
                 onChange={e => set("password", e.target.value)}
+                onFocus={() => setPasswordFocused(true)}
                 onBlur={() => touch("password")}
                 className={`${fieldCls(err("password"))} pr-[44px]`}
               />
@@ -257,6 +241,9 @@ export default function SignUpForm() {
               </button>
             </div>
             <FieldError message={err("password")} />
+            {(passwordFocused || fields.password.length > 0) && (
+              <PasswordRequirements password={fields.password} />
+            )}
           </div>
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
             <div className="relative">
@@ -301,9 +288,16 @@ export default function SignUpForm() {
         <FieldError message={err("terms")} />
       </div>
 
+      {/* ── Submit error ── */}
+      {submitError && (
+        <div className="w-full rounded-input border border-red-400 px-4 py-3 font-outfit text-[13px] text-red-500">
+          {submitError}
+        </div>
+      )}
+
       {/* ── Create Account ── */}
-      <button type="submit" className="btn-primary">
-        CREATE ACCOUNT
+      <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+        {submitting ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
       </button>
 
       {/* ── Login / OR / Social ── */}

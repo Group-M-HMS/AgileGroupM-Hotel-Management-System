@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FieldError } from "@/components/FieldError";
+import { useAuth } from "@/lib/AuthContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -55,14 +57,23 @@ function EyeIcon({ open }: { open: boolean }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function LoginForm() {
+  const router = useRouter();
+  const { user, login } = useAuth();
   const [fields, setFields] = useState<Fields>({ email: "", password: "" });
+
+  useEffect(() => {
+    if (user) router.replace("/dashboard");
+  }, [user, router]);
   const [errors, setErrors] = useState<Errors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function set(field: keyof Fields, value: string) {
     const next = { ...fields, [field]: value };
     setFields(next);
+    setSubmitError(null);
     if (touched[field]) {
       const e = validate(next);
       setErrors(prev => ({ ...prev, [field]: e[field] }));
@@ -75,7 +86,7 @@ export default function LoginForm() {
     setErrors(prev => ({ ...prev, [field]: e[field] }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const allTouched = Object.fromEntries(
       Object.keys(fields).map(k => [k, true])
@@ -83,9 +94,28 @@ export default function LoginForm() {
     setTouched(allTouched);
     const errs = validate(fields);
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      // TODO: call login API
-      console.log("Submitting", fields);
+    if (Object.keys(errs).length > 0) return;
+
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        setSubmitError(body?.message ?? "We couldn't log you in right now. Please try again.");
+        return;
+      }
+      const { user } = await response.json();
+      login(user);
+      router.push("/dashboard");
+    } catch {
+      setSubmitError("We couldn't log you in right now. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -157,9 +187,16 @@ export default function LoginForm() {
 
       </div>
 
+      {/* ── Submit error ── */}
+      {submitError && (
+        <div className="w-full rounded-input border border-red-400 px-4 py-3 font-outfit text-[13px] text-red-500">
+          {submitError}
+        </div>
+      )}
+
       {/* ── Log In ── */}
-      <button type="submit" className="btn-primary">
-        LOG IN
+      <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+        {submitting ? "LOGGING IN..." : "LOG IN"}
       </button>
 
       {/* ── Sign up / OR / Social ── */}
