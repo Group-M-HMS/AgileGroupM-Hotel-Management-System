@@ -84,12 +84,7 @@ export default function DashboardHero() {
             <button
               type="button"
               onClick={() =>
-                document
-                  .getElementById("search-stay")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
+                 router.push("/booking")}
               className="rounded-full bg-sage px-7 py-3 font-outfit font-semibold text-jungle-dark transition hover:bg-sage/90"
             >
               Book Your Stay
