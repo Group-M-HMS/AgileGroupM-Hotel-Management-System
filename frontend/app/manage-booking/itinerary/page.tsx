@@ -3,10 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { StatusBadge } from "@/components/StatusBadge";
 import { AmenityIcon } from "@/app/room/amenityIcons";
 import { formatDate } from "../../checkout/formatDate";
 import { findMockBooking } from "../mockBookings";
+import { CancelBookingControl } from "./CancelBookingControl";
 import { GuestDetails } from "./GuestDetails";
 import { PrintButton } from "./PrintButton";
 import { RoomThumbnail } from "./RoomThumbnail";
@@ -91,12 +91,16 @@ export default async function ItineraryPage({
           {/* NIBM2-302 / NIBM2-303 — room, status, and booking reference */}
           <div className="flex items-start gap-4">
             {room?.thumbnail && <RoomThumbnail src={room.thumbnail} alt={room.name} />}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-1 flex-col gap-2">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="font-lora text-heading-sm font-normal text-jungle-dark sm:text-[32px]">
                   {room?.name ?? "Room details unavailable"}
                 </h1>
-                <StatusBadge status={booking.status} />
+                <CancelBookingControl
+                  email={booking.email}
+                  bookingReference={booking.bookingReference}
+                  initialStatus={booking.status}
+                />
               </div>
               {room && room.amenities.length > 0 && (
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
