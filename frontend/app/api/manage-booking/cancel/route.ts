@@ -5,9 +5,9 @@
 import { cancelMockBooking } from "@/app/manage-booking/mockBookings";
 
 export async function POST(request: Request) {
-  const { email, bookingReference } = await request.json();
+  const { email, id } = await request.json();
 
-  const booking = cancelMockBooking(String(email), String(bookingReference));
+  const booking = cancelMockBooking(String(email), String(id));
 
   if (!booking) {
     return Response.json({ message: "No booking matches those details." }, { status: 404 });

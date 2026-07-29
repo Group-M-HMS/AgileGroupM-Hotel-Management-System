@@ -4,7 +4,7 @@
 
 export type MockBooking = {
   email: string;
-  bookingReference: string;
+  id: string; // UUID — matches the real Booking entity's primary key, no separate human-readable code
   roomId: string; // must match a real seeded room id in the local room-service DB
   checkIn: string;
   checkOut: string;
@@ -32,7 +32,7 @@ export const MOCK_BOOKINGS: MockBooking[] =
   (globalForMockBookings.__MOCK_BOOKINGS__ = [
     {
       email: "test@example.com",
-      bookingReference: "ABC123",
+      id: "328661c7-5381-4e43-b54a-1257c2e65aad",
       roomId: "1",
       checkIn: "2026-08-10",
       checkOut: "2026-08-13",
@@ -49,7 +49,7 @@ export const MOCK_BOOKINGS: MockBooking[] =
     },
     {
       email: "jane.doe@example.com",
-      bookingReference: "XYZ789",
+      id: "7179a9a3-f09b-4792-8c5d-eee5fc1f9818",
       roomId: "1",
       checkIn: "2026-09-02",
       checkOut: "2026-09-05",
@@ -66,7 +66,7 @@ export const MOCK_BOOKINGS: MockBooking[] =
     },
     {
       email: "test@example.com",
-      bookingReference: "DEF456",
+      id: "2e56c739-a7fd-4beb-901f-c1f73c02afb4",
       roomId: "1",
       checkIn: "2026-06-01",
       checkOut: "2026-06-05",
@@ -83,7 +83,7 @@ export const MOCK_BOOKINGS: MockBooking[] =
     },
     {
       email: "test@example.com",
-      bookingReference: "GHI789",
+      id: "5264cda5-ac5e-4bc5-b688-e66d63c509cc",
       roomId: "2",
       checkIn: "2026-09-15",
       checkOut: "2026-09-18",
@@ -100,7 +100,7 @@ export const MOCK_BOOKINGS: MockBooking[] =
     },
     {
       email: "test@example.com",
-      bookingReference: "JKL012",
+      id: "790fbe78-3f8f-4d1b-a31e-8e93c13134ed",
       roomId: "3",
       checkIn: "2026-10-20",
       checkOut: "2026-10-25",
@@ -117,7 +117,7 @@ export const MOCK_BOOKINGS: MockBooking[] =
     },
     {
       email: "test@example.com",
-      bookingReference: "MNO345",
+      id: "9f16d820-c7c0-4f09-bc72-ac0956e7d2e8",
       roomId: "4",
       checkIn: "2026-05-10",
       checkOut: "2026-05-12",
@@ -134,7 +134,7 @@ export const MOCK_BOOKINGS: MockBooking[] =
     },
     {
       email: "test@example.com",
-      bookingReference: "PQR678",
+      id: "c31406a8-949f-4501-bb6d-1999c24b26f1",
       roomId: "5",
       checkIn: "2026-04-01",
       checkOut: "2026-04-04",
@@ -151,7 +151,7 @@ export const MOCK_BOOKINGS: MockBooking[] =
     },
     {
       email: "test@example.com",
-      bookingReference: "STU901",
+      id: "8a2bb3d6-44e8-4e4a-afb9-ddf82ff90a52",
       roomId: "6",
       checkIn: "2027-01-05",
       checkOut: "2027-01-10",
@@ -168,11 +168,11 @@ export const MOCK_BOOKINGS: MockBooking[] =
     },
   ]);
 
-export function findMockBooking(email: string, bookingReference: string): MockBooking | null {
+export function findMockBooking(email: string, id: string): MockBooking | null {
   const match = MOCK_BOOKINGS.find(
     (b) =>
       b.email.toLowerCase() === email.toLowerCase() &&
-      b.bookingReference.toLowerCase() === bookingReference.toLowerCase()
+      b.id.toLowerCase() === id.toLowerCase()
   );
   return match ?? null;
 }
@@ -181,8 +181,8 @@ export function findMockBookingsByEmail(email: string): MockBooking[] {
   return MOCK_BOOKINGS.filter((b) => b.email.toLowerCase() === email.toLowerCase());
 }
 
-export function cancelMockBooking(email: string, bookingReference: string): MockBooking | null {
-  const booking = findMockBooking(email, bookingReference);
+export function cancelMockBooking(email: string, id: string): MockBooking | null {
+  const booking = findMockBooking(email, id);
   if (!booking) return null;
   booking.status = "Cancelled";
   return booking;

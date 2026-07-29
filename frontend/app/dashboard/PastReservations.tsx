@@ -30,7 +30,7 @@ export function PastReservations({ bookings }: { bookings: MockBooking[] }) {
             <tbody>
               {bookings.map(booking => (
                 <tr
-                  key={booking.bookingReference}
+                  key={booking.id}
                   className="border-b border-sand/60 transition hover:bg-sand-light"
                 >
                   <td className="py-6">
@@ -38,7 +38,7 @@ export function PastReservations({ bookings }: { bookings: MockBooking[] }) {
                       <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sage/20">
                         <CalendarDays size={20} className="text-sage" />
                       </div>
-                      <p className="font-semibold text-jungle-dark">{booking.bookingReference}</p>
+                      <p className="font-semibold text-jungle-dark">{booking.id}</p>
                     </div>
                   </td>
                   <td>
@@ -49,7 +49,7 @@ export function PastReservations({ bookings }: { bookings: MockBooking[] }) {
                   <td className="font-semibold">${booking.total.toFixed(2)}</td>
                   <td>
                     <Link
-                      href={`/manage-booking/itinerary?email=${encodeURIComponent(booking.email)}&reference=${encodeURIComponent(booking.bookingReference)}`}
+                      href={`/manage-booking/itinerary?email=${encodeURIComponent(booking.email)}&id=${encodeURIComponent(booking.id)}`}
                       className="flex items-center gap-2 font-semibold text-sage transition hover:text-jungle-dark"
                     >
                       Details

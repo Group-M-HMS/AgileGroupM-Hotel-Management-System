@@ -25,7 +25,7 @@ export function UpcomingReservations({
         <div className="flex flex-col gap-6">
           {bookings.map(booking => (
             <div
-              key={booking.bookingReference}
+              key={booking.id}
               className="flex flex-col gap-4 rounded-[30px] border border-sand bg-white p-8 md:flex-row md:items-center md:justify-between"
             >
               <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
@@ -55,12 +55,12 @@ export function UpcomingReservations({
                   <h3 className="mt-1 font-semibold text-jungle-dark">{booking.guests}</h3>
                 </div>
                 <div className="md:mr-6">
-                  <p className="text-sm text-jungle/60">Booking Reference</p>
-                  <h3 className="mt-1 font-semibold text-jungle-dark">{booking.bookingReference}</h3>
+                  <p className="text-sm text-jungle/60">Booking ID</p>
+                  <h3 className="mt-1 font-semibold text-jungle-dark">{booking.id}</h3>
                 </div>
               </div>
               <Link
-                href={`/manage-booking/itinerary?email=${encodeURIComponent(booking.email)}&reference=${encodeURIComponent(booking.bookingReference)}`}
+                href={`/manage-booking/itinerary?email=${encodeURIComponent(booking.email)}&id=${encodeURIComponent(booking.id)}`}
                 className="flex items-center justify-center gap-2 rounded-full bg-sage px-6 py-3 font-semibold text-jungle-dark transition hover:bg-sage/90"
               >
                 View Itinerary

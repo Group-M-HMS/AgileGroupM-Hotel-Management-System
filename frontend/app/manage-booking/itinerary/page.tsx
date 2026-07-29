@@ -53,9 +53,9 @@ export default async function ItineraryPage({
 }) {
   const query = await searchParams;
   const email = parseParam(query.email);
-  const reference = parseParam(query.reference);
+  const id = parseParam(query.id);
 
-  const booking = findMockBooking(email, reference);
+  const booking = findMockBooking(email, id);
   if (!booking) {
     notFound();
   }
@@ -98,7 +98,7 @@ export default async function ItineraryPage({
                 </h1>
                 <CancelBookingControl
                   email={booking.email}
-                  bookingReference={booking.bookingReference}
+                  id={booking.id}
                   initialStatus={booking.status}
                 />
               </div>
@@ -120,7 +120,7 @@ export default async function ItineraryPage({
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <p className="font-outfit text-meta text-jungle/60">
-              Booking Reference: <span className="font-semibold text-jungle-dark">{booking.bookingReference}</span>
+              Booking ID: <span className="font-semibold text-jungle-dark">{booking.id}</span>
             </p>
             {room && (
               <Link

@@ -7,11 +7,11 @@ type Status = "Confirmed" | "Cancelled";
 
 export function CancelBookingControl({
   email,
-  bookingReference,
+  id,
   initialStatus,
 }: {
   email: string;
-  bookingReference: string;
+  id: string;
   initialStatus: Status;
 }) {
   const [status, setStatus] = useState<Status>(initialStatus);
@@ -33,7 +33,7 @@ export function CancelBookingControl({
       const response = await fetch("/api/manage-booking/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, bookingReference }),
+        body: JSON.stringify({ email, id }),
       });
       if (!response.ok) {
         setError("We couldn't cancel this booking right now. Please try again.");
