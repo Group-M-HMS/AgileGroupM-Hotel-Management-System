@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CalendarDays, Search, Users, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function DashboardHero() {
+export default function HomeHero() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);

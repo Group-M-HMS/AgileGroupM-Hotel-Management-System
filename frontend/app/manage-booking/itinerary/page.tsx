@@ -75,7 +75,7 @@ export default async function ItineraryPage({
         <div className="mx-auto max-w-7xl px-page-x pt-12 pb-24 lg:px-page-x-lg">
         <div className="mx-auto max-w-3xl">
           <Link
-            href="/manage-booking"
+            href="/dashboard"
             className="no-print mb-6 inline-flex items-center gap-1 font-outfit text-meta text-jungle transition-opacity hover:opacity-70"
           >
             <span
@@ -85,7 +85,7 @@ export default async function ItineraryPage({
             >
               arrow_back
             </span>
-            Back to Manage Booking
+            Back to My Bookings
           </Link>
 
           {/* NIBM2-302 / NIBM2-303 — room, status, and booking reference */}
