@@ -15,10 +15,10 @@ export default function ItineraryNotFound() {
             We couldn&apos;t find a booking for those details. Please try your lookup again.
           </p>
           <Link
-            href="/manage-booking"
+            href="/dashboard"
             className="rounded-btn bg-jungle-dark px-6 py-2.5 font-outfit text-meta font-semibold text-sand-light transition-opacity hover:opacity-90"
           >
-            Back to Manage Booking
+            Back to My Bookings
           </Link>
         </div>
       </div>

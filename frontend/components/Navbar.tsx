@@ -1,29 +1,21 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, Leaf } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { ProfileMenu } from '@/components/ProfileMenu';
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const isHome = pathname === '/';
 
   function handleSignOut() {
     logout();
     setMobileMenuOpen(false);
     router.push('/');
   }
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
   const navLinks = [
   {
     name: 'Home',
@@ -40,24 +32,15 @@ export function Navbar() {
   {
     name: 'Experiences',
     path: '/experiences'
-  },
-  {
-    name: 'Manage Booking',
-    path: '/manage-booking'
   }];
 
-  const bgColor = isHome ?
-  isScrolled ?
-  'bg-jungle-dark/95 backdrop-blur-md shadow-soft' :
-  'bg-transparent' :
-  'bg-jungle-dark shadow-soft';
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${bgColor}`}>
+    <nav className="fixed w-full z-50 bg-jungle-dark shadow-soft">
       <div className="mx-auto max-w-7xl px-page-x lg:px-page-x-lg">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
-            href="/"
+            href="/search-results"
             className="flex items-center space-x-2 text-sand-light hover:text-sage transition-colors">
 
             <Leaf className="h-6 w-6" />
@@ -78,13 +61,7 @@ export function Navbar() {
               </Link>
             )}
             {user ?
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="text-sm font-medium tracking-wide text-sand-light hover:text-sage transition-colors">
-
-                Sign Out
-              </button> :
+            <ProfileMenu firstName={user.firstName} onSignOut={handleSignOut} /> :
 
             <Link
               href="/login"
@@ -132,13 +109,22 @@ export function Navbar() {
               </Link>
           )}
             {user ?
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="block w-full px-3 py-2 text-left rounded-md text-base font-medium text-sand-light hover:text-sage hover:bg-jungle/50">
+            <>
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === '/dashboard' ? 'text-sage bg-jungle' : 'text-sand-light hover:text-sage hover:bg-jungle/50'}`}>
 
-                Sign Out
-              </button> :
+                  My Bookings
+                </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="block w-full px-3 py-2 text-left rounded-md text-base font-medium text-sand-light hover:text-sage hover:bg-jungle/50">
+
+                  Sign Out
+                </button>
+            </> :
 
             <Link
               href="/login"
