@@ -24,7 +24,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String idToken = header.substring(7);
             try {
-                FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+                FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken, true);;
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(decodedToken, null, Collections.emptyList());
