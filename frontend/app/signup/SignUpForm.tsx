@@ -12,7 +12,7 @@ type Fields = {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
   password: string;
   confirmPassword: string;
   terms: boolean;
@@ -36,8 +36,8 @@ function validate(f: Fields): Errors {
   if (!f.email.trim()) e.email = "Email is required";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = "Enter a valid email address";
 
-  if (!f.phone.trim()) e.phone = "Phone number is required";
-  else if (!/^\+?[\d\s\-()+]{7,15}$/.test(f.phone)) e.phone = "Enter a valid phone number";
+  if (!f.phoneNumber.trim()) e.phoneNumber = "Phone number is required";
+  else if (!/^\+?[\d\s\-()+]{7,15}$/.test(f.phoneNumber)) e.phoneNumber = "Enter a valid phone number";
 
   if (!f.password) e.password = "Password is required";
   else if (f.password.length < 8) e.password = "At least 8 characters required";
@@ -80,7 +80,7 @@ export default function SignUpForm() {
   const router = useRouter();
   const { user, login } = useAuth();
   const [fields, setFields] = useState<Fields>({
-    firstName: "", lastName: "", email: "", phone: "",
+    firstName: "", lastName: "", email: "", phoneNumber: "",
     password: "", confirmPassword: "", terms: false,
   });
 
@@ -209,12 +209,12 @@ export default function SignUpForm() {
             <input
               type="tel"
               placeholder="Phone Number*"
-              value={fields.phone}
-              onChange={e => set("phone", e.target.value)}
-              onBlur={() => touch("phone")}
-              className={fieldCls(err("phone"))}
+              value={fields.phoneNumber}
+              onChange={e => set("phoneNumber", e.target.value)}
+              onBlur={() => touch("phoneNumber")}
+              className={fieldCls(err("phoneNumber"))}
             />
-            <FieldError message={err("phone")} />
+            <FieldError message={err("phoneNumber")} />
           </div>
         </div>
 

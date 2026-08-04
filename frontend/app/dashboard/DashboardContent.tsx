@@ -11,7 +11,7 @@ import { EmptyBookingsState } from "./EmptyBookingsState";
 
 type Tab = "bookings" | "profile";
 
-const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
+const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
 
 function todayIsoDate(): string {
   return new Date().toLocaleDateString("en-CA");

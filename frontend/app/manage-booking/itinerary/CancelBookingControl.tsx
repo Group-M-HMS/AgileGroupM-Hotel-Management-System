@@ -16,6 +16,7 @@ export function CancelBookingControl({
 }) {
   const [status, setStatus] = useState<Status>(initialStatus);
   const [modalOpen, setModalOpen] = useState(false);
+  const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showBanner, setShowBanner] = useState(false);
@@ -33,7 +34,7 @@ export function CancelBookingControl({
       const response = await fetch("/api/manage-booking/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, id }),
+        body: JSON.stringify({ email, id, reason: reason.trim() || undefined }),
       });
       if (!response.ok) {
         setError("We couldn't cancel this booking right now. Please try again.");
@@ -41,6 +42,7 @@ export function CancelBookingControl({
       }
       setStatus("Cancelled");
       setModalOpen(false);
+      setReason("");
       setShowBanner(true);
     } catch {
       setError("We couldn't cancel this booking right now. Please try again.");
@@ -89,6 +91,19 @@ export function CancelBookingControl({
               This action is final and cannot be undone. Your reservation will be canceled
               immediately.
             </div>
+            <div className="flex flex-col gap-[4px]">
+              <label htmlFor="cancel-reason" className="font-outfit text-[13px] font-medium text-jungle-dark">
+                Reason for cancelling (optional)
+              </label>
+              <textarea
+                id="cancel-reason"
+                value={reason}
+                onChange={e => setReason(e.target.value)}
+                rows={3}
+                placeholder="e.g. Travel plans changed"
+                className="w-full resize-none rounded-input border-2 border-sand bg-white px-field-x py-3 font-outfit text-[13px] text-jungle placeholder:text-jungle/50 outline-none transition-colors focus:border-sage"
+              />
+            </div>
             {error && (
               <p className="font-outfit text-[13px] text-red-600">{error}</p>
             )}
@@ -98,6 +113,7 @@ export function CancelBookingControl({
                 onClick={() => {
                   setModalOpen(false);
                   setError(null);
+                  setReason("");
                 }}
                 disabled={submitting}
                 className="flex h-btn w-full items-center justify-center rounded-btn border border-sand font-outfit text-field font-semibold text-jungle-dark transition-colors hover:border-sage disabled:opacity-60"

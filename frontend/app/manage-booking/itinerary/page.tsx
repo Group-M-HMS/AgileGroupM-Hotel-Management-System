@@ -12,7 +12,7 @@ import { PrintButton } from "./PrintButton";
 import { RoomThumbnail } from "./RoomThumbnail";
 import { SectionHeading } from "./SectionHeading";
 
-const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
+const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
 
 async function fetchRoomSummary(
   roomId: string
