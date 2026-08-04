@@ -6,8 +6,8 @@ import { BookingSummaryHeader } from "./BookingSummaryHeader";
 import { PriceBreakdown } from "./PriceBreakdown";
 import { GuestInfoForm } from "./GuestInfoForm";
 
-const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
-const PRICING_SERVICE_URL = process.env.NEXT_PUBLIC_PRICING_SERVICE_URL ?? "http://localhost:8083";
+const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
+const PRICING_SERVICE_URL = process.env.NEXT_PUBLIC_PRICING_SERVICE_URL ?? "http://168.138.170.92:8083";
 
 type Quote = {
   nightlyRate: number;
