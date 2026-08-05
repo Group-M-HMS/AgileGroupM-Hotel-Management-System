@@ -171,7 +171,7 @@ export function GuestInfoForm({
       </div>
 
       <button type="submit" className="btn-primary sm:w-auto sm:self-start sm:px-10">
-        CONFIRM BOOKING
+        Pay & Book
       </button>
     </form>
   );
