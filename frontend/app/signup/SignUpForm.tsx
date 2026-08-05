@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { PasswordRequirements } from "./PasswordRequirements";
 import { FieldError } from "@/components/FieldError";
 import { useAuth } from "@/lib/AuthContext";
@@ -74,19 +75,31 @@ function EyeIcon({ open }: { open: boolean }) {
   );
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Inner Form Component ──────────────────────────────────────────────────────
 
-export default function SignUpForm() {
+function SignUpFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, login } = useAuth();
+
+  // Extract return URL if available, default to dashboard
+  const redirectUrl = searchParams.get("redirect") || "/dashboard";
+
+  // Preserve redirect query parameter when switching to Login
+  const loginUrl = searchParams.get("redirect")
+    ? `/login?redirect=${encodeURIComponent(searchParams.get("redirect")!)}`
+    : "/login";
+
   const [fields, setFields] = useState<Fields>({
-    firstName: "", lastName: "", email: "", phoneNumber: "",
-    password: "", confirmPassword: "", terms: false,
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: "",
+    terms: false,
   });
 
-  useEffect(() => {
-    if (user) router.replace("/dashboard");
-  }, [user, router]);
   const [errors, setErrors] = useState<Errors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -95,56 +108,75 @@ export default function SignUpForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (user) {
+      router.replace(redirectUrl);
+    }
+  }, [user, router, redirectUrl]);
+
   function set(field: keyof Fields, value: string | boolean) {
     const next = { ...fields, [field]: value };
     setFields(next);
     setSubmitError(null);
     if (touched[field]) {
       const e = validate(next);
-      setErrors(prev => ({ ...prev, [field]: e[field] }));
+      setErrors((prev) => ({ ...prev, [field]: e[field] }));
     }
   }
 
   function touch(field: keyof Fields) {
-    setTouched(prev => ({ ...prev, [field]: true }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
     const e = validate(fields);
-    setErrors(prev => ({ ...prev, [field]: e[field] }));
+    setErrors((prev) => ({ ...prev, [field]: e[field] }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     const allTouched = Object.fromEntries(
-      Object.keys(fields).map(k => [k, true])
+      Object.keys(fields).map((k) => [k, true])
     ) as Record<keyof Fields, boolean>;
     setTouched(allTouched);
+
     const errs = validate(fields);
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
     setSubmitting(true);
     setSubmitError(null);
+
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(fields),
       });
+
       if (!response.ok) {
         const body = await response.json().catch(() => null);
-        setSubmitError(body?.message ?? "We couldn't create your account right now. Please try again.");
+        setSubmitError(
+          body?.message ??
+            "We couldn't create your account right now. Please try again."
+        );
         return;
       }
-      const { user } = await response.json();
-      login(user);
-      router.push("/dashboard");
+
+      const { user: registeredUser } = await response.json();
+      login(registeredUser);
+
+      // Redirect directly back to checkout or dashboard
+      router.push(redirectUrl);
     } catch {
-      setSubmitError("We couldn't create your account right now. Please try again.");
+      setSubmitError(
+        "We couldn't create your account right now. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
-  const err = (field: keyof Fields) => (touched[field] ? errors[field] : undefined);
+  const err = (field: keyof Fields) =>
+    touched[field] ? errors[field] : undefined;
 
   return (
     <form
@@ -152,7 +184,6 @@ export default function SignUpForm() {
       noValidate
       className="flex w-full flex-col items-start gap-[24px] px-6 sm:px-10 lg:px-0"
     >
-
       {/* ── Heading ── */}
       <div className="flex w-full flex-col items-start gap-[10px] leading-[normal]">
         <h1 className="font-lora text-heading-sm font-medium tracking-[-0.5px] text-jungle-dark sm:text-heading-md lg:text-heading-lg">
@@ -165,7 +196,6 @@ export default function SignUpForm() {
 
       {/* ── Fields ── */}
       <div className="flex w-full flex-col items-start gap-[14px]">
-
         {/* First + Last Name */}
         <div className="flex w-full flex-col gap-[14px] sm:flex-row">
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
@@ -173,7 +203,7 @@ export default function SignUpForm() {
               type="text"
               placeholder="First Name*"
               value={fields.firstName}
-              onChange={e => set("firstName", e.target.value)}
+              onChange={(e) => set("firstName", e.target.value)}
               onBlur={() => touch("firstName")}
               className={fieldCls(err("firstName"))}
             />
@@ -184,7 +214,7 @@ export default function SignUpForm() {
               type="text"
               placeholder="Last Name*"
               value={fields.lastName}
-              onChange={e => set("lastName", e.target.value)}
+              onChange={(e) => set("lastName", e.target.value)}
               onBlur={() => touch("lastName")}
               className={fieldCls(err("lastName"))}
             />
@@ -199,7 +229,7 @@ export default function SignUpForm() {
               type="email"
               placeholder="Email*"
               value={fields.email}
-              onChange={e => set("email", e.target.value)}
+              onChange={(e) => set("email", e.target.value)}
               onBlur={() => touch("email")}
               className={fieldCls(err("email"))}
             />
@@ -210,7 +240,7 @@ export default function SignUpForm() {
               type="tel"
               placeholder="Phone Number*"
               value={fields.phoneNumber}
-              onChange={e => set("phoneNumber", e.target.value)}
+              onChange={(e) => set("phoneNumber", e.target.value)}
               onBlur={() => touch("phoneNumber")}
               className={fieldCls(err("phoneNumber"))}
             />
@@ -226,14 +256,14 @@ export default function SignUpForm() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password*"
                 value={fields.password}
-                onChange={e => set("password", e.target.value)}
+                onChange={(e) => set("password", e.target.value)}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => touch("password")}
                 className={`${fieldCls(err("password"))} pr-[44px]`}
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(v => !v)}
+                onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-[16px] top-1/2 -translate-y-1/2 text-jungle/50 transition-colors hover:text-jungle"
               >
@@ -251,13 +281,13 @@ export default function SignUpForm() {
                 type={showConfirm ? "text" : "password"}
                 placeholder="Confirm Password*"
                 value={fields.confirmPassword}
-                onChange={e => set("confirmPassword", e.target.value)}
+                onChange={(e) => set("confirmPassword", e.target.value)}
                 onBlur={() => touch("confirmPassword")}
                 className={`${fieldCls(err("confirmPassword"))} pr-[44px]`}
               />
               <button
                 type="button"
-                onClick={() => setShowConfirm(v => !v)}
+                onClick={() => setShowConfirm((v) => !v)}
                 aria-label={showConfirm ? "Hide password" : "Show password"}
                 className="absolute right-[16px] top-1/2 -translate-y-1/2 text-jungle/50 transition-colors hover:text-jungle"
               >
@@ -276,13 +306,22 @@ export default function SignUpForm() {
             id="terms"
             type="checkbox"
             checked={fields.terms}
-            onChange={e => set("terms", e.target.checked)}
+            onChange={(e) => set("terms", e.target.checked)}
             onBlur={() => touch("terms")}
-            className={`form-checkbox ${err("terms") ? "border-red-400" : "border-sage"}`}
+            className={`form-checkbox ${
+              err("terms") ? "border-red-400" : "border-sage"
+            }`}
           />
-          <label htmlFor="terms" className="flex cursor-pointer flex-wrap items-center gap-[4px] leading-[normal]">
-            <span className="font-outfit text-meta font-normal text-jungle/85">I agree to the</span>
-            <span className="font-outfit text-meta font-semibold text-jungle">Terms &amp; Conditions</span>
+          <label
+            htmlFor="terms"
+            className="flex cursor-pointer flex-wrap items-center gap-[4px] leading-[normal]"
+          >
+            <span className="font-outfit text-meta font-normal text-jungle/85">
+              I agree to the
+            </span>
+            <span className="font-outfit text-meta font-semibold text-jungle">
+              Terms &amp; Conditions
+            </span>
           </label>
         </div>
         <FieldError message={err("terms")} />
@@ -296,40 +335,71 @@ export default function SignUpForm() {
       )}
 
       {/* ── Create Account ── */}
-      <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+      <button
+        type="submit"
+        disabled={submitting}
+        className="btn-primary disabled:opacity-60"
+      >
         {submitting ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
       </button>
 
       {/* ── Login / OR / Social ── */}
       <div className="flex w-full flex-col items-center gap-[14px]">
-
         <div className="flex items-center gap-[6px] leading-[normal]">
           <span className="font-outfit text-meta font-normal text-jungle/65">
             Already have an account?
           </span>
-          <a href="/login" className="font-outfit text-meta font-semibold text-jungle-dark hover:underline">
+          <Link
+            href={loginUrl}
+            className="font-outfit text-meta font-semibold text-jungle-dark hover:underline"
+          >
             Log in
-          </a>
+          </Link>
         </div>
 
         <div className="flex w-full items-center gap-[16px]">
           <div className="h-px flex-1 bg-sand" />
-          <span className="font-outfit text-[12px] font-normal leading-[normal] tracking-[2px] text-jungle/55">OR</span>
+          <span className="font-outfit text-[12px] font-normal leading-[normal] tracking-[2px] text-jungle/55">
+            OR
+          </span>
           <div className="h-px flex-1 bg-sand" />
         </div>
 
         <div className="flex items-center justify-center gap-[18px]">
-          <button type="button" aria-label="Sign up with Google" className="btn-social">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/google.svg" alt="" aria-hidden="true" className="h-6 w-6" />
+          <button
+            type="button"
+            aria-label="Sign up with Google"
+            className="btn-social"
+          >
+            <img
+              src="/icons/google.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-6 w-6"
+            />
           </button>
-          <button type="button" aria-label="Sign up with Apple" className="btn-social">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/apple.svg" alt="" aria-hidden="true" className="h-6 w-6" />
+          <button
+            type="button"
+            aria-label="Sign up with Apple"
+            className="btn-social"
+          >
+            <img
+              src="/icons/apple.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-6 w-6"
+            />
           </button>
         </div>
-
       </div>
     </form>
+  );
+}
+
+export default function SignUpForm() {
+  return (
+    <Suspense fallback={<div className="text-sm font-outfit p-4">Loading...</div>}>
+      <SignUpFormContent />
+    </Suspense>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import LoginForm from "./LoginForm";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -27,9 +28,7 @@ export default function LoginPage() {
       <div className="pt-16">
         <div className="flex flex-col lg:h-[calc(100vh-4rem)] lg:flex-row">
 
-          {/* ══════════════════════════════════════════
-              Brand Panel — desktop only, left 50%
-              ══════════════════════════════════════════ */}
+          {/* Brand Panel — desktop only, left 50% */}
           <div className="relative hidden h-full w-1/2 shrink-0 flex-col items-start justify-around overflow-hidden bg-jungle-dark p-[56px] lg:flex">
 
             {/* Decorative ellipse */}
@@ -71,11 +70,11 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* ══════════════════════════════════════════
-              Form Panel — right 50% on desktop, full width on mobile
-              ══════════════════════════════════════════ */}
+          {/* Form Panel — right 50% on desktop, full width on mobile */}
           <div className="flex flex-1 flex-col items-center overflow-y-auto bg-sand-light px-6 py-10 sm:px-10 lg:w-1/2 lg:shrink-0 lg:justify-center lg:overflow-hidden lg:px-14 lg:py-0">
-            <LoginForm />
+            <Suspense fallback={<div className="font-outfit text-sm text-jungle/60">Loading...</div>}>
+              <LoginForm />
+            </Suspense>
           </div>
 
         </div>

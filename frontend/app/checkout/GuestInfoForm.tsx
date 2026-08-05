@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/lib/AuthContext";
 
 type Quote = {
   nightlyRate: number;
@@ -47,9 +49,9 @@ function validate(f: Fields): Errors {
 }
 
 function fieldCls(hasError?: string) {
-  return `input-field w-full ${
+  return `input-field w-full rounded-md border-2 bg-white px-4 py-3 font-outfit text-sm transition-colors focus:outline-none ${
     hasError
-      ? "border-red-400 focus:border-red-400"
+      ? "border-red-400 focus:border-red-500"
       : "border-sand focus:border-sage"
   }`;
 }
@@ -68,9 +70,18 @@ export function GuestInfoForm({
   quote: Quote | null;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const currentUrl = searchParams.toString()
+    ? `${pathname}?${searchParams.toString()}`
+    : pathname;
+
+  const loginRedirectUrl = `/login?redirect=${encodeURIComponent(currentUrl)}`;
+
+  const auth = useAuth() as any;
+  const user = auth?.user;
+  const authLoading = auth?.loading ?? auth?.isLoading ?? false;
 
   const [fields, setFields] = useState<Fields>({
     firstName: "",
@@ -81,77 +92,39 @@ export function GuestInfoForm({
   });
 
   const [errors, setErrors] = useState<Errors>({});
-  const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>(
+    {}
+  );
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [termsError, setTermsError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<
+    "idle" | "processing" | "saving"
+  >("idle");
 
-  // Unified initialization effect to prevent state race conditions
   useEffect(() => {
-    let isMounted = true;
+    if (user) {
+      const u = user as Record<string, any>;
+      const fullName = u.name || u.fullName || "";
+      const nameParts = fullName.split(" ");
 
-    async function initSession() {
-      let initialFields: Fields = {
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        specialRequests: "",
-      };
-
-      try {
-        const res = await fetch("/api/auth/session");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.authenticated) {
-            setIsAuthenticated(true);
-            initialFields = {
-              firstName: data.user?.firstName || "",
-              lastName: data.user?.lastName || "",
-              email: data.user?.email || "",
-              phone: data.user?.phone || "",
-              specialRequests: "",
-            };
-          }
-        }
-      } catch (error) {
-        console.error("Auth check failed", error);
-      }
-
-      // Restore unsaved checkout data after auth check (gives preference to saved drafts)
-      const saved = localStorage.getItem("checkoutData");
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          if (data.fields) {
-            initialFields = { ...initialFields, ...data.fields };
-          }
-          localStorage.removeItem("checkoutData");
-        } catch (error) {
-          console.error("Restore failed", error);
-        }
-      }
-
-      if (isMounted) {
-        setFields(initialFields);
-        setCheckingAuth(false);
-      }
+      setFields((prev) => ({
+        ...prev,
+        firstName: u.firstName || nameParts[0] || prev.firstName,
+        lastName: u.lastName || nameParts.slice(1).join(" ") || prev.lastName,
+        email: u.email || prev.email,
+        phone:
+          u.phone ||
+          u.phoneNumber ||
+          u.phone_number ||
+          u.mobile ||
+          u.contact ||
+          u.phoneNo ||
+          prev.phone,
+      }));
     }
-
-    initSession();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  function saveCheckoutState() {
-    localStorage.setItem(
-      "checkoutData",
-      JSON.stringify({ roomId, checkIn, checkOut, guests, quote, fields })
-    );
-  }
+  }, [user]);
 
   function set(field: keyof Fields, value: string) {
     const next = { ...fields, [field]: value };
@@ -171,15 +144,16 @@ export function GuestInfoForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // ⛔ Block proceeding if user is NOT logged in
+    if (!user) {
+      router.push(loginRedirectUrl);
+      return;
+    }
+
     if (isSubmitting) return;
 
     setSubmitError("");
-
-    if (!isAuthenticated) {
-      saveCheckoutState();
-      router.push("/login?redirect=/checkout");
-      return;
-    }
 
     const allTouched = Object.fromEntries(
       Object.keys(fields).map((k) => [k, true])
@@ -191,20 +165,32 @@ export function GuestInfoForm({
 
     if (!agreedTerms) {
       setTermsError("Please accept the Terms & Conditions before continuing");
+      return;
     } else {
       setTermsError("");
     }
 
-    if (Object.keys(errs).length > 0 || !agreedTerms) {
+    if (Object.keys(errs).length > 0) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      setPaymentStep("processing");
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      const mockPaymentResult = {
+        status: "COMPLETED",
+        transactionId: `TXN_MOCK_${Date.now()}`,
+        paidAmount: quote?.total || 0,
+      };
+
+      setPaymentStep("saving");
       const response = await fetch("/api/bookings/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           roomId,
           checkIn,
@@ -213,57 +199,72 @@ export function GuestInfoForm({
           quote,
           guest: fields,
           termsAccepted: agreedTerms,
+          payment: mockPaymentResult,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Booking request failed");
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "Server failed to record booking.");
       }
 
-      router.push("/my-bookings");
-    } catch (error) {
-      console.error("Booking failed", error);
-      setSubmitError("Failed to complete booking. Please try again.");
+      router.push("/dashboard/bookings?status=success");
+    } catch (error: any) {
+      console.error("Booking failed:", error);
+      setSubmitError(
+        error.message || "Failed to complete booking. Please try again."
+      );
       setIsSubmitting(false);
+      setPaymentStep("idle");
     }
   }
 
-  const err = (field: keyof Fields) => (touched[field] ? errors[field] : undefined);
+  const err = (field: keyof Fields) =>
+    touched[field] ? errors[field] : undefined;
+
+  if (authLoading) {
+    return (
+      <div className="p-6 font-outfit text-sm text-jungle/60">
+        Loading guest details...
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex w-full max-w-2xl flex-col gap-[24px]">
-      {!checkingAuth && !isAuthenticated && (
-        <div className="rounded-lg border border-sand bg-white p-5">
-          <h3 className="font-lora text-lg font-medium text-jungle-dark">Login Required</h3>
-          <p className="mt-2 font-outfit text-sm text-jungle/70">
-            Please login or create an account before confirming your booking.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              saveCheckoutState();
-              router.push("/login?redirect=/checkout");
-            }}
-            className="btn-primary mt-4"
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="flex w-full max-w-2xl flex-col gap-6"
+    >
+      {!user && (
+        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50/80 p-4 font-outfit text-sm text-amber-900">
+          <span>Already have an account with us?</span>
+          <Link
+            href={loginRedirectUrl}
+            className="font-medium text-emerald-800 underline hover:text-emerald-950"
           >
-            Login / Sign Up
-          </button>
+            Sign in to autofill details →
+          </Link>
         </div>
       )}
 
-      <div className="flex flex-col gap-[6px]">
-        <h2 className="font-lora text-[24px] font-medium text-jungle-dark">Guest Information</h2>
-        <p className="font-outfit text-field text-jungle/60">
-          We will use these details to send your booking confirmation and contact you if needed.
+      <div className="flex flex-col gap-1.5">
+        <h2 className="font-lora text-2xl font-medium text-jungle-dark">
+          Guest Information
+        </h2>
+        <p className="font-outfit text-sm text-jungle/60">
+          We will use these details to send your booking confirmation and
+          contact you if needed.
         </p>
       </div>
 
-      <div className="flex flex-col gap-[14px]">
-        <div className="flex flex-col gap-[14px] sm:flex-row sm:items-start">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex flex-1 flex-col">
             <input
               type="text"
               placeholder="First Name*"
+              autoComplete="given-name"
               aria-label="First Name"
               aria-invalid={!!err("firstName")}
               value={fields.firstName}
@@ -271,13 +272,18 @@ export function GuestInfoForm({
               onBlur={() => touch("firstName")}
               className={fieldCls(err("firstName"))}
             />
-            {err("firstName") && <span className="mt-1 font-outfit text-xs text-red-500">{err("firstName")}</span>}
+            {err("firstName") && (
+              <span className="mt-1 font-outfit text-xs text-red-500">
+                {err("firstName")}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-1 flex-col">
             <input
               type="text"
               placeholder="Last Name*"
+              autoComplete="family-name"
               aria-label="Last Name"
               aria-invalid={!!err("lastName")}
               value={fields.lastName}
@@ -285,15 +291,20 @@ export function GuestInfoForm({
               onBlur={() => touch("lastName")}
               className={fieldCls(err("lastName"))}
             />
-            {err("lastName") && <span className="mt-1 font-outfit text-xs text-red-500">{err("lastName")}</span>}
+            {err("lastName") && (
+              <span className="mt-1 font-outfit text-xs text-red-500">
+                {err("lastName")}
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="flex flex-col gap-[14px] sm:flex-row sm:items-start">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex flex-1 flex-col">
             <input
               type="email"
               placeholder="Email Address*"
+              autoComplete="email"
               aria-label="Email Address"
               aria-invalid={!!err("email")}
               value={fields.email}
@@ -301,13 +312,18 @@ export function GuestInfoForm({
               onBlur={() => touch("email")}
               className={fieldCls(err("email"))}
             />
-            {err("email") && <span className="mt-1 font-outfit text-xs text-red-500">{err("email")}</span>}
+            {err("email") && (
+              <span className="mt-1 font-outfit text-xs text-red-500">
+                {err("email")}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-1 flex-col">
             <input
               type="tel"
               placeholder="Phone Number*"
+              autoComplete="tel"
               aria-label="Phone Number"
               aria-invalid={!!err("phone")}
               value={fields.phone}
@@ -315,11 +331,15 @@ export function GuestInfoForm({
               onBlur={() => touch("phone")}
               className={fieldCls(err("phone"))}
             />
-            {err("phone") && <span className="mt-1 font-outfit text-xs text-red-500">{err("phone")}</span>}
+            {err("phone") && (
+              <span className="mt-1 font-outfit text-xs text-red-500">
+                {err("phone")}
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="flex flex-col gap-[4px]">
+        <div className="flex flex-col gap-1">
           <textarea
             placeholder="Special Requests (optional)"
             aria-label="Special Requests"
@@ -328,15 +348,21 @@ export function GuestInfoForm({
             onBlur={() => touch("specialRequests")}
             rows={4}
             maxLength={500}
-            className={`w-full resize-none rounded-input border-2 bg-white px-field-x py-4 font-outfit text-field text-jungle ${
-              err("specialRequests") ? "border-red-400 focus:border-red-400" : "border-sand focus:border-sage"
+            className={`w-full resize-none rounded-md border-2 bg-white px-4 py-3 font-outfit text-sm transition-colors focus:outline-none ${
+              err("specialRequests")
+                ? "border-red-400 focus:border-red-500"
+                : "border-sand focus:border-sage"
             }`}
           />
           <div className="flex items-center justify-between">
             {err("specialRequests") ? (
-              <span className="font-outfit text-xs text-red-500">{err("specialRequests")}</span>
-            ) : <span />}
-            <span className="font-outfit text-[12px] text-jungle/45">
+              <span className="font-outfit text-xs text-red-500">
+                {err("specialRequests")}
+              </span>
+            ) : (
+              <span />
+            )}
+            <span className="font-outfit text-xs text-jungle/45">
               {fields.specialRequests.length}/500
             </span>
           </div>
@@ -344,7 +370,7 @@ export function GuestInfoForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="flex items-start gap-3 font-outfit text-sm text-jungle">
+        <label className="flex items-start gap-3 font-outfit text-sm text-jungle cursor-pointer select-none">
           <input
             type="checkbox"
             checked={agreedTerms}
@@ -352,32 +378,50 @@ export function GuestInfoForm({
               setAgreedTerms(e.target.checked);
               if (e.target.checked) setTermsError("");
             }}
-            className="mt-1 h-4 w-4"
+            className="mt-1 h-4 w-4 rounded border-sand text-sage focus:ring-sage"
           />
           <span>
             I agree to the{" "}
-            <a href="/terms" target="_blank" className="text-blue-600 underline">
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
               Terms & Conditions
             </a>{" "}
             and confirm that my booking details are correct.
           </span>
         </label>
-        {termsError && <p className="font-outfit text-sm text-red-500">{termsError}</p>}
+        {termsError && (
+          <p className="font-outfit text-sm text-red-500">{termsError}</p>
+        )}
       </div>
 
-      {submitError && <p className="font-outfit text-sm text-red-500">{submitError}</p>}
+      {submitError && (
+        <div className="rounded-md border border-red-300 bg-red-50 p-3 font-outfit text-sm text-red-600">
+          {submitError}
+        </div>
+      )}
+
+      {/* Warning prompt if user is not signed in */}
+      {!user && (
+        <p className="font-outfit text-xs text-amber-800">
+          * You must be signed in to complete your booking.
+        </p>
+      )}
 
       <button
         type="submit"
-        disabled={checkingAuth || isSubmitting}
+        disabled={isSubmitting}
         className="btn-primary sm:w-auto sm:self-start sm:px-10 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {checkingAuth
-          ? "Checking Account..."
-          : isSubmitting
-          ? "Processing Payment..."
-          : !isAuthenticated
-          ? "Login to Continue"
+        {!user
+          ? "Sign In to Pay & Book"
+          : paymentStep === "processing"
+          ? "Authorizing Payment Gateway..."
+          : paymentStep === "saving"
+          ? "Confirming Booking..."
           : "Pay & Book"}
       </button>
     </form>
