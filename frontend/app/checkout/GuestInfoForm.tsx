@@ -284,7 +284,7 @@ export function GuestInfoForm({
 
         <p className="font-outfit text-field text-jungle/60">
 
-          We'll use these details to send your booking confirmation and contact you if needed.
+          We will use these details to send your booking confirmation and contact you if needed.
 
         </p>
 
