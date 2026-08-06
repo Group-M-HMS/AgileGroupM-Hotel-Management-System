@@ -1,52 +1,67 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebase";
+import { fetchProfile, logoutBackend } from "./apiClient";
 
 export type AuthUser = {
   email: string;
   firstName: string;
   lastName: string;
+  phone: string;
 };
 
 type AuthContextValue = {
   user: AuthUser | null;
-  login: (user: AuthUser) => void;
-  logout: () => void;
+  loading: boolean;
+  logout: () => Promise<void>;
 };
-
-const STORAGE_KEY = "rn_auth_user";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        // One-time hydration from localStorage on mount — `window` doesn't exist during SSR,
-        // so this can't be a lazy useState initializer instead.
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setUser(JSON.parse(stored));
-      } catch {
-        window.localStorage.removeItem(STORAGE_KEY);
+        setUser(null);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLoading(false);
+        return;
       }
-    }
+
+      try {
+        const profile = await fetchProfile();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setUser(profile);
+      } catch {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setUser(null);
+      } finally {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  function login(nextUser: AuthUser) {
-    setUser(nextUser);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
-  }
-
-  function logout() {
+  async function logout() {
+    try {
+      await logoutBackend();
+    } catch {
+      // Backend revoke failing shouldn't block client-side sign-out.
+    }
+    await signOut(auth);
     setUser(null);
-    window.localStorage.removeItem(STORAGE_KEY);
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );
