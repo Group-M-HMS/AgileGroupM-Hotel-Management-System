@@ -7,7 +7,7 @@ import { RoomGallery } from "@/app/room/RoomGallery";
 import { AmenityList } from "@/app/room/AmenityList";
 import { BookingCard } from "@/app/room/BookingCard";
 
-const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
+const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
 
 type RoomDetail = {
   id: number;

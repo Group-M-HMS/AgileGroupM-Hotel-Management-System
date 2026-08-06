@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import SelectField from "./SelectField";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { PasswordRequirements } from "./PasswordRequirements";
+import { FieldError } from "@/components/FieldError";
+import { useAuth } from "@/lib/AuthContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -9,10 +13,7 @@ type Fields = {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
-  nationality: string;
-  gender: string;
-  address: string;
+  phoneNumber: string;
   password: string;
   confirmPassword: string;
   terms: boolean;
@@ -36,14 +37,8 @@ function validate(f: Fields): Errors {
   if (!f.email.trim()) e.email = "Email is required";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = "Enter a valid email address";
 
-  if (!f.phone.trim()) e.phone = "Phone number is required";
-  else if (!/^\+?[\d\s\-()+]{7,15}$/.test(f.phone)) e.phone = "Enter a valid phone number";
-
-  if (!f.nationality) e.nationality = "Please select your nationality";
-  if (!f.gender) e.gender = "Please select your gender";
-
-  if (!f.address.trim()) e.address = "Address is required";
-  else if (f.address.trim().length < 5) e.address = "Please enter your full address";
+  if (!f.phoneNumber.trim()) e.phoneNumber = "Phone number is required";
+  else if (!/^\+?[\d\s\-()+]{7,15}$/.test(f.phoneNumber)) e.phoneNumber = "Enter a valid phone number";
 
   if (!f.password) e.password = "Password is required";
   else if (f.password.length < 8) e.password = "At least 8 characters required";
@@ -80,54 +75,108 @@ function EyeIcon({ open }: { open: boolean }) {
   );
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Inner Form Component ──────────────────────────────────────────────────────
 
-const NATIONALITIES = ["Sri Lankan", "British", "American", "Australian", "Indian", "Other"];
-const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
+function SignUpFormContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, login } = useAuth();
 
-// ── Component ─────────────────────────────────────────────────────────────────
+  // Extract return URL if available, default to dashboard
+  const redirectUrl = searchParams.get("redirect") || "/dashboard";
 
-export default function SignUpForm() {
+  // Preserve redirect query parameter when switching to Login
+  const loginUrl = searchParams.get("redirect")
+    ? `/login?redirect=${encodeURIComponent(searchParams.get("redirect")!)}`
+    : "/login";
+
   const [fields, setFields] = useState<Fields>({
-    firstName: "", lastName: "", email: "", phone: "",
-    nationality: "", gender: "", address: "",
-    password: "", confirmPassword: "", terms: false,
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: "",
+    terms: false,
   });
+
   const [errors, setErrors] = useState<Errors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      router.replace(redirectUrl);
+    }
+  }, [user, router, redirectUrl]);
 
   function set(field: keyof Fields, value: string | boolean) {
     const next = { ...fields, [field]: value };
     setFields(next);
+    setSubmitError(null);
     if (touched[field]) {
       const e = validate(next);
-      setErrors(prev => ({ ...prev, [field]: e[field] }));
+      setErrors((prev) => ({ ...prev, [field]: e[field] }));
     }
   }
 
   function touch(field: keyof Fields) {
-    setTouched(prev => ({ ...prev, [field]: true }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
     const e = validate(fields);
-    setErrors(prev => ({ ...prev, [field]: e[field] }));
+    setErrors((prev) => ({ ...prev, [field]: e[field] }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     const allTouched = Object.fromEntries(
-      Object.keys(fields).map(k => [k, true])
+      Object.keys(fields).map((k) => [k, true])
     ) as Record<keyof Fields, boolean>;
     setTouched(allTouched);
+
     const errs = validate(fields);
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      // TODO: call sign-up API
-      console.log("Submitting", fields);
+    if (Object.keys(errs).length > 0) return;
+
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        setSubmitError(
+          body?.message ??
+            "We couldn't create your account right now. Please try again."
+        );
+        return;
+      }
+
+      const { user: registeredUser } = await response.json();
+      login(registeredUser);
+
+      // Redirect directly back to checkout or dashboard
+      router.push(redirectUrl);
+    } catch {
+      setSubmitError(
+        "We couldn't create your account right now. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
     }
   }
 
-  const err = (field: keyof Fields) => (touched[field] ? errors[field] : undefined);
+  const err = (field: keyof Fields) =>
+    touched[field] ? errors[field] : undefined;
 
   return (
     <form
@@ -135,7 +184,6 @@ export default function SignUpForm() {
       noValidate
       className="flex w-full flex-col items-start gap-[24px] px-6 sm:px-10 lg:px-0"
     >
-
       {/* ── Heading ── */}
       <div className="flex w-full flex-col items-start gap-[10px] leading-[normal]">
         <h1 className="font-lora text-heading-sm font-medium tracking-[-0.5px] text-jungle-dark sm:text-heading-md lg:text-heading-lg">
@@ -148,7 +196,6 @@ export default function SignUpForm() {
 
       {/* ── Fields ── */}
       <div className="flex w-full flex-col items-start gap-[14px]">
-
         {/* First + Last Name */}
         <div className="flex w-full flex-col gap-[14px] sm:flex-row">
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
@@ -156,20 +203,22 @@ export default function SignUpForm() {
               type="text"
               placeholder="First Name*"
               value={fields.firstName}
-              onChange={e => set("firstName", e.target.value)}
+              onChange={(e) => set("firstName", e.target.value)}
               onBlur={() => touch("firstName")}
               className={fieldCls(err("firstName"))}
             />
+            <FieldError message={err("firstName")} />
           </div>
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
             <input
               type="text"
               placeholder="Last Name*"
               value={fields.lastName}
-              onChange={e => set("lastName", e.target.value)}
+              onChange={(e) => set("lastName", e.target.value)}
               onBlur={() => touch("lastName")}
               className={fieldCls(err("lastName"))}
             />
+            <FieldError message={err("lastName")} />
           </div>
         </div>
 
@@ -180,53 +229,23 @@ export default function SignUpForm() {
               type="email"
               placeholder="Email*"
               value={fields.email}
-              onChange={e => set("email", e.target.value)}
+              onChange={(e) => set("email", e.target.value)}
               onBlur={() => touch("email")}
               className={fieldCls(err("email"))}
             />
+            <FieldError message={err("email")} />
           </div>
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
             <input
               type="tel"
               placeholder="Phone Number*"
-              value={fields.phone}
-              onChange={e => set("phone", e.target.value)}
-              onBlur={() => touch("phone")}
-              className={fieldCls(err("phone"))}
+              value={fields.phoneNumber}
+              onChange={(e) => set("phoneNumber", e.target.value)}
+              onBlur={() => touch("phoneNumber")}
+              className={fieldCls(err("phoneNumber"))}
             />
+            <FieldError message={err("phoneNumber")} />
           </div>
-        </div>
-
-        {/* Nationality + Gender */}
-        <div className="flex w-full flex-col gap-[14px] sm:flex-row">
-          <SelectField
-            placeholder="Nationality*"
-            options={NATIONALITIES}
-            value={fields.nationality}
-            onChange={v => set("nationality", v)}
-            onBlur={() => touch("nationality")}
-            error={err("nationality")}
-          />
-          <SelectField
-            placeholder="Gender*"
-            options={GENDERS}
-            value={fields.gender}
-            onChange={v => set("gender", v)}
-            onBlur={() => touch("gender")}
-            error={err("gender")}
-          />
-        </div>
-
-        {/* Address */}
-        <div className="flex w-full flex-col gap-[4px]">
-          <input
-            type="text"
-            placeholder="Address*"
-            value={fields.address}
-            onChange={e => set("address", e.target.value)}
-            onBlur={() => touch("address")}
-            className={fieldCls(err("address"))}
-          />
         </div>
 
         {/* Password + Confirm */}
@@ -237,19 +256,24 @@ export default function SignUpForm() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password*"
                 value={fields.password}
-                onChange={e => set("password", e.target.value)}
+                onChange={(e) => set("password", e.target.value)}
+                onFocus={() => setPasswordFocused(true)}
                 onBlur={() => touch("password")}
                 className={`${fieldCls(err("password"))} pr-[44px]`}
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(v => !v)}
+                onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-[16px] top-1/2 -translate-y-1/2 text-jungle/50 transition-colors hover:text-jungle"
               >
                 <EyeIcon open={showPassword} />
               </button>
             </div>
+            <FieldError message={err("password")} />
+            {(passwordFocused || fields.password.length > 0) && (
+              <PasswordRequirements password={fields.password} />
+            )}
           </div>
           <div className="flex flex-1 min-w-0 flex-col gap-[4px]">
             <div className="relative">
@@ -257,19 +281,20 @@ export default function SignUpForm() {
                 type={showConfirm ? "text" : "password"}
                 placeholder="Confirm Password*"
                 value={fields.confirmPassword}
-                onChange={e => set("confirmPassword", e.target.value)}
+                onChange={(e) => set("confirmPassword", e.target.value)}
                 onBlur={() => touch("confirmPassword")}
                 className={`${fieldCls(err("confirmPassword"))} pr-[44px]`}
               />
               <button
                 type="button"
-                onClick={() => setShowConfirm(v => !v)}
+                onClick={() => setShowConfirm((v) => !v)}
                 aria-label={showConfirm ? "Hide password" : "Show password"}
                 className="absolute right-[16px] top-1/2 -translate-y-1/2 text-jungle/50 transition-colors hover:text-jungle"
               >
                 <EyeIcon open={showConfirm} />
               </button>
             </div>
+            <FieldError message={err("confirmPassword")} />
           </div>
         </div>
       </div>
@@ -281,52 +306,100 @@ export default function SignUpForm() {
             id="terms"
             type="checkbox"
             checked={fields.terms}
-            onChange={e => set("terms", e.target.checked)}
+            onChange={(e) => set("terms", e.target.checked)}
             onBlur={() => touch("terms")}
-            className={`form-checkbox ${err("terms") ? "border-red-400" : "border-sage"}`}
+            className={`form-checkbox ${
+              err("terms") ? "border-red-400" : "border-sage"
+            }`}
           />
-          <label htmlFor="terms" className="flex cursor-pointer flex-wrap items-center gap-[4px] leading-[normal]">
-            <span className="font-outfit text-meta font-normal text-jungle/85">I agree to the</span>
-            <span className="font-outfit text-meta font-semibold text-jungle">Terms &amp; Conditions</span>
+          <label
+            htmlFor="terms"
+            className="flex cursor-pointer flex-wrap items-center gap-[4px] leading-[normal]"
+          >
+            <span className="font-outfit text-meta font-normal text-jungle/85">
+              I agree to the
+            </span>
+            <span className="font-outfit text-meta font-semibold text-jungle">
+              Terms &amp; Conditions
+            </span>
           </label>
         </div>
+        <FieldError message={err("terms")} />
       </div>
 
+      {/* ── Submit error ── */}
+      {submitError && (
+        <div className="w-full rounded-input border border-red-400 px-4 py-3 font-outfit text-[13px] text-red-500">
+          {submitError}
+        </div>
+      )}
+
       {/* ── Create Account ── */}
-      <button type="submit" className="btn-primary">
-        CREATE ACCOUNT
+      <button
+        type="submit"
+        disabled={submitting}
+        className="btn-primary disabled:opacity-60"
+      >
+        {submitting ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
       </button>
 
       {/* ── Login / OR / Social ── */}
       <div className="flex w-full flex-col items-center gap-[14px]">
-
         <div className="flex items-center gap-[6px] leading-[normal]">
           <span className="font-outfit text-meta font-normal text-jungle/65">
             Already have an account?
           </span>
-          <a href="/login" className="font-outfit text-meta font-semibold text-jungle-dark hover:underline">
+          <Link
+            href={loginUrl}
+            className="font-outfit text-meta font-semibold text-jungle-dark hover:underline"
+          >
             Log in
-          </a>
+          </Link>
         </div>
 
         <div className="flex w-full items-center gap-[16px]">
           <div className="h-px flex-1 bg-sand" />
-          <span className="font-outfit text-[12px] font-normal leading-[normal] tracking-[2px] text-jungle/55">OR</span>
+          <span className="font-outfit text-[12px] font-normal leading-[normal] tracking-[2px] text-jungle/55">
+            OR
+          </span>
           <div className="h-px flex-1 bg-sand" />
         </div>
 
         <div className="flex items-center justify-center gap-[18px]">
-          <button type="button" aria-label="Sign up with Google" className="btn-social">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/google.svg" alt="" aria-hidden="true" className="h-6 w-6" />
+          <button
+            type="button"
+            aria-label="Sign up with Google"
+            className="btn-social"
+          >
+            <img
+              src="/icons/google.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-6 w-6"
+            />
           </button>
-          <button type="button" aria-label="Sign up with Apple" className="btn-social">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/apple.svg" alt="" aria-hidden="true" className="h-6 w-6" />
+          <button
+            type="button"
+            aria-label="Sign up with Apple"
+            className="btn-social"
+          >
+            <img
+              src="/icons/apple.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-6 w-6"
+            />
           </button>
         </div>
-
       </div>
     </form>
+  );
+}
+
+export default function SignUpForm() {
+  return (
+    <Suspense fallback={<div className="text-sm font-outfit p-4">Loading...</div>}>
+      <SignUpFormContent />
+    </Suspense>
   );
 }

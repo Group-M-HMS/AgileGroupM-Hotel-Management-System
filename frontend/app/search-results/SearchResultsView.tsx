@@ -10,7 +10,7 @@ import { SortFilterBar, type SortOption } from "./SortFilterBar";
 type Status = "loading" | "success" | "empty" | "timeout" | "error";
 
 const TIMEOUT_MS = 10_000;
-const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
+const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
 
 // Fields the search endpoint still doesn't return (full room-detail lookup owns these);
 // filled with safe defaults so RoomResultsList/SortFilterBar don't crash.
