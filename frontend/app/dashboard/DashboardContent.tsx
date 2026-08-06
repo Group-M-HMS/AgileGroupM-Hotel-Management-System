@@ -19,25 +19,17 @@ function todayIsoDate(): string {
 
 export function DashboardContent() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [hydrated, setHydrated] = useState(false);
+  const { user, loading } = useAuth();
   const [tab, setTab] = useState<Tab>("bookings");
   const [bookings, setBookings] = useState<MockBooking[] | null>(null);
   const [roomNames, setRoomNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // One-time mount flag so we don't redirect before AuthContext finishes reading
-    // localStorage — same class of unavoidable one-time effect setState as AuthContext itself.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (hydrated && !user) {
+    if (!loading && !user) {
       router.replace("/login");
     }
-  }, [hydrated, user, router]);
+  }, [loading, user, router]);
 
   useEffect(() => {
     if (!user) return;
@@ -87,7 +79,7 @@ export function DashboardContent() {
     };
   }, [bookings]);
 
-  if (!hydrated || !user) {
+  if (loading || !user) {
     return (
       <div className="flex items-center justify-center py-24 font-outfit text-jungle/60">
         Loading...
@@ -167,6 +159,10 @@ export function DashboardContent() {
             <div>
               <p className="text-sm text-jungle/60">Email</p>
               <p className="mt-1 font-semibold text-jungle-dark">{user.email}</p>
+            </div>
+            <div>
+              <p className="text-sm text-jungle/60">Phone</p>
+              <p className="mt-1 font-semibold text-jungle-dark">{user.phone || "—"}</p>
             </div>
           </div>
         </div>
