@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
@@ -22,6 +22,28 @@ type Fields = {
 };
 
 type Errors = Partial<Record<keyof Fields, string>>;
+
+type AuthLikeUser = {
+  name?: string;
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  phoneNumber?: string;
+  phone_number?: string;
+  mobile?: string;
+  contact?: string;
+  phoneNo?: string;
+};
+
+const FIELD_KEYS: Array<keyof Fields> = [
+  "firstName",
+  "lastName",
+  "email",
+  "phone",
+  "specialRequests",
+];
 
 function validate(f: Fields): Errors {
   const e: Errors = {};
@@ -79,17 +101,15 @@ export function GuestInfoForm({
 
   const loginRedirectUrl = `/login?redirect=${encodeURIComponent(currentUrl)}`;
 
-  const auth = useAuth() as any;
+  const auth = useAuth() as {
+    user?: AuthLikeUser | null;
+    loading?: boolean;
+    isLoading?: boolean;
+  };
   const user = auth?.user;
   const authLoading = auth?.loading ?? auth?.isLoading ?? false;
 
-  const [fields, setFields] = useState<Fields>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    specialRequests: "",
-  });
+  const [fields, setFields] = useState<Partial<Fields>>({});
 
   const [errors, setErrors] = useState<Errors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>(
@@ -103,42 +123,48 @@ export function GuestInfoForm({
     "idle" | "processing" | "saving"
   >("idle");
 
-  useEffect(() => {
-    if (user) {
-      const u = user as Record<string, any>;
-      const fullName = u.name || u.fullName || "";
-      const nameParts = fullName.split(" ");
-
-      setFields((prev) => ({
-        ...prev,
-        firstName: u.firstName || nameParts[0] || prev.firstName,
-        lastName: u.lastName || nameParts.slice(1).join(" ") || prev.lastName,
-        email: u.email || prev.email,
-        phone:
-          u.phone ||
-          u.phoneNumber ||
-          u.phone_number ||
-          u.mobile ||
-          u.contact ||
-          u.phoneNo ||
-          prev.phone,
-      }));
-    }
-  }, [user]);
+  const fullName = user?.name || user?.fullName || "";
+  const nameParts = fullName.split(" ");
+  const userPrefill = {
+    firstName: user?.firstName || nameParts[0] || "",
+    lastName: user?.lastName || nameParts.slice(1).join(" ") || "",
+    email: user?.email || "",
+    phone:
+      user?.phone ||
+      user?.phoneNumber ||
+      user?.phone_number ||
+      user?.mobile ||
+      user?.contact ||
+      user?.phoneNo ||
+      "",
+  };
+  const resolvedFields: Fields = {
+    firstName: fields.firstName ?? userPrefill.firstName,
+    lastName: fields.lastName ?? userPrefill.lastName,
+    email: fields.email ?? userPrefill.email,
+    phone: fields.phone ?? userPrefill.phone,
+    specialRequests: fields.specialRequests ?? "",
+  };
 
   function set(field: keyof Fields, value: string) {
     const next = { ...fields, [field]: value };
     setFields(next);
 
     if (touched[field]) {
-      const e = validate(next);
+      const e = validate({
+        firstName: next.firstName ?? userPrefill.firstName,
+        lastName: next.lastName ?? userPrefill.lastName,
+        email: next.email ?? userPrefill.email,
+        phone: next.phone ?? userPrefill.phone,
+        specialRequests: next.specialRequests ?? "",
+      });
       setErrors((prev) => ({ ...prev, [field]: e[field] }));
     }
   }
 
   function touch(field: keyof Fields) {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    const e = validate(fields);
+    const e = validate(resolvedFields);
     setErrors((prev) => ({ ...prev, [field]: e[field] }));
   }
 
@@ -156,11 +182,11 @@ export function GuestInfoForm({
     setSubmitError("");
 
     const allTouched = Object.fromEntries(
-      Object.keys(fields).map((k) => [k, true])
+      FIELD_KEYS.map((k) => [k, true])
     ) as Record<keyof Fields, boolean>;
     setTouched(allTouched);
 
-    const errs = validate(fields);
+    const errs = validate(resolvedFields);
     setErrors(errs);
 
     if (!agreedTerms) {
@@ -197,7 +223,7 @@ export function GuestInfoForm({
           checkOut,
           guests,
           quote,
-          guest: fields,
+          guest: resolvedFields,
           termsAccepted: agreedTerms,
           payment: mockPaymentResult,
         }),
@@ -209,10 +235,14 @@ export function GuestInfoForm({
       }
 
       router.push("/dashboard/bookings?status=success");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Booking failed:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to complete booking. Please try again.";
       setSubmitError(
-        error.message || "Failed to complete booking. Please try again."
+        message || "Failed to complete booking. Please try again."
       );
       setIsSubmitting(false);
       setPaymentStep("idle");
@@ -267,7 +297,7 @@ export function GuestInfoForm({
               autoComplete="given-name"
               aria-label="First Name"
               aria-invalid={!!err("firstName")}
-              value={fields.firstName}
+              value={resolvedFields.firstName}
               onChange={(e) => set("firstName", e.target.value)}
               onBlur={() => touch("firstName")}
               className={fieldCls(err("firstName"))}
@@ -286,7 +316,7 @@ export function GuestInfoForm({
               autoComplete="family-name"
               aria-label="Last Name"
               aria-invalid={!!err("lastName")}
-              value={fields.lastName}
+              value={resolvedFields.lastName}
               onChange={(e) => set("lastName", e.target.value)}
               onBlur={() => touch("lastName")}
               className={fieldCls(err("lastName"))}
@@ -307,7 +337,7 @@ export function GuestInfoForm({
               autoComplete="email"
               aria-label="Email Address"
               aria-invalid={!!err("email")}
-              value={fields.email}
+              value={resolvedFields.email}
               onChange={(e) => set("email", e.target.value)}
               onBlur={() => touch("email")}
               className={fieldCls(err("email"))}
@@ -326,7 +356,7 @@ export function GuestInfoForm({
               autoComplete="tel"
               aria-label="Phone Number"
               aria-invalid={!!err("phone")}
-              value={fields.phone}
+              value={resolvedFields.phone}
               onChange={(e) => set("phone", e.target.value)}
               onBlur={() => touch("phone")}
               className={fieldCls(err("phone"))}
@@ -343,7 +373,7 @@ export function GuestInfoForm({
           <textarea
             placeholder="Special Requests (optional)"
             aria-label="Special Requests"
-            value={fields.specialRequests}
+            value={resolvedFields.specialRequests}
             onChange={(e) => set("specialRequests", e.target.value)}
             onBlur={() => touch("specialRequests")}
             rows={4}
@@ -363,7 +393,7 @@ export function GuestInfoForm({
               <span />
             )}
             <span className="font-outfit text-xs text-jungle/45">
-              {fields.specialRequests.length}/500
+              {resolvedFields.specialRequests.length}/500
             </span>
           </div>
         </div>
