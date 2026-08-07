@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  NIBM2 Sprint 2 Automated Regression Suite.
+  Tests are organized into <test> blocks mirroring the 8 Xray Test Sets,
+  so results map cleanly back to: Authentication, Account Dashboard,
+  Booking History, Booking Itinerary, Cancellation, Checkout & Payment,
+  Booking Confirmation, Navigation.
+
+  Only Authentication and Account Dashboard are implemented as a starting
+  point - add classes to the other <test> blocks as you build them out.
+-->
+<suite name="NIBM2 Sprint 2 Suite" verbose="1" parallel="none">
+
+    <test name="Authentication Tests">
+        <classes>
+            <class name="com.nibm2.tests.LoginTest"/>
+            <class name="com.nibm2.tests.RegisterTest"/>
+        </classes>
+    </test>
+
+    <test name="Account Dashboard Tests">
+        <classes>
+            <class name="com.nibm2.tests.DashboardTest"/>
+        </classes>
+    </test>
+
+    <test name="Booking History Tests">
+        <classes>
+            <class name="com.nibm2.tests.BookingHistoryTest"/>
+        </classes>
+    </test>
+
+    <test name="Booking Itinerary Tests">
+        <classes>
+            <class name="com.nibm2.tests.BookingItineraryTest"/>
+        </classes>
+    </test>
+
+    <test name="Cancellation Tests">
+        <classes>
+            <class name="com.nibm2.tests.CancellationTest"/>
+        </classes>
+    </test>
+
+    <test name="Checkout and Payment Tests">
+        <classes>
+            <class name="com.nibm2.tests.CheckoutTest"/>
+        </classes>
+    </test>
+
+    <test name="Booking Confirmation Tests">
+        <classes>
+            <class name="com.nibm2.tests.BookingConfirmationTest"/>
+        </classes>
+    </test>
+
+    <!--
+      Navigation Tests (NIBM2-198) is already covered by
+      DashboardTest.hotelLogoReturnsToRoomSearch() in the Account Dashboard
+      <test> block above, so there is no separate NavigationTest class.
+    -->
+
+</suite>
