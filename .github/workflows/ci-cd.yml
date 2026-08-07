@@ -276,6 +276,10 @@ jobs:
             context: backend/pricing-service
           - name: user-service
             context: backend/user-service
+          - name: booking-service
+            context: backend/booking-service
+          - name: payment-service
+            context: backend/payment-service
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       # The VM (OCI-ARM) is arm64 — without these, build-push-action can only build for the
