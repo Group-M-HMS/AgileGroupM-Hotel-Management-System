@@ -22,7 +22,7 @@ public class CheckoutController {
     @GetMapping("/prefill")
     public UserResponse getPrefillDetails() {
         FirebaseToken token = (FirebaseToken) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userService.getProfile(token.getUid());
+        User user = userService.getProfile(token);
         return new UserResponse(user.getEmail(), user.getFirstName(), user.getLastName(), user.getPhone());
     }
 }

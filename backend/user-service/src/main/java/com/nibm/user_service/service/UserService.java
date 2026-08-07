@@ -28,8 +28,23 @@ public class UserService {
                 });
     }
 
-    public User getProfile(String firebaseUid) {
-        return userRepository.findById(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("No profile found for this user"));
+    /**
+     * Returns the caller's profile, provisioning a minimal one from the Firebase token
+     * if none exists yet. Firebase is the source of truth for identity; a missing DB
+     * profile (e.g. an account created before profile sync worked, or an admin-created
+     * user) is auto-created here rather than being treated as an error, so any valid
+     * Firebase user can always log in. Name/phone stay blank until the user edits them.
+     */
+    public User getProfile(FirebaseToken token) {
+        return userRepository.findById(token.getUid())
+                .orElseGet(() -> {
+                    User user = new User();
+                    user.setFirebaseUid(token.getUid());
+                    user.setEmail(token.getEmail());
+                    user.setFirstName("");
+                    user.setLastName("");
+                    user.setPhone("");
+                    return userRepository.save(user);
+                });
     }
 }
