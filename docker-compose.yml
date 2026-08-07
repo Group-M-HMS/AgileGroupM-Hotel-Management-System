@@ -67,6 +67,46 @@ services:
       room-service:
         condition: service_started
 
+  booking-service:
+    image: ${IMAGE_PREFIX}-booking-service:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ROOM_DETAIL_SERVICE_URL: http://room-service:8081
+      PRICING_SERVICE_URL: http://pricing-service:8083
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      room-service:
+        condition: service_started
+      pricing-service:
+        condition: service_started
+
+  payment-service:
+    image: ${IMAGE_PREFIX}-payment-service:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      BOOKING_SERVICE_URL: http://booking-service:8085
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_REPLACE_ME}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      booking-service:
+        condition: service_started
+
   frontend:
     image: ${IMAGE_PREFIX}-frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
