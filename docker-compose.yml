@@ -31,6 +31,24 @@ services:
       postgres:
         condition: service_healthy
 
+  user-service:
+    image: ${IMAGE_PREFIX}-user-service:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ROOM_SERVICE_URL: http://room-service:8081
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      room-service:
+        condition: service_started
+
   pricing-service:
     image: ${IMAGE_PREFIX}-pricing-service:${IMAGE_TAG:-latest}
     restart: unless-stopped
