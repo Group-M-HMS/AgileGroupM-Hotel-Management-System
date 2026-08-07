@@ -8,10 +8,10 @@ import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    List<Booking> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+    List<Booking> findByCustomerIdOrderByCreatedAtDesc(String customerId);
 
     // A customer should only ever see their own booking's details.
-    Optional<Booking> findByIdAndCustomerId(Long id, Long customerId);
+    Optional<Booking> findByIdAndCustomerId(Long id, String customerId);
 
     boolean existsByBookingReference(String bookingReference);
 }

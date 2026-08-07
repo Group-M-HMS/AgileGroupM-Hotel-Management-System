@@ -15,5 +15,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByBookingId(Long bookingId);
 
     // Payment history is scoped to the logged-in customer directly.
-    List<Payment> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+    List<Payment> findByCustomerIdOrderByCreatedAtDesc(String customerId);
 }

@@ -97,7 +97,7 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentHistoryItem> getPaymentHistory(Long customerId) {
+    public List<PaymentHistoryItem> getPaymentHistory(String customerId) {
         return paymentRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream()
                 .map(p -> new PaymentHistoryItem(p.getId(), p.getBookingId(), p.getAmount(), p.getStatus()))
                 .toList();
