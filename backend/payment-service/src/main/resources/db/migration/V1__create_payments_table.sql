@@ -3,7 +3,7 @@
 CREATE TABLE payments (
     id                       BIGSERIAL PRIMARY KEY,
     booking_id               BIGINT         NOT NULL,
-    customer_id              BIGINT         NOT NULL,
+    customer_id              VARCHAR(255)   NOT NULL,
     stripe_payment_intent_id VARCHAR(255)   NOT NULL,
     idempotency_key          VARCHAR(255)   NOT NULL UNIQUE,
     amount                   NUMERIC(12, 2) NOT NULL,

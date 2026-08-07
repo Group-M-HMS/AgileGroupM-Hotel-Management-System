@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
+import { submitBookingAndPayment } from "@/lib/checkout";
 
 type Quote = {
   nightlyRate: number;
@@ -83,7 +84,6 @@ export function GuestInfoForm({
   checkIn,
   checkOut,
   guests,
-  quote,
 }: {
   roomId: string;
   checkIn: string;
@@ -120,7 +120,7 @@ export function GuestInfoForm({
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentStep, setPaymentStep] = useState<
-    "idle" | "processing" | "saving"
+    "idle" | "processing" | "confirming" | "saving"
   >("idle");
 
   const fullName = user?.name || user?.fullName || "";
@@ -203,36 +203,17 @@ export function GuestInfoForm({
     setIsSubmitting(true);
 
     try {
-      setPaymentStep("processing");
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const mockPaymentResult = {
-        status: "COMPLETED",
-        transactionId: `TXN_MOCK_${Date.now()}`,
-        paidAmount: quote?.total || 0,
-      };
-
-      setPaymentStep("saving");
-      const response = await fetch("/api/bookings/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
+      await submitBookingAndPayment(
+        {
           roomId,
           checkIn,
           checkOut,
           guests,
-          quote,
-          guest: resolvedFields,
+          specialRequests: resolvedFields.specialRequests,
           termsAccepted: agreedTerms,
-          payment: mockPaymentResult,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.message || "Server failed to record booking.");
-      }
+        },
+        setPaymentStep
+      );
 
       router.push("/dashboard/bookings?status=success");
     } catch (error: unknown) {
@@ -449,7 +430,9 @@ export function GuestInfoForm({
         {!user
           ? "Sign In to Pay & Book"
           : paymentStep === "processing"
-          ? "Authorizing Payment Gateway..."
+          ? "Reserving Your Room..."
+          : paymentStep === "confirming"
+          ? "Authorizing Payment..."
           : paymentStep === "saving"
           ? "Confirming Booking..."
           : "Pay & Book"}

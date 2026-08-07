@@ -23,7 +23,7 @@ public class Payment {
     private Long bookingId;
 
     @Column(name = "customer_id", nullable = false)
-    private Long customerId;
+    private String customerId;
 
     @Column(name = "stripe_payment_intent_id", nullable = false)
     private String stripePaymentIntentId;
