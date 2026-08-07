@@ -18,6 +18,8 @@ jobs:
       room-service: ${{ steps.filter.outputs.room-service }}
       pricing-service: ${{ steps.filter.outputs.pricing-service }}
       user-service: ${{ steps.filter.outputs.user-service }}
+      booking-service: ${{ steps.filter.outputs.booking-service }}
+      payment-service: ${{ steps.filter.outputs.payment-service }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
@@ -32,6 +34,10 @@ jobs:
               - 'backend/pricing-service/**'
             user-service:
               - 'backend/user-service/**'
+            booking-service:
+              - 'backend/booking-service/**'
+            payment-service:
+              - 'backend/payment-service/**'
 
   frontend:
     needs: changes
@@ -156,8 +162,70 @@ jobs:
       - run: chmod +x ./mvnw
       - run: ./mvnw -B verify
 
+  booking-service:
+    needs: changes
+    if: needs.changes.outputs.booking-service == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: hms_user
+          POSTGRES_PASSWORD: hms_password
+          POSTGRES_DB: hms_booking
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend/booking-service
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - run: chmod +x ./mvnw
+      - run: ./mvnw -B verify
+
+  payment-service:
+    needs: changes
+    if: needs.changes.outputs.payment-service == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: hms_user
+          POSTGRES_PASSWORD: hms_password
+          POSTGRES_DB: hms_payment
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend/payment-service
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - run: chmod +x ./mvnw
+      - run: ./mvnw -B verify
+
   ci-gate:
-    needs: [changes, frontend, room-service, pricing-service, user-service]
+    needs: [changes, frontend, room-service, pricing-service, user-service, booking-service, payment-service]
     # Single required status check for branch protection: frontend/room-service/pricing-service
     # are skipped (not failed) when their paths didn't change, so a required check on any one
     # of them directly would leave PRs that don't touch that path waiting forever. This job
@@ -208,6 +276,10 @@ jobs:
             context: backend/pricing-service
           - name: user-service
             context: backend/user-service
+          - name: booking-service
+            context: backend/booking-service
+          - name: payment-service
+            context: backend/payment-service
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       # The VM (OCI-ARM) is arm64 — without these, build-push-action can only build for the
