@@ -79,7 +79,11 @@ services:
       PRICING_SERVICE_URL: http://pricing-service:8083
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
     ports:
-      - "8085:8085"
+      # Host 8085 is taken by an unrelated project (tunesync) on this shared VM, so
+      # publish booking-service on host 8086 instead. The container still listens on
+      # 8085 internally, and payment-service reaches it as http://booking-service:8085
+      # over the compose network, so this host remap changes nothing functional.
+      - "8086:8085"
     depends_on:
       postgres:
         condition: service_healthy
