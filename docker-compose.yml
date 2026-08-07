@@ -83,6 +83,7 @@ services:
       ROOM_DETAIL_SERVICE_URL: http://room-service:8081
       PRICING_SERVICE_URL: http://pricing-service:8083
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
     ports:
       - "8085:8085"
     depends_on:
@@ -104,6 +105,7 @@ services:
       BOOKING_SERVICE_URL: http://booking-service:8085
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_REPLACE_ME}
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
     ports:
       - "8084:8084"
     depends_on:
