@@ -21,7 +21,7 @@ public class Booking {
     private Long id;
 
     @Column(name = "customer_id", nullable = false)
-    private Long customerId;
+    private String customerId;
 
     @Column(name = "room_id", nullable = false)
     private Long roomId;

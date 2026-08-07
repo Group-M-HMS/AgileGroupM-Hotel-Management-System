@@ -65,7 +65,7 @@ public class BookingServiceClient {
 
     private record BookingServiceBookingResponse(
             Long bookingId,
-            Long customerId,
+            String customerId,
             java.math.BigDecimal totalAmount,
             String status
     ) {

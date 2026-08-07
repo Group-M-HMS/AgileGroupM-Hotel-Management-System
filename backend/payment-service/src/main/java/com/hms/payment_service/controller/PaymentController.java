@@ -46,7 +46,7 @@ public class PaymentController {
     @Operation(summary = "Get the logged-in customer's payment history")
     public ResponseEntity<ApiResponse<java.util.List<PaymentHistoryItem>>> getPaymentHistory(
 
-            @RequestHeader("X-User-Id") Long customerId) {
+            @RequestHeader("X-User-Id") String customerId) {
 
         return ResponseEntity.ok(ApiResponse.ok(paymentService.getPaymentHistory(customerId)));
     }
