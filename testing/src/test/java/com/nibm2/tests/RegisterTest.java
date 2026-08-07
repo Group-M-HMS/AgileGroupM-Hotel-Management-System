@@ -78,4 +78,48 @@ public class RegisterTest extends BaseTest {
         Assert.assertTrue(true, "Firebase Auth securely hashes passwords by design.");
     }
 
+    @Test(description = "Enter a password that does not meet the minimum length requirement")
+    public void shortPasswordShowsValidationMessage() {
+        RegisterPage registerPage = new RegisterPage(driver);
+        registerPage.open(BASE_URL);
+
+        registerPage.fillForm("Short Pass", testEmail, "abc123");
+        registerPage.submitExpectingError();
+
+        Assert.assertTrue(registerPage.isPasswordValidationMessageVisible(),
+                "Password must contain at least 8 characters validation message should be displayed");
+        Assert.assertFalse(driver.getCurrentUrl().contains("/dashboard"),
+                "Registration form cannot be submitted with an invalid password");
+                
+        captureScreenshot("SUCCESS_shortPasswordShowsValidationMessage");
+    }
+
+    @Test(description = "Update the password field with a password that satisfies the requirement", dependsOnMethods = "shortPasswordShowsValidationMessage")
+    public void validPasswordRemovesValidationMessageAndSubmits() {
+        RegisterPage registerPage = new RegisterPage(driver);
+        registerPage.open(BASE_URL);
+
+        // Generate a brand new email specifically for this test so it doesn't conflict with validRegistrationSucceeds
+        String validEmail = "validpass_" + System.currentTimeMillis() + "@test.com";
+
+        // Initially invalid
+        registerPage.fillForm("Valid Pass", validEmail, "abc123");
+        registerPage.submitExpectingError();
+        
+        // Update to valid password (must contain uppercase, lowercase, and a number)
+        registerPage.fillForm("Valid Pass", validEmail, "Passw0rd!23");
+        
+        // Assert the validation message is gone
+        Assert.assertFalse(registerPage.isPasswordValidationMessageVisible(),
+                "Password validation message should be removed after entering a valid password");
+                
+        // Assert the form can now be submitted
+        Assert.assertTrue(registerPage.isSubmitEnabled(),
+                "User can continue the registration process (Submit button should be enabled)");
+                
+        captureScreenshot("SUCCESS_validPasswordRemovesValidationMessageAndSubmits");
+    }
+
+
+
 }

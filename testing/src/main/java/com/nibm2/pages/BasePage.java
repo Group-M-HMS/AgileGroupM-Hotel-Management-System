@@ -26,7 +26,8 @@ public abstract class BasePage {
 
     protected void type(By locator, String text) {
         WebElement el = wait.waitForVisible(locator);
-        el.clear();
+        // el.clear() does not reliably trigger React state updates, causing concatenated text
+        el.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"), org.openqa.selenium.Keys.DELETE);
         el.sendKeys(text);
         try { Thread.sleep(300); } catch (Exception e) {} // slow down for visibility
     }
