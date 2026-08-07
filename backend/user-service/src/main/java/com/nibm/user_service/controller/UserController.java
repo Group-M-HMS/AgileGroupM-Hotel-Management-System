@@ -28,7 +28,7 @@ public class UserController {
     @GetMapping("/me")
     public UserResponse getMyProfile() {
         FirebaseToken token = currentToken();
-        User user = userService.getProfile(token.getUid());
+        User user = userService.getProfile(token);
         return toResponse(user);
     }
 
