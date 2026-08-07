@@ -1,20 +1,21 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, Leaf } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
+import { ProfileMenu } from '@/components/ProfileMenu';
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const isHome = pathname === '/';
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
+  function handleSignOut() {
+    logout();
+    setMobileMenuOpen(false);
+    router.push('/');
+  }
   const navLinks = [
   {
     name: 'Home',
@@ -31,24 +32,15 @@ export function Navbar() {
   {
     name: 'Experiences',
     path: '/experiences'
-  },
-  {
-    name: 'Sign In',
-    path: '/admin'
   }];
 
-  const bgColor = isHome ?
-  isScrolled ?
-  'bg-jungle-dark/95 backdrop-blur-md shadow-soft' :
-  'bg-transparent' :
-  'bg-jungle-dark shadow-soft';
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${bgColor}`}>
+    <nav className="fixed w-full z-50 bg-jungle-dark shadow-soft">
       <div className="mx-auto max-w-7xl px-page-x lg:px-page-x-lg">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
-            href="/"
+            href="/search-results"
             className="flex items-center space-x-2 text-sand-light hover:text-sage transition-colors">
 
             <Leaf className="h-6 w-6" />
@@ -68,6 +60,16 @@ export function Navbar() {
                 {link.name}
               </Link>
             )}
+            {user ?
+            <ProfileMenu firstName={user.firstName} onSignOut={handleSignOut} /> :
+
+            <Link
+              href="/login"
+              className={`text-sm font-medium tracking-wide transition-colors ${pathname === '/login' ? 'text-sage' : 'text-sand-light hover:text-sage'}`}>
+
+                Sign In
+              </Link>
+            }
             <Link
               href="/"
               className="bg-sage hover:bg-sage-light text-jungle-dark px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5">
@@ -106,6 +108,32 @@ export function Navbar() {
                 {link.name}
               </Link>
           )}
+            {user ?
+            <>
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === '/dashboard' ? 'text-sage bg-jungle' : 'text-sand-light hover:text-sage hover:bg-jungle/50'}`}>
+
+                  My Bookings
+                </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="block w-full px-3 py-2 text-left rounded-md text-base font-medium text-sand-light hover:text-sage hover:bg-jungle/50">
+
+                  Sign Out
+                </button>
+            </> :
+
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === '/login' ? 'text-sage bg-jungle' : 'text-sand-light hover:text-sage hover:bg-jungle/50'}`}>
+
+                Sign In
+              </Link>
+            }
             <Link
             href="/book"
             onClick={() => setMobileMenuOpen(false)}
