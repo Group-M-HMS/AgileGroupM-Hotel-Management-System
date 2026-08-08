@@ -1,4 +1,4 @@
-import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import type { Stripe, StripeCardElement } from "@stripe/stripe-js";
 import { auth } from "./firebase";
 
 // The frontend talks to the booking/payment services directly, the same way the
@@ -7,23 +7,6 @@ const BOOKING_SERVICE_URL =
   process.env.NEXT_PUBLIC_BOOKING_SERVICE_URL ?? "http://168.138.170.92:8085";
 const PAYMENT_SERVICE_URL =
   process.env.NEXT_PUBLIC_PAYMENT_SERVICE_URL ?? "http://168.138.170.92:8084";
-const STRIPE_PUBLISHABLE_KEY =
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
-
-// Stripe test-mode token that stands in for a real card-entry UI. Represents a
-// Visa card that always succeeds (equivalent to test card 4242 4242 4242 4242).
-const STRIPE_TEST_CARD_TOKEN = "tok_visa";
-
-let stripePromise: Promise<Stripe | null> | null = null;
-function getStripe(): Promise<Stripe | null> {
-  if (!STRIPE_PUBLISHABLE_KEY) {
-    throw new Error(
-      "Payment is not configured. Set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY."
-    );
-  }
-  if (!stripePromise) stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
-  return stripePromise;
-}
 
 type ApiEnvelope<T> = { success: boolean; message: string | null; data: T };
 
@@ -57,11 +40,13 @@ export type BookingPaymentResult = {
  * Runs the full checkout pipeline against the real backend services:
  *   1. booking-service   creates a PENDING booking (X-User-Id = Firebase UID)
  *   2. payment-service   creates a Stripe PaymentIntent, returns its clientSecret
- *   3. Stripe.js         confirms the card (test token stands in for a card form)
+ *   3. Stripe.js         confirms the card the customer entered (Stripe Elements)
  *   4. payment-service   verifies the intent succeeded and flips the booking to CONFIRMED
  */
 export async function submitBookingAndPayment(
   input: BookingPaymentInput,
+  stripe: Stripe,
+  cardElement: StripeCardElement,
   onStep?: (step: CheckoutStep) => void
 ): Promise<BookingPaymentResult> {
   const uid = auth.currentUser?.uid;
@@ -95,13 +80,11 @@ export async function submitBookingAndPayment(
     paymentRes
   );
 
-  // 3. Confirm the card with Stripe. In test mode the token replaces a card form.
+  // 3. Confirm the card the customer entered via Stripe Elements.
   onStep?.("confirming");
-  const stripe = await getStripe();
-  if (!stripe) throw new Error("Unable to load the payment provider.");
   const { error, paymentIntent } = await stripe.confirmCardPayment(
     payment.clientSecret,
-    { payment_method: { card: { token: STRIPE_TEST_CARD_TOKEN } } }
+    { payment_method: { card: cardElement } }
   );
   if (error) throw new Error(error.message || "Card payment was declined.");
   if (paymentIntent?.status !== "succeeded") {
