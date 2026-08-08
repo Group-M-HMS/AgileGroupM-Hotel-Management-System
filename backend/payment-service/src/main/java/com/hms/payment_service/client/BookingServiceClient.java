@@ -51,7 +51,7 @@ public class BookingServiceClient {
     public String confirmBooking(Long bookingId, String paymentReference) {
         try {
             BookingConfirmResponse response = webClient.post()
-                    .uri("/api/v1/bookings/internal/{id}/confirm", bookingId)
+                    .uri("/api/v1/bookings/internal/{id}/confirm-payment", bookingId)
                     .header("X-Internal-Secret", internalSecret)
                     .bodyValue(new BookingConfirmRequest(paymentReference))
                     .retrieve()
@@ -75,7 +75,8 @@ public class BookingServiceClient {
     ) {
     }
 
-    private record BookingConfirmRequest(String paymentReference) {
+    // Field name must match booking-service's BookingConfirmPaymentRequest.
+    private record BookingConfirmRequest(String transactionReference) {
     }
 
     private record BookingConfirmResponse(Long bookingId, String status) {
