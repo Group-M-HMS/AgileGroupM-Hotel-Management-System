@@ -3,8 +3,28 @@
 import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { useAuth } from "@/lib/AuthContext";
 import { submitBookingAndPayment } from "@/lib/checkout";
+
+// Loaded once at module scope so Stripe.js isn't re-fetched on every render.
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+);
+
+type GuestInfoFormProps = {
+  roomId: string;
+  checkIn: string;
+  checkOut: string;
+  guests: string;
+  quote: Quote | null;
+};
 
 type Quote = {
   nightlyRate: number;
@@ -79,22 +99,18 @@ function fieldCls(hasError?: string) {
   }`;
 }
 
-export function GuestInfoForm({
+function GuestInfoFormInner({
   roomId,
   checkIn,
   checkOut,
   guests,
   quote,
-}: {
-  roomId: string;
-  checkIn: string;
-  checkOut: string;
-  guests: string;
-  quote: Quote | null;
-}) {
+}: GuestInfoFormProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const stripe = useStripe();
+  const elements = useElements();
 
   const currentUrl = searchParams.toString()
     ? `${pathname}?${searchParams.toString()}`
@@ -119,6 +135,7 @@ export function GuestInfoForm({
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [termsError, setTermsError] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [cardError, setCardError] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentStep, setPaymentStep] = useState<
     "idle" | "processing" | "confirming" | "saving"
@@ -201,6 +218,17 @@ export function GuestInfoForm({
       return;
     }
 
+    if (!stripe || !elements) {
+      setSubmitError("Payment form is still loading. Please try again in a moment.");
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      setCardError("Please enter your card details.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -213,6 +241,8 @@ export function GuestInfoForm({
           specialRequests: resolvedFields.specialRequests,
           termsAccepted: agreedTerms,
         },
+        stripe,
+        cardElement,
         setPaymentStep
       );
 
@@ -389,6 +419,36 @@ export function GuestInfoForm({
         </div>
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <label className="font-outfit text-sm font-medium text-jungle">
+          Card details
+        </label>
+        <div className={fieldCls(cardError)}>
+          <CardElement
+            options={{
+              hidePostalCode: true,
+              style: {
+                base: {
+                  fontSize: "14px",
+                  color: "#1f2d27",
+                  fontFamily: "Outfit, sans-serif",
+                  "::placeholder": { color: "#9ca3af" },
+                },
+                invalid: { color: "#ef4444" },
+              },
+            }}
+            onChange={(e) => setCardError(e.error?.message)}
+          />
+        </div>
+        {cardError ? (
+          <p className="font-outfit text-sm text-red-500">{cardError}</p>
+        ) : (
+          <p className="font-outfit text-xs text-jungle/45">
+            Test mode — use 4242 4242 4242 4242, any future expiry, any CVC.
+          </p>
+        )}
+      </div>
+
       <div className="flex flex-col gap-2">
         <label className="flex items-start gap-3 font-outfit text-sm text-jungle cursor-pointer select-none">
           <input
@@ -447,5 +507,15 @@ export function GuestInfoForm({
           : "Pay & Book"}
       </button>
     </form>
+  );
+}
+
+// Stripe's useStripe/useElements hooks only work inside <Elements>, so the form
+// body lives in GuestInfoFormInner and this wrapper provides the Stripe context.
+export function GuestInfoForm(props: GuestInfoFormProps) {
+  return (
+    <Elements stripe={stripePromise}>
+      <GuestInfoFormInner {...props} />
+    </Elements>
   );
 }
