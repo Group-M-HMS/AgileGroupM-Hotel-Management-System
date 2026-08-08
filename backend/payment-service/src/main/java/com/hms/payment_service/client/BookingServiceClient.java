@@ -15,16 +15,19 @@ public class BookingServiceClient {
 
     private final WebClient webClient;
     private final long timeoutMs;
+    private final String internalSecret;
 
     public BookingServiceClient(WebClient bookingServiceWebClient, Environment env) {
         this.webClient = bookingServiceWebClient;
         this.timeoutMs = env.getProperty("booking-service.timeout-ms", Long.class, 5000L);
+        this.internalSecret = env.getProperty("internal.service-secret", "change-me-in-every-environment");
     }
 
     public BookingInfo getBooking(Long bookingId) {
         try {
             BookingServiceBookingResponse response = webClient.get()
                     .uri("/api/v1/bookings/internal/{id}", bookingId)
+                    .header("X-Internal-Secret", internalSecret)
                     .retrieve()
                     .bodyToMono(BookingServiceBookingResponse.class)
                     .block(Duration.ofMillis(timeoutMs));
@@ -49,6 +52,7 @@ public class BookingServiceClient {
         try {
             BookingConfirmResponse response = webClient.post()
                     .uri("/api/v1/bookings/internal/{id}/confirm", bookingId)
+                    .header("X-Internal-Secret", internalSecret)
                     .bodyValue(new BookingConfirmRequest(paymentReference))
                     .retrieve()
                     .bodyToMono(BookingConfirmResponse.class)
