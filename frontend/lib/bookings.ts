@@ -67,3 +67,77 @@ export async function fetchMyBookings(): Promise<DashboardBooking[]> {
     taxAmount: Number(s.taxAmount),
   }));
 }
+
+// Mirrors booking-service's BookingDetailResponse (GET /api/v1/bookings/my/{id}).
+type BookingDetailDto = {
+  bookingId: number;
+  roomId: number;
+  hotelName: string;
+  roomType: string;
+  checkInDate: string; // ISO date
+  checkOutDate: string;
+  numberOfGuests: number;
+  specialRequests: string | null;
+  status: BookingStatus;
+  paymentStatus: string;
+  totalAmount: number;
+  bookingReference: string | null;
+};
+
+export type BookingDetail = {
+  bookingId: number;
+  roomId: number;
+  roomName: string;
+  roomType: string;
+  checkIn: string; // ISO date
+  checkOut: string;
+  guests: number;
+  specialRequests: string;
+  status: BookingStatus;
+  paymentStatus: string;
+  total: number;
+  bookingReference: string | null;
+};
+
+/** Fetches one of the signed-in customer's bookings by id (booking-service scopes it to the caller). */
+export async function fetchBookingDetail(bookingId: string | number): Promise<BookingDetail> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("You must be signed in to view this booking.");
+
+  const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/my/${bookingId}`, {
+    headers: { "X-User-Id": uid },
+  });
+  const d = await unwrap<BookingDetailDto>(res);
+
+  return {
+    bookingId: d.bookingId,
+    roomId: d.roomId,
+    roomName: d.hotelName,
+    roomType: d.roomType,
+    checkIn: d.checkInDate,
+    checkOut: d.checkOutDate,
+    guests: d.numberOfGuests,
+    specialRequests: d.specialRequests ?? "",
+    status: d.status,
+    paymentStatus: d.paymentStatus,
+    total: Number(d.totalAmount),
+    bookingReference: d.bookingReference,
+  };
+}
+
+/** Cancels one of the signed-in customer's bookings. `reason` is required by the backend. */
+export async function cancelBooking(
+  bookingId: string | number,
+  reason: string
+): Promise<BookingStatus> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("You must be signed in to cancel this booking.");
+
+  const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}/cancel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-User-Id": uid },
+    body: JSON.stringify({ reason }),
+  });
+  const result = await unwrap<{ bookingId: number; status: BookingStatus }>(res);
+  return result.status;
+}
