@@ -50,6 +50,7 @@ export type BookingPaymentResult = {
   bookingId: number;
   bookingStatus: string;
   paymentStatus: string;
+  bookingReference: string | null;
 };
 
 /**
@@ -119,13 +120,16 @@ export async function submitBookingAndPayment(
       transactionReference: paymentIntent.id,
     }),
   });
-  const confirmed = await unwrap<{ status: string; bookingStatus: string }>(
-    confirmRes
-  );
+  const confirmed = await unwrap<{
+    status: string;
+    bookingStatus: string;
+    bookingReference: string | null;
+  }>(confirmRes);
 
   return {
     bookingId,
     bookingStatus: confirmed.bookingStatus,
     paymentStatus: confirmed.status,
+    bookingReference: confirmed.bookingReference,
   };
 }

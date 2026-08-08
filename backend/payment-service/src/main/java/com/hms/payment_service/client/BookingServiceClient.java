@@ -1,5 +1,6 @@
 package com.hms.payment_service.client;
 
+import com.hms.payment_service.dto.BookingConfirmResult;
 import com.hms.payment_service.dto.BookingInfo;
 import com.hms.payment_service.exception.BookingNotFoundException;
 import org.springframework.core.env.Environment;
@@ -48,7 +49,7 @@ public class BookingServiceClient {
      * booking to CONFIRMED and generate its reference number.
      * Internal service-to-service endpoint, not part of the public API doc.
      */
-    public String confirmBooking(Long bookingId, String paymentReference) {
+    public BookingConfirmResult confirmBooking(Long bookingId, String paymentReference) {
         try {
             BookingConfirmResponse response = webClient.post()
                     .uri("/api/v1/bookings/internal/{id}/confirm-payment", bookingId)
@@ -61,7 +62,7 @@ public class BookingServiceClient {
             if (response == null) {
                 throw new BookingNotFoundException(bookingId);
             }
-            return response.status();
+            return new BookingConfirmResult(response.status(), response.bookingReference());
         } catch (WebClientResponseException.NotFound ex) {
             throw new BookingNotFoundException(bookingId);
         }
@@ -79,6 +80,6 @@ public class BookingServiceClient {
     private record BookingConfirmRequest(String transactionReference) {
     }
 
-    private record BookingConfirmResponse(Long bookingId, String status) {
+    private record BookingConfirmResponse(Long bookingId, String status, String bookingReference) {
     }
 }
