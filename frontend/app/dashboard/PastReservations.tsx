@@ -1,4 +1,5 @@
-import { CalendarDays } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, ArrowUpRight } from "lucide-react";
 import { formatDate } from "@/app/checkout/formatDate";
 import type { DashboardBooking } from "@/lib/bookings";
 import { StatusBadge } from "./StatusBadge";
@@ -24,7 +25,8 @@ export function PastReservations({ bookings }: { bookings: DashboardBooking[] })
                 <th className="w-[25%] pb-4 font-outfit font-semibold text-jungle-dark">Stay</th>
                 <th className="w-[15%] pb-4 font-outfit font-semibold text-jungle-dark">Guests</th>
                 <th className="w-[15%] pb-4 font-outfit font-semibold text-jungle-dark">Total</th>
-                <th className="w-[15%] pb-4 font-outfit font-semibold text-jungle-dark">Status</th>
+                <th className="w-[12%] pb-4 font-outfit font-semibold text-jungle-dark">Status</th>
+                <th className="w-[13%] pb-4"></th>
               </tr>
             </thead>
             <tbody>
@@ -52,6 +54,15 @@ export function PastReservations({ bookings }: { bookings: DashboardBooking[] })
                   <td className="font-semibold">${booking.total.toFixed(2)}</td>
                   <td>
                     <StatusBadge status={booking.status} />
+                  </td>
+                  <td>
+                    <Link
+                      href={`/manage-booking/itinerary?id=${booking.bookingId}`}
+                      className="flex items-center gap-2 font-semibold text-sage transition hover:text-jungle-dark"
+                    >
+                      Details
+                      <ArrowUpRight size={18} />
+                    </Link>
                   </td>
                 </tr>
               ))}
