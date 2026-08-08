@@ -1,4 +1,5 @@
-import { CalendarDays, Users, BedDouble } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, Users, BedDouble, ArrowRight } from "lucide-react";
 import { formatDate } from "@/app/checkout/formatDate";
 import type { DashboardBooking } from "@/lib/bookings";
 import { StatusBadge } from "./StatusBadge";
@@ -53,7 +54,16 @@ export function UpcomingReservations({ bookings }: { bookings: DashboardBooking[
                   <h3 className="mt-1 font-semibold text-jungle-dark">#{booking.bookingId}</h3>
                 </div>
               </div>
-              <StatusBadge status={booking.status} />
+              <div className="flex flex-col items-start gap-3 md:items-end">
+                <StatusBadge status={booking.status} />
+                <Link
+                  href={`/manage-booking/itinerary?id=${booking.bookingId}`}
+                  className="inline-flex items-center gap-1 font-outfit text-sm font-semibold text-sage transition hover:text-jungle-dark"
+                >
+                  View Itinerary
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
             </div>
           ))}
         </div>

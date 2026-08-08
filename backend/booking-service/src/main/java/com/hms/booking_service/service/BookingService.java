@@ -93,8 +93,10 @@ public class BookingService {
         };
 
         return new BookingDetailResponse(
-                booking.getId(), room.name(), room.description(),
-                booking.getStatus(), paymentStatus, booking.getBookingReference());
+                booking.getId(), booking.getRoomId(), room.name(), room.description(),
+                booking.getCheckInDate(), booking.getCheckOutDate(), booking.getNumberOfGuests(),
+                booking.getSpecialRequests(), booking.getStatus(), paymentStatus,
+                booking.getTotalAmount(), booking.getBookingReference());
     }
 
     /**
