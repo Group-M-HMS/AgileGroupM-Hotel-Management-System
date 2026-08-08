@@ -39,12 +39,23 @@ public class NavbarComponent extends BasePage {
     }
     
     public void clickSignOut() {
-        By signOutButton = By.xpath("//*[contains(text(), 'Sign Out')]");
+        By signOutButton = By.xpath("//*[contains(text(), 'Sign Out') or contains(text(), 'Logout')]");
         try {
             click(signOutButton);
         } catch (Exception e) {
             System.out.println("Standard click on Sign Out failed. Using JS click.");
             org.openqa.selenium.WebElement el = driver.findElement(signOutButton);
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        }
+    }
+
+    public void clickMyBookings() {
+        By myBookingsLink = By.xpath("//a[contains(text(), 'My Bookings')]");
+        try {
+            click(myBookingsLink);
+        } catch (Exception e) {
+            System.out.println("Standard click on My Bookings failed. Using JS click.");
+            org.openqa.selenium.WebElement el = driver.findElement(myBookingsLink);
             ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
         }
     }
