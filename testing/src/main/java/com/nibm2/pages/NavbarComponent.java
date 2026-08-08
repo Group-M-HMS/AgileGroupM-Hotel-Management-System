@@ -8,8 +8,9 @@ public class NavbarComponent extends BasePage {
     // Locator for the "Sign In" link (visible when unauthenticated)
     private final By signInLink = By.xpath("//nav//a[contains(text(), 'Sign In')]");
     
-    // Locator for the Profile button which displays the user's name
-    private final By profileMenuButton = By.xpath("//nav//button[contains(., 'User')] | //nav//button[.//svg[contains(@class, 'lucide-user')]]");
+    // Locator for the Profile button which displays the user's name.
+    // The desktop nav contains a button for the ProfileMenu.
+    private final By profileMenuButton = By.xpath("//nav//div[contains(@class, 'hidden md:flex')]//button");
 
     public NavbarComponent(WebDriver driver) {
         super(driver);
@@ -25,5 +26,26 @@ public class NavbarComponent extends BasePage {
 
     public boolean isProfileMenuVisible() {
         return isDisplayed(profileMenuButton);
+    }
+    
+    public void clickProfileMenu() {
+        try {
+            click(profileMenuButton);
+        } catch (Exception e) {
+            System.out.println("Standard click on profile menu failed. Using JS click.");
+            org.openqa.selenium.WebElement el = driver.findElement(profileMenuButton);
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        }
+    }
+    
+    public void clickSignOut() {
+        By signOutButton = By.xpath("//*[contains(text(), 'Sign Out')]");
+        try {
+            click(signOutButton);
+        } catch (Exception e) {
+            System.out.println("Standard click on Sign Out failed. Using JS click.");
+            org.openqa.selenium.WebElement el = driver.findElement(signOutButton);
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        }
     }
 }
