@@ -15,17 +15,25 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Creates or updates the caller's profile from the submitted details. Applies the
+     * request's fields whether the row is new or already exists, so a sync always wins —
+     * this matters because getProfile (/me) can auto-create a blank row first (fired by
+     * the client's auth-state listener at signup), and an update-on-create-only sync
+     * would then silently drop the name the user just entered.
+     */
     public User syncProfile(FirebaseToken token, ProfileSyncRequest request) {
-        return userRepository.findById(token.getUid())
+        User user = userRepository.findById(token.getUid())
                 .orElseGet(() -> {
-                    User user = new User();
-                    user.setFirebaseUid(token.getUid());
-                    user.setEmail(token.getEmail());
-                    user.setFirstName(request.firstName());
-                    user.setLastName(request.lastName());
-                    user.setPhone(request.phone());
-                    return userRepository.save(user);
+                    User created = new User();
+                    created.setFirebaseUid(token.getUid());
+                    return created;
                 });
+        user.setEmail(token.getEmail());
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setPhone(request.phone());
+        return userRepository.save(user);
     }
 
     /**
