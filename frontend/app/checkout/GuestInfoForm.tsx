@@ -84,6 +84,7 @@ export function GuestInfoForm({
   checkIn,
   checkOut,
   guests,
+  quote,
 }: {
   roomId: string;
   checkIn: string;
@@ -203,7 +204,7 @@ export function GuestInfoForm({
     setIsSubmitting(true);
 
     try {
-      await submitBookingAndPayment(
+      const result = await submitBookingAndPayment(
         {
           roomId,
           checkIn,
@@ -215,7 +216,15 @@ export function GuestInfoForm({
         setPaymentStep
       );
 
-      router.push("/dashboard/bookings?status=success");
+      const successParams = new URLSearchParams({
+        roomId,
+        checkIn,
+        checkOut,
+        guests,
+      });
+      if (result.bookingReference) successParams.set("ref", result.bookingReference);
+      if (quote?.total != null) successParams.set("total", String(quote.total));
+      router.push(`/checkout/success?${successParams.toString()}`);
     } catch (error: unknown) {
       console.error("Booking failed:", error);
       const message =
