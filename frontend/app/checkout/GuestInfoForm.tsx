@@ -3,7 +3,28 @@
 import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { useAuth } from "@/lib/AuthContext";
+import { submitBookingAndPayment } from "@/lib/checkout";
+
+// Loaded once at module scope so Stripe.js isn't re-fetched on every render.
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+);
+
+type GuestInfoFormProps = {
+  roomId: string;
+  checkIn: string;
+  checkOut: string;
+  guests: string;
+  quote: Quote | null;
+};
 
 type Quote = {
   nightlyRate: number;
@@ -78,22 +99,18 @@ function fieldCls(hasError?: string) {
   }`;
 }
 
-export function GuestInfoForm({
+function GuestInfoFormInner({
   roomId,
   checkIn,
   checkOut,
   guests,
   quote,
-}: {
-  roomId: string;
-  checkIn: string;
-  checkOut: string;
-  guests: string;
-  quote: Quote | null;
-}) {
+}: GuestInfoFormProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const stripe = useStripe();
+  const elements = useElements();
 
   const currentUrl = searchParams.toString()
     ? `${pathname}?${searchParams.toString()}`
@@ -118,9 +135,10 @@ export function GuestInfoForm({
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [termsError, setTermsError] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [cardError, setCardError] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentStep, setPaymentStep] = useState<
-    "idle" | "processing" | "saving"
+    "idle" | "processing" | "confirming" | "saving"
   >("idle");
 
   const fullName = user?.name || user?.fullName || "";
@@ -200,41 +218,43 @@ export function GuestInfoForm({
       return;
     }
 
+    if (!stripe || !elements) {
+      setSubmitError("Payment form is still loading. Please try again in a moment.");
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      setCardError("Please enter your card details.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      setPaymentStep("processing");
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const mockPaymentResult = {
-        status: "COMPLETED",
-        transactionId: `TXN_MOCK_${Date.now()}`,
-        paidAmount: quote?.total || 0,
-      };
-
-      setPaymentStep("saving");
-      const response = await fetch("/api/bookings/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
+      const result = await submitBookingAndPayment(
+        {
           roomId,
           checkIn,
           checkOut,
           guests,
-          quote,
-          guest: resolvedFields,
+          specialRequests: resolvedFields.specialRequests,
           termsAccepted: agreedTerms,
-          payment: mockPaymentResult,
-        }),
+        },
+        stripe,
+        cardElement,
+        setPaymentStep
+      );
+
+      const successParams = new URLSearchParams({
+        roomId,
+        checkIn,
+        checkOut,
+        guests,
       });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.message || "Server failed to record booking.");
-      }
-
-      router.push("/dashboard/bookings?status=success");
+      if (result.bookingReference) successParams.set("ref", result.bookingReference);
+      if (quote?.total != null) successParams.set("total", String(quote.total));
+      router.push(`/checkout/success?${successParams.toString()}`);
     } catch (error: unknown) {
       console.error("Booking failed:", error);
       const message =
@@ -399,6 +419,36 @@ export function GuestInfoForm({
         </div>
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <label className="font-outfit text-sm font-medium text-jungle">
+          Card details
+        </label>
+        <div className={fieldCls(cardError)}>
+          <CardElement
+            options={{
+              hidePostalCode: true,
+              style: {
+                base: {
+                  fontSize: "14px",
+                  color: "#1f2d27",
+                  fontFamily: "Outfit, sans-serif",
+                  "::placeholder": { color: "#9ca3af" },
+                },
+                invalid: { color: "#ef4444" },
+              },
+            }}
+            onChange={(e) => setCardError(e.error?.message)}
+          />
+        </div>
+        {cardError ? (
+          <p className="font-outfit text-sm text-red-500">{cardError}</p>
+        ) : (
+          <p className="font-outfit text-xs text-jungle/45">
+            Test mode — use 4242 4242 4242 4242, any future expiry, any CVC.
+          </p>
+        )}
+      </div>
+
       <div className="flex flex-col gap-2">
         <label className="flex items-start gap-3 font-outfit text-sm text-jungle cursor-pointer select-none">
           <input
@@ -449,11 +499,23 @@ export function GuestInfoForm({
         {!user
           ? "Sign In to Pay & Book"
           : paymentStep === "processing"
-          ? "Authorizing Payment Gateway..."
+          ? "Reserving Your Room..."
+          : paymentStep === "confirming"
+          ? "Authorizing Payment..."
           : paymentStep === "saving"
           ? "Confirming Booking..."
           : "Pay & Book"}
       </button>
     </form>
+  );
+}
+
+// Stripe's useStripe/useElements hooks only work inside <Elements>, so the form
+// body lives in GuestInfoFormInner and this wrapper provides the Stripe context.
+export function GuestInfoForm(props: GuestInfoFormProps) {
+  return (
+    <Elements stripe={stripePromise}>
+      <GuestInfoFormInner {...props} />
+    </Elements>
   );
 }

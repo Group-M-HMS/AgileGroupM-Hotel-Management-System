@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public record BookingInternalResponse(
         Long bookingId,
-        Long customerId,
+        String customerId,
         BigDecimal totalAmount,
         String status
 ) {

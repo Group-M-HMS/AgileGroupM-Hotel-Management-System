@@ -40,7 +40,7 @@ public class BookingService {
      * GlobalExceptionHandler as a clean 400 rather than catching it here.
      */
     @Transactional
-    public CreateBookingResponse createBooking(Long customerId, CreateBookingRequest request) {
+    public CreateBookingResponse createBooking(String customerId, CreateBookingRequest request) {
         // Confirms the room exists and gets its nightly rate indirectly through Pricing Service.
         roomDetailServiceClient.getRoomDetail(request.roomId());
 
@@ -73,14 +73,14 @@ public class BookingService {
      * GET /bookings/my. NIBM2-443: reservation details for dashboard display.
      */
     @Transactional(readOnly = true)
-    public List<BookingSummary> getMyBookings(Long customerId) {
+    public List<BookingSummary> getMyBookings(String customerId) {
         return bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream()
                 .map(this::toSummary)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public BookingDetailResponse getBookingDetail(Long customerId, Long bookingId) {
+    public BookingDetailResponse getBookingDetail(String customerId, Long bookingId) {
         Booking booking = bookingRepository.findByIdAndCustomerId(bookingId, customerId)
                 .orElseThrow(() -> new BookingNotFoundException(bookingId));
 
@@ -93,8 +93,10 @@ public class BookingService {
         };
 
         return new BookingDetailResponse(
-                booking.getId(), room.name(), room.description(),
-                booking.getStatus(), paymentStatus, booking.getBookingReference());
+                booking.getId(), booking.getRoomId(), room.name(), room.description(),
+                booking.getCheckInDate(), booking.getCheckOutDate(), booking.getNumberOfGuests(),
+                booking.getSpecialRequests(), booking.getStatus(), paymentStatus,
+                booking.getTotalAmount(), booking.getBookingReference());
     }
 
     /**
@@ -104,7 +106,7 @@ public class BookingService {
      * clause), so flipping status to CANCELLED is the release.
      */
     @Transactional
-    public CancelBookingResponse cancelBooking(Long customerId, Long bookingId, CancelBookingRequest request) {
+    public CancelBookingResponse cancelBooking(String customerId, Long bookingId, CancelBookingRequest request) {
         Booking booking = bookingRepository.findByIdAndCustomerId(bookingId, customerId)
                 .orElseThrow(() -> new BookingNotFoundException(bookingId));
 
