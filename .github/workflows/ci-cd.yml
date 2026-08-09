@@ -345,6 +345,12 @@ jobs:
       needs.build-and-push.result == 'success'
     runs-on: ubuntu-latest
     environment: production
+    # Never let two deploys touch the VM at once — a second push while a deploy is mid-pull
+    # would race `docker compose up`. Queue instead of cancel: a half-finished deploy should
+    # be allowed to complete rather than be interrupted.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       # docker-compose.yml (and postgres-init) live on the VM as plain copied files, not a git
@@ -366,7 +372,40 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           port: ${{ secrets.VM_SSH_PORT || 22 }}
+          # The VM's link to ghcr.io is slow and occasionally stalls on a large layer. The
+          # action's default command_timeout is 10m, which the pull kept blowing past — killing
+          # the deploy *before* `up -d` and leaving the VM on stale images. Raise the ceiling and
+          # retry the pull so a single stalled layer no longer fails the whole release.
+          command_timeout: 40m
           script: |
+            set -eu
             cd /mnt/data/hotel-management-system
-            docker compose pull
-            docker compose up -d
+
+            # Pull ALL services every deploy (not just changed ones): earlier deploys failed
+            # mid-pull, so the VM may be behind on several images — a full pull is self-healing
+            # and converges it to :latest. Layers already present are skipped, so once caught up
+            # this is fast. Each attempt is capped by `timeout` so a stall is retried, not fatal.
+            for attempt in 1 2 3; do
+              echo "== docker compose pull (attempt $attempt) =="
+              if timeout 600 docker compose pull; then
+                break
+              fi
+              if [ "$attempt" = "3" ]; then
+                echo "ERROR: docker compose pull failed after 3 attempts" >&2
+                exit 1
+              fi
+              echo "pull stalled/failed; retrying in 15s..."
+              sleep 15
+            done
+
+            docker compose up -d --remove-orphans
+
+            # Fail loudly if anything crashed on start, so a broken deploy shows red instead of
+            # silently leaving old/half-updated containers running.
+            sleep 15
+            if [ -n "$(docker compose ps --status exited --quiet)" ]; then
+              echo "ERROR: one or more services exited after deploy:" >&2
+              docker compose ps >&2
+              exit 1
+            fi
+            docker compose ps
