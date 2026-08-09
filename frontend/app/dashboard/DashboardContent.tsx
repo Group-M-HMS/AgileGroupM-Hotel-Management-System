@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
-import type { MockBooking } from "@/app/manage-booking/mockBookings";
+import { fetchMyBookings, type DashboardBooking } from "@/lib/bookings";
 
 import { UpcomingReservations } from "./UpcomingReservations";
 import { PastReservations } from "./PastReservations";
@@ -11,45 +11,29 @@ import { EmptyBookingsState } from "./EmptyBookingsState";
 
 type Tab = "bookings" | "profile";
 
-const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
-
 function todayIsoDate(): string {
   return new Date().toLocaleDateString("en-CA");
 }
 
 export function DashboardContent() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [hydrated, setHydrated] = useState(false);
+  const { user, loading } = useAuth();
   const [tab, setTab] = useState<Tab>("bookings");
-  const [bookings, setBookings] = useState<MockBooking[] | null>(null);
-  const [roomNames, setRoomNames] = useState<Record<string, string>>({});
+  const [bookings, setBookings] = useState<DashboardBooking[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // One-time mount flag so we don't redirect before AuthContext finishes reading
-    // localStorage — same class of unavoidable one-time effect setState as AuthContext itself.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (hydrated && !user) {
+    if (!loading && !user) {
       router.replace("/login");
     }
-  }, [hydrated, user, router]);
+  }, [loading, user, router]);
 
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetch("/api/manage-booking/list", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email }),
-    })
-      .then(res => res.json())
+    fetchMyBookings()
       .then(data => {
-        if (!cancelled) setBookings(data.bookings ?? []);
+        if (!cancelled) setBookings(data);
       })
       .catch(() => {
         if (!cancelled) setError("We couldn't load your bookings right now. Please try again.");
@@ -59,35 +43,7 @@ export function DashboardContent() {
     };
   }, [user]);
 
-  useEffect(() => {
-    if (!bookings || bookings.length === 0) return;
-    let cancelled = false;
-    const uniqueRoomIds = Array.from(new Set(bookings.map(b => b.roomId)));
-    Promise.all(
-      uniqueRoomIds.map(async roomId => {
-        try {
-          const response = await fetch(`${ROOM_SERVICE_URL}/api/rooms/${roomId}`);
-          if (!response.ok) return null;
-          const room = await response.json();
-          return [roomId, room.name as string] as const;
-        } catch {
-          return null;
-        }
-      })
-    ).then(results => {
-      if (cancelled) return;
-      const names: Record<string, string> = {};
-      for (const result of results) {
-        if (result) names[result[0]] = result[1];
-      }
-      setRoomNames(names);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [bookings]);
-
-  if (!hydrated || !user) {
+  if (loading || !user) {
     return (
       <div className="flex items-center justify-center py-24 font-outfit text-jungle/60">
         Loading...
@@ -145,7 +101,7 @@ export function DashboardContent() {
             <EmptyBookingsState />
           ) : (
             <>
-              <UpcomingReservations bookings={upcoming} roomNames={roomNames} />
+              <UpcomingReservations bookings={upcoming} />
               <PastReservations bookings={past} />
             </>
           )}
@@ -167,6 +123,10 @@ export function DashboardContent() {
             <div>
               <p className="text-sm text-jungle/60">Email</p>
               <p className="mt-1 font-semibold text-jungle-dark">{user.email}</p>
+            </div>
+            <div>
+              <p className="text-sm text-jungle/60">Phone</p>
+              <p className="mt-1 font-semibold text-jungle-dark">{user.phone || "—"}</p>
             </div>
           </div>
         </div>

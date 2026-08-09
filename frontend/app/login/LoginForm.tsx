@@ -3,8 +3,11 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { FieldError } from "@/components/FieldError";
 import { useAuth } from "@/lib/AuthContext";
+import { auth } from "@/lib/firebase";
+import { mapFirebaseAuthError } from "@/lib/firebaseErrors";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,7 +35,7 @@ function validate(f: Fields): Errors {
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, login } = useAuth();
+  const { user } = useAuth();
 
   // 1. Extract return target or fallback to dashboard
   const redirectUrl = searchParams.get("redirect") || "/dashboard";
@@ -91,25 +94,12 @@ function LoginFormContent() {
     setSubmitError(null);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fields),
-      });
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        setSubmitError(body?.message ?? "Invalid credentials. Please try again.");
-        return;
-      }
-
-      const { user: authenticatedUser } = await response.json();
-      login(authenticatedUser);
+      await signInWithEmailAndPassword(auth, fields.email, fields.password);
 
       // 3. Redirect user back to checkout with saved parameters
       router.push(redirectUrl);
-    } catch {
-      setSubmitError("Failed to log in. Please try again.");
+    } catch (error: unknown) {
+      setSubmitError(mapFirebaseAuthError(error, "Failed to log in. Please try again."));
     } finally {
       setSubmitting(false);
     }

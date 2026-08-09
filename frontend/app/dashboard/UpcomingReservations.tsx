@@ -1,15 +1,10 @@
 import Link from "next/link";
 import { CalendarDays, Users, BedDouble, ArrowRight } from "lucide-react";
 import { formatDate } from "@/app/checkout/formatDate";
-import type { MockBooking } from "@/app/manage-booking/mockBookings";
+import type { DashboardBooking } from "@/lib/bookings";
+import { StatusBadge } from "./StatusBadge";
 
-export function UpcomingReservations({
-  bookings,
-  roomNames,
-}: {
-  bookings: MockBooking[];
-  roomNames: Record<string, string>;
-}) {
+export function UpcomingReservations({ bookings }: { bookings: DashboardBooking[] }) {
   return (
     <section>
       <div className="mb-6">
@@ -25,7 +20,7 @@ export function UpcomingReservations({
         <div className="flex flex-col gap-6">
           {bookings.map(booking => (
             <div
-              key={booking.id}
+              key={booking.bookingId}
               className="flex flex-col gap-4 rounded-[30px] border border-sand bg-white p-8 md:flex-row md:items-center md:justify-between"
             >
               <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
@@ -35,7 +30,7 @@ export function UpcomingReservations({
                     <p className="text-sm text-jungle/60">Room</p>
                   </div>
                   <h3 className="mt-1 font-semibold text-jungle-dark">
-                    {roomNames[booking.roomId] ?? "Room details unavailable"}
+                    {booking.roomName || "Room details unavailable"}
                   </h3>
                 </div>
                 <div>
@@ -56,16 +51,19 @@ export function UpcomingReservations({
                 </div>
                 <div className="md:mr-6">
                   <p className="text-sm text-jungle/60">Booking ID</p>
-                  <h3 className="mt-1 font-semibold text-jungle-dark">{booking.id}</h3>
+                  <h3 className="mt-1 font-semibold text-jungle-dark">#{booking.bookingId}</h3>
                 </div>
               </div>
-              <Link
-                href={`/manage-booking/itinerary?email=${encodeURIComponent(booking.email)}&id=${encodeURIComponent(booking.id)}`}
-                className="flex items-center justify-center gap-2 rounded-full bg-sage px-6 py-3 font-semibold text-jungle-dark transition hover:bg-sage/90"
-              >
-                View Itinerary
-                <ArrowRight size={18} />
-              </Link>
+              <div className="flex flex-col items-start gap-3 md:items-end">
+                <StatusBadge status={booking.status} />
+                <Link
+                  href={`/manage-booking/itinerary?id=${booking.bookingId}`}
+                  className="inline-flex items-center gap-1 font-outfit text-sm font-semibold text-sage transition hover:text-jungle-dark"
+                >
+                  View Itinerary
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
             </div>
           ))}
         </div>

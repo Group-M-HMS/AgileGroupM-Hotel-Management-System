@@ -3,9 +3,13 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { PasswordRequirements } from "./PasswordRequirements";
 import { FieldError } from "@/components/FieldError";
 import { useAuth } from "@/lib/AuthContext";
+import { auth } from "@/lib/firebase";
+import { mapFirebaseAuthError } from "@/lib/firebaseErrors";
+import { syncProfile } from "@/lib/apiClient";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -80,7 +84,7 @@ function EyeIcon({ open }: { open: boolean }) {
 function SignUpFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, login } = useAuth();
+  const { user } = useAuth();
 
   // Extract return URL if available, default to dashboard
   const redirectUrl = searchParams.get("redirect") || "/dashboard";
@@ -146,29 +150,21 @@ function SignUpFormContent() {
     setSubmitError(null);
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fields),
+      await createUserWithEmailAndPassword(auth, fields.email, fields.password);
+      await syncProfile({
+        firstName: fields.firstName,
+        lastName: fields.lastName,
+        phone: fields.phoneNumber,
       });
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        setSubmitError(
-          body?.message ??
-            "We couldn't create your account right now. Please try again."
-        );
-        return;
-      }
-
-      const { user: registeredUser } = await response.json();
-      login(registeredUser);
 
       // Redirect directly back to checkout or dashboard
       router.push(redirectUrl);
-    } catch {
+    } catch (error: unknown) {
       setSubmitError(
-        "We couldn't create your account right now. Please try again."
+        mapFirebaseAuthError(
+          error,
+          "We couldn't create your account right now. Please try again."
+        )
       );
     } finally {
       setSubmitting(false);
