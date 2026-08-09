@@ -40,7 +40,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
-            href="/search-results"
+            href="/"
             className="flex items-center space-x-2 text-sand-light hover:text-sage transition-colors">
 
             <Leaf className="h-6 w-6" />
