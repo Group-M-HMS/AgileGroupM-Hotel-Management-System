@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE bookings (
     id                  BIGSERIAL PRIMARY KEY,
-    customer_id         BIGINT         NOT NULL,
+    customer_id         VARCHAR(255)   NOT NULL,
     room_id             BIGINT         NOT NULL,
     check_in_date       DATE           NOT NULL,
     check_out_date      DATE           NOT NULL,

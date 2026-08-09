@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { StatusBadge } from "@/components/StatusBadge";
-
-type Status = "Confirmed" | "Cancelled";
+import { StatusBadge } from "@/app/dashboard/StatusBadge";
+import { cancelBooking, type BookingStatus } from "@/lib/bookings";
 
 export function CancelBookingControl({
-  email,
-  id,
+  bookingId,
   initialStatus,
 }: {
-  email: string;
-  id: string;
-  initialStatus: Status;
+  bookingId: number;
+  initialStatus: BookingStatus;
 }) {
-  const [status, setStatus] = useState<Status>(initialStatus);
+  const [status, setStatus] = useState<BookingStatus>(initialStatus);
   const [modalOpen, setModalOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -28,34 +25,36 @@ export function CancelBookingControl({
   }, [showBanner]);
 
   async function handleConfirmCancel() {
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      setError("Please tell us why you're cancelling.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
-      const response = await fetch("/api/manage-booking/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, id, reason: reason.trim() || undefined }),
-      });
-      if (!response.ok) {
-        setError("We couldn't cancel this booking right now. Please try again.");
-        return;
-      }
-      setStatus("Cancelled");
+      const newStatus = await cancelBooking(bookingId, trimmed);
+      setStatus(newStatus);
       setModalOpen(false);
       setReason("");
       setShowBanner(true);
-    } catch {
-      setError("We couldn't cancel this booking right now. Please try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "We couldn't cancel this booking right now. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
+  // Only a confirmed (paid) or still-pending booking can be cancelled.
+  const cancellable = status === "CONFIRMED" || status === "PENDING";
+
   return (
     <>
       <StatusBadge status={status} />
 
-      {status === "Confirmed" && (
+      {cancellable && (
         <button
           type="button"
           onClick={() => setModalOpen(true)}
@@ -93,7 +92,7 @@ export function CancelBookingControl({
             </div>
             <div className="flex flex-col gap-[4px]">
               <label htmlFor="cancel-reason" className="font-outfit text-[13px] font-medium text-jungle-dark">
-                Reason for cancelling (optional)
+                Reason for cancelling
               </label>
               <textarea
                 id="cancel-reason"
@@ -123,7 +122,7 @@ export function CancelBookingControl({
               <button
                 type="button"
                 onClick={handleConfirmCancel}
-                disabled={submitting}
+                disabled={submitting || !reason.trim()}
                 className="btn-primary disabled:opacity-60"
               >
                 {submitting ? "Cancelling..." : "Yes, Cancel"}

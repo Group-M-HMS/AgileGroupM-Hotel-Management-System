@@ -73,8 +73,9 @@ public class PaymentService {
 
         if (payment.getStatus() == PaymentStatus.PAID) {
             // Already confirmed - return the existing result rather than re-charging
-            // or re-triggering Booking Service (idempotent confirm).
-            return new ConfirmPaymentResponse(payment.getId(), payment.getStatus(), "CONFIRMED");
+            // or re-triggering Booking Service (idempotent confirm). The reference was
+            // returned on the original confirm and isn't stored here, hence null.
+            return new ConfirmPaymentResponse(payment.getId(), payment.getStatus(), "CONFIRMED", null);
         }
 
         PaymentIntent intent = stripePaymentClient.retrievePaymentIntent(payment.getStripePaymentIntentId());
@@ -90,14 +91,15 @@ public class PaymentService {
         payment.setTransactionReference(request.transactionReference());
         paymentRepository.save(payment);
 
-        String bookingStatus = bookingServiceClient.confirmBooking(
+        BookingConfirmResult bookingResult = bookingServiceClient.confirmBooking(
                 payment.getBookingId(), payment.getTransactionReference());
 
-        return new ConfirmPaymentResponse(payment.getId(), payment.getStatus(), bookingStatus);
+        return new ConfirmPaymentResponse(payment.getId(), payment.getStatus(),
+                bookingResult.status(), bookingResult.bookingReference());
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentHistoryItem> getPaymentHistory(Long customerId) {
+    public List<PaymentHistoryItem> getPaymentHistory(String customerId) {
         return paymentRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream()
                 .map(p -> new PaymentHistoryItem(p.getId(), p.getBookingId(), p.getAmount(), p.getStatus()))
                 .toList();

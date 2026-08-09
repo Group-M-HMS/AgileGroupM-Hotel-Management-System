@@ -3,15 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
-import type { MockBooking } from "@/app/manage-booking/mockBookings";
+import { fetchMyBookings, type DashboardBooking } from "@/lib/bookings";
 
 import { UpcomingReservations } from "./UpcomingReservations";
 import { PastReservations } from "./PastReservations";
 import { EmptyBookingsState } from "./EmptyBookingsState";
 
 type Tab = "bookings" | "profile";
-
-const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
 
 function todayIsoDate(): string {
   return new Date().toLocaleDateString("en-CA");
@@ -21,8 +19,7 @@ export function DashboardContent() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [tab, setTab] = useState<Tab>("bookings");
-  const [bookings, setBookings] = useState<MockBooking[] | null>(null);
-  const [roomNames, setRoomNames] = useState<Record<string, string>>({});
+  const [bookings, setBookings] = useState<DashboardBooking[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,14 +31,9 @@ export function DashboardContent() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetch("/api/manage-booking/list", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email }),
-    })
-      .then(res => res.json())
+    fetchMyBookings()
       .then(data => {
-        if (!cancelled) setBookings(data.bookings ?? []);
+        if (!cancelled) setBookings(data);
       })
       .catch(() => {
         if (!cancelled) setError("We couldn't load your bookings right now. Please try again.");
@@ -50,34 +42,6 @@ export function DashboardContent() {
       cancelled = true;
     };
   }, [user]);
-
-  useEffect(() => {
-    if (!bookings || bookings.length === 0) return;
-    let cancelled = false;
-    const uniqueRoomIds = Array.from(new Set(bookings.map(b => b.roomId)));
-    Promise.all(
-      uniqueRoomIds.map(async roomId => {
-        try {
-          const response = await fetch(`${ROOM_SERVICE_URL}/api/rooms/${roomId}`);
-          if (!response.ok) return null;
-          const room = await response.json();
-          return [roomId, room.name as string] as const;
-        } catch {
-          return null;
-        }
-      })
-    ).then(results => {
-      if (cancelled) return;
-      const names: Record<string, string> = {};
-      for (const result of results) {
-        if (result) names[result[0]] = result[1];
-      }
-      setRoomNames(names);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [bookings]);
 
   if (loading || !user) {
     return (
@@ -137,7 +101,7 @@ export function DashboardContent() {
             <EmptyBookingsState />
           ) : (
             <>
-              <UpcomingReservations bookings={upcoming} roomNames={roomNames} />
+              <UpcomingReservations bookings={upcoming} />
               <PastReservations bookings={past} />
             </>
           )}

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { CalendarDays, ArrowUpRight } from "lucide-react";
 import { formatDate } from "@/app/checkout/formatDate";
-import type { MockBooking } from "@/app/manage-booking/mockBookings";
+import type { DashboardBooking } from "@/lib/bookings";
+import { StatusBadge } from "./StatusBadge";
 
-export function PastReservations({ bookings }: { bookings: MockBooking[] }) {
+export function PastReservations({ bookings }: { bookings: DashboardBooking[] }) {
   return (
     <section>
       <div className="mb-6">
@@ -24,13 +25,14 @@ export function PastReservations({ bookings }: { bookings: MockBooking[] }) {
                 <th className="w-[25%] pb-4 font-outfit font-semibold text-jungle-dark">Stay</th>
                 <th className="w-[15%] pb-4 font-outfit font-semibold text-jungle-dark">Guests</th>
                 <th className="w-[15%] pb-4 font-outfit font-semibold text-jungle-dark">Total</th>
-                <th className="w-[15%] pb-4"></th>
+                <th className="w-[12%] pb-4 font-outfit font-semibold text-jungle-dark">Status</th>
+                <th className="w-[13%] pb-4"></th>
               </tr>
             </thead>
             <tbody>
               {bookings.map(booking => (
                 <tr
-                  key={booking.id}
+                  key={booking.bookingId}
                   className="border-b border-sand/60 transition hover:bg-sand-light"
                 >
                   <td className="py-6">
@@ -38,7 +40,10 @@ export function PastReservations({ bookings }: { bookings: MockBooking[] }) {
                       <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sage/20">
                         <CalendarDays size={20} className="text-sage" />
                       </div>
-                      <p className="font-semibold text-jungle-dark">{booking.id}</p>
+                      <div>
+                        <p className="font-semibold text-jungle-dark">{booking.roomName}</p>
+                        <p className="text-sm text-jungle/50">#{booking.bookingId}</p>
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -48,8 +53,11 @@ export function PastReservations({ bookings }: { bookings: MockBooking[] }) {
                   <td>{booking.guests}</td>
                   <td className="font-semibold">${booking.total.toFixed(2)}</td>
                   <td>
+                    <StatusBadge status={booking.status} />
+                  </td>
+                  <td>
                     <Link
-                      href={`/manage-booking/itinerary?email=${encodeURIComponent(booking.email)}&id=${encodeURIComponent(booking.id)}`}
+                      href={`/manage-booking/itinerary?id=${booking.bookingId}`}
                       className="flex items-center gap-2 font-semibold text-sage transition hover:text-jungle-dark"
                     >
                       Details

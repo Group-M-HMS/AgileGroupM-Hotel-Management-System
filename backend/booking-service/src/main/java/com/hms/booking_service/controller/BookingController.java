@@ -26,7 +26,7 @@ public class BookingController {
     @PostMapping
     @Operation(summary = "Create a booking")
     public ResponseEntity<ApiResponse<CreateBookingResponse>> createBooking(
-            @RequestHeader(value = "X-User-Id", required = false) Long customerId,
+            @RequestHeader(value = "X-User-Id", required = false) String customerId,
             @Valid @RequestBody CreateBookingRequest request) {
 
         requireAuthenticated(customerId);
@@ -38,7 +38,7 @@ public class BookingController {
     @GetMapping("/my")
     @Operation(summary = "Get the logged-in customer's bookings")
     public ResponseEntity<ApiResponse<List<BookingSummary>>> getMyBookings(
-            @RequestHeader(value = "X-User-Id", required = false) Long customerId) {
+            @RequestHeader(value = "X-User-Id", required = false) String customerId) {
 
         requireAuthenticated(customerId);
         return ResponseEntity.ok(ApiResponse.ok(bookingService.getMyBookings(customerId)));
@@ -47,7 +47,7 @@ public class BookingController {
     @GetMapping("/my/{bookingId}")
     @Operation(summary = "Get a specific booking's details")
     public ResponseEntity<ApiResponse<BookingDetailResponse>> getBookingDetails(
-            @RequestHeader(value = "X-User-Id", required = false) Long customerId,
+            @RequestHeader(value = "X-User-Id", required = false) String customerId,
             @PathVariable Long bookingId) {
 
         requireAuthenticated(customerId);
@@ -57,7 +57,7 @@ public class BookingController {
     @PostMapping("/{bookingId}/cancel")
     @Operation(summary = "Cancel a booking")
     public ResponseEntity<ApiResponse<CancelBookingResponse>> cancelBooking(
-            @RequestHeader(value = "X-User-Id", required = false) Long customerId,
+            @RequestHeader(value = "X-User-Id", required = false) String customerId,
             @PathVariable Long bookingId,
             @Valid @RequestBody CancelBookingRequest request) {
 
@@ -67,8 +67,8 @@ public class BookingController {
     }
 
     /** NIBM2-468: reject any booking-confirmation-adjacent request without an authenticated session. */
-    private void requireAuthenticated(Long customerId) {
-        if (customerId == null) {
+    private void requireAuthenticated(String customerId) {
+        if (customerId == null || customerId.isBlank()) {
             throw new UnauthorizedException("Authentication required");
         }
     }
