@@ -2,13 +2,13 @@ import urllib.request
 import json
 from datetime import datetime, timedelta
 
-def create_booking(uid, room_id, check_in, check_out, guests=1):
+def create_booking(uid, room_id, check_in, check_out, guests=1, special_requests="none"):
     data = json.dumps({
         "roomId": room_id,
         "checkInDate": check_in,
         "checkOutDate": check_out,
         "numberOfGuests": guests,
-        "specialRequests": "none",
+        "specialRequests": special_requests,
         "termsAccepted": True
     }).encode("utf-8")
     
@@ -39,5 +39,9 @@ create_booking("past_user_uid", 1, get_date(-10), get_date(-8))
 
 # 4. today_user_uid (needs 1 booking with checkout = today)
 create_booking("today_user_uid", 2, get_date(-2), get_date(0))
+
+# 5. special_user_uid (needs special requests bookings)
+create_booking("special_user_uid", 1, get_date(5), get_date(7), 2, "Late check-in after 10pm")
+create_booking("special_user_uid", 3, get_date(12), get_date(14), 1, "Please provide extra pillows, high-floor room, quiet space near garden 🌿✨! " + ("Long special request detail line with formatting. " * 15))
 
 
