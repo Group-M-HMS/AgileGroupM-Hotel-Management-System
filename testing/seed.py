@@ -37,3 +37,7 @@ create_booking("details_user_uid", 4, get_date(5), get_date(7), 4)
 # 3. past_user_uid (needs 1 past booking)
 create_booking("past_user_uid", 1, get_date(-10), get_date(-8))
 
+# 4. today_user_uid (needs 1 booking with checkout = today)
+create_booking("today_user_uid", 2, get_date(-2), get_date(0))
+
+
