@@ -1,0 +1,21 @@
+# Target build directory
+target/
+
+# Test output directory & logs
+test-output/
+*.log
+
+# IDE & Editor files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# Compiled Java class files
+*.class
+
+# OS junk
+.DS_Store
+Thumbs.db
