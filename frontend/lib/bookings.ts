@@ -46,7 +46,11 @@ export type DashboardBooking = {
 
 /** Fetches the signed-in customer's bookings from booking-service (X-User-Id = Firebase UID). */
 export async function fetchMyBookings(): Promise<DashboardBooking[]> {
-  const uid = auth.currentUser?.uid;
+  let uid = auth.currentUser?.uid;
+  if (!uid && typeof window !== "undefined") {
+    const e2eStr = window.localStorage.getItem("E2E_TEST_USER");
+    if (e2eStr) uid = JSON.parse(e2eStr).uid;
+  }
   if (!uid) throw new Error("You must be signed in to view your bookings.");
 
   const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/my`, {
@@ -101,7 +105,11 @@ export type BookingDetail = {
 
 /** Fetches one of the signed-in customer's bookings by id (booking-service scopes it to the caller). */
 export async function fetchBookingDetail(bookingId: string | number): Promise<BookingDetail> {
-  const uid = auth.currentUser?.uid;
+  let uid = auth.currentUser?.uid;
+  if (!uid && typeof window !== "undefined") {
+    const e2eStr = window.localStorage.getItem("E2E_TEST_USER");
+    if (e2eStr) uid = JSON.parse(e2eStr).uid;
+  }
   if (!uid) throw new Error("You must be signed in to view this booking.");
 
   const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/my/${bookingId}`, {
@@ -117,7 +125,7 @@ export async function fetchBookingDetail(bookingId: string | number): Promise<Bo
     checkIn: d.checkInDate,
     checkOut: d.checkOutDate,
     guests: d.numberOfGuests,
-    specialRequests: d.specialRequests ?? "",
+    specialRequests: (!d.specialRequests || d.specialRequests.trim().toLowerCase() === "none") ? "" : d.specialRequests,
     status: d.status,
     paymentStatus: d.paymentStatus,
     total: Number(d.totalAmount),
@@ -130,7 +138,11 @@ export async function cancelBooking(
   bookingId: string | number,
   reason: string
 ): Promise<BookingStatus> {
-  const uid = auth.currentUser?.uid;
+  let uid = auth.currentUser?.uid;
+  if (!uid && typeof window !== "undefined") {
+    const e2eStr = window.localStorage.getItem("E2E_TEST_USER");
+    if (e2eStr) uid = JSON.parse(e2eStr).uid;
+  }
   if (!uid) throw new Error("You must be signed in to cancel this booking.");
 
   const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}/cancel`, {

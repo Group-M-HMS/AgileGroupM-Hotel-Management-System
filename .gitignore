@@ -12,6 +12,9 @@ target/
 .env
 /deploy/VM_SETUP.md
 
+# Apache Maven portable binary folder
+apache-maven-3.9.6/
+
 # Firebase service-account credentials — must never be committed (Google auto-disables
 # public keys). Provided at runtime via FIREBASE_CREDENTIALS_PATH; devs may drop a local
 # copy at the path below for local runs.

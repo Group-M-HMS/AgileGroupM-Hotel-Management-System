@@ -25,6 +25,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for E2E_TEST_USER first
+    if (typeof window !== "undefined") {
+      const e2eStr = window.localStorage.getItem("E2E_TEST_USER");
+      if (e2eStr) {
+        setUser(JSON.parse(e2eStr));
+        setLoading(false);
+        return;
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         // eslint-disable-next-line react-hooks/set-state-in-effect

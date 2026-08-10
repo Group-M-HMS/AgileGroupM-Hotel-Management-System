@@ -136,6 +136,17 @@ export default async function BookingSuccessPage({
             </dl>
           </div>
 
+          <div className="mt-6 w-full rounded-xl border-2 border-sand bg-white px-6 py-5">
+            <h2 className="font-outfit text-sm font-semibold text-jungle">
+              Arrival & Check-in Guidance
+            </h2>
+            <ul className="mt-3 space-y-2 font-outfit text-xs text-jungle/75 list-disc pl-4">
+              <li>Check-in begins at 2:00 PM. Early check-in is subject to availability.</li>
+              <li>Please present a valid government-issued photo ID or passport upon arrival.</li>
+              <li>Keep your Booking Reference handy when arriving at reception.</li>
+            </ul>
+          </div>
+
           <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/dashboard"
