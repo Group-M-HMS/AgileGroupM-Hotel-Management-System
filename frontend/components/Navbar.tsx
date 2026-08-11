@@ -53,8 +53,8 @@ export function Navbar() {
     path: '/'
   },
   {
-    name: 'The Villa',
-    path: '/villa'
+    name: 'The Hotel',
+    path: '/hotel'
   },
   {
     name: 'Rooms',
@@ -71,7 +71,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
-            href="/search-results"
+            href="/"
             className={`flex items-center space-x-2 transition-colors ${logoCls}`}>
 
             <Leaf className="h-6 w-6" />
