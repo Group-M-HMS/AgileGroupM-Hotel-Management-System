@@ -102,7 +102,7 @@ export function Navbar() {
               </Link>
             }
             <Link
-              href="/"
+              href="/#search-stay"
               className="bg-sage hover:bg-sage-light text-jungle-dark px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5">
 
               Book Stay
@@ -166,7 +166,7 @@ export function Navbar() {
               </Link>
             }
             <Link
-            href="/book"
+            href="/#search-stay"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 mt-4 text-center rounded-md text-base font-medium bg-sage text-jungle-dark hover:bg-sage-light">
 
