@@ -3,10 +3,10 @@ import { SectionHeading } from "./SectionHeading";
 function SummaryField({ label, value, icon }: { label: string; value: string; icon?: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="font-outfit text-[12px] uppercase tracking-wide text-jungle/50">
+      <span className="font-jakarta text-[12px] uppercase tracking-wide text-jungle/50">
         {label}
       </span>
-      <span className="flex items-center gap-1 font-outfit text-[15px] font-semibold text-jungle-dark">
+      <span className="flex items-center gap-1 font-jakarta text-[15px] font-semibold text-jungle-dark">
         {icon && (
           <span className="material-symbols-outlined text-jungle/50" style={{ fontSize: "16px" }} aria-hidden="true">
             {icon}

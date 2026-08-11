@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loadStripe } from "@stripe/stripe-js";
@@ -24,6 +24,10 @@ type GuestInfoFormProps = {
   checkOut: string;
   guests: string;
   quote: Quote | null;
+  // Server-rendered stay + price summary card, slotted into the right column
+  // so the whole grid can live inside one <form> under one <Elements> provider
+  // (Stripe's CardElement + the submit handler must share a provider).
+  summary: ReactNode;
 };
 
 type Quote = {
@@ -91,11 +95,19 @@ function validate(f: Fields): Errors {
   return e;
 }
 
+// Text inputs reuse the shared .input-field control (pill radius, height,
+// padding) with only the stateful border/focus colour appended — same split
+// SignUpForm uses, so every form across the app looks identical.
 function fieldCls(hasError?: string) {
-  return `input-field w-full rounded-md border-2 bg-white px-4 py-3 font-outfit text-sm transition-colors focus:outline-none ${
-    hasError
-      ? "border-red-400 focus:border-red-500"
-      : "border-sand focus:border-sage"
+  return `input-field ${hasError ? "border-red-400 focus:border-red-400" : "border-sand focus:border-sage"}`;
+}
+
+// The card <div> that hosts Stripe's <CardElement>. It can't use .input-field
+// directly (the element needs vertical centring inside the control height), so
+// it mirrors the same radius/border/padding tokens with flex centring.
+function cardWrapCls(hasError?: string) {
+  return `flex h-control items-center rounded-input border-2 bg-white px-field-x transition-colors ${
+    hasError ? "border-red-400" : "border-sand focus-within:border-sage"
   }`;
 }
 
@@ -105,6 +117,7 @@ function GuestInfoFormInner({
   checkOut,
   guests,
   quote,
+  summary,
 }: GuestInfoFormProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -274,42 +287,42 @@ function GuestInfoFormInner({
 
   if (authLoading) {
     return (
-      <div className="p-6 font-outfit text-sm text-jungle/60">
+      <div className="p-6 font-jakarta text-sm text-jungle/60">
         Loading guest details...
       </div>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      noValidate
-      className="flex w-full max-w-2xl flex-col gap-6"
-    >
-      {!user && (
-        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50/80 p-4 font-outfit text-sm text-amber-900">
-          <span>Already have an account with us?</span>
-          <Link
-            href={loginRedirectUrl}
-            className="font-medium text-emerald-800 underline hover:text-emerald-950"
-          >
-            Sign in to autofill details →
-          </Link>
-        </div>
-      )}
+    <form onSubmit={handleSubmit} noValidate className="w-full">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-3 lg:gap-16">
+        {/* ── Left column: guest details + confirm ───────────────────── */}
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          {!user && (
+            <div className="flex flex-col gap-2 rounded-2xl border border-sand bg-sand-light p-4 font-jakarta text-sm text-jungle sm:flex-row sm:items-center sm:justify-between">
+              <span>Already have an account with us?</span>
+              <Link
+                href={loginRedirectUrl}
+                className="font-semibold text-jungle-dark underline hover:text-jungle"
+              >
+                Sign in to autofill details →
+              </Link>
+            </div>
+          )}
 
-      <div className="flex flex-col gap-1.5">
-        <h2 className="font-lora text-2xl font-medium text-jungle-dark">
-          Guest Information
-        </h2>
-        <p className="font-outfit text-sm text-jungle/60">
-          We will use these details to send your booking confirmation and
-          contact you if needed.
-        </p>
-      </div>
+          <div className="flex flex-col gap-6 rounded-3xl border border-sand bg-white p-6 shadow-soft lg:p-8">
+            <div className="flex flex-col gap-1.5">
+              <h2 className="font-fraunces text-2xl font-medium text-jungle-dark">
+                Guest Information
+              </h2>
+              <p className="font-jakarta text-sm text-jungle/60">
+                We will use these details to send your booking confirmation and
+                contact you if needed.
+              </p>
+            </div>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex flex-1 flex-col">
             <input
               type="text"
@@ -323,7 +336,7 @@ function GuestInfoFormInner({
               className={fieldCls(err("firstName"))}
             />
             {err("firstName") && (
-              <span className="mt-1 font-outfit text-xs text-red-500">
+              <span className="mt-1 font-jakarta text-xs text-red-500">
                 {err("firstName")}
               </span>
             )}
@@ -342,7 +355,7 @@ function GuestInfoFormInner({
               className={fieldCls(err("lastName"))}
             />
             {err("lastName") && (
-              <span className="mt-1 font-outfit text-xs text-red-500">
+              <span className="mt-1 font-jakarta text-xs text-red-500">
                 {err("lastName")}
               </span>
             )}
@@ -363,7 +376,7 @@ function GuestInfoFormInner({
               className={fieldCls(err("email"))}
             />
             {err("email") && (
-              <span className="mt-1 font-outfit text-xs text-red-500">
+              <span className="mt-1 font-jakarta text-xs text-red-500">
                 {err("email")}
               </span>
             )}
@@ -382,7 +395,7 @@ function GuestInfoFormInner({
               className={fieldCls(err("phone"))}
             />
             {err("phone") && (
-              <span className="mt-1 font-outfit text-xs text-red-500">
+              <span className="mt-1 font-jakarta text-xs text-red-500">
                 {err("phone")}
               </span>
             )}
@@ -398,114 +411,131 @@ function GuestInfoFormInner({
             onBlur={() => touch("specialRequests")}
             rows={4}
             maxLength={500}
-            className={`w-full resize-none rounded-md border-2 bg-white px-4 py-3 font-outfit text-sm transition-colors focus:outline-none ${
+            className={`w-full resize-none rounded-[20px] border-2 bg-white px-field-x py-3.5 font-jakarta text-field text-jungle placeholder:text-jungle/50 outline-none transition-colors ${
               err("specialRequests")
-                ? "border-red-400 focus:border-red-500"
+                ? "border-red-400 focus:border-red-400"
                 : "border-sand focus:border-sage"
             }`}
           />
           <div className="flex items-center justify-between">
             {err("specialRequests") ? (
-              <span className="font-outfit text-xs text-red-500">
+              <span className="font-jakarta text-xs text-red-500">
                 {err("specialRequests")}
               </span>
             ) : (
               <span />
             )}
-            <span className="font-outfit text-xs text-jungle/45">
+            <span className="font-jakarta text-xs text-jungle/45">
               {resolvedFields.specialRequests.length}/500
             </span>
           </div>
-        </div>
-      </div>
+            </div>
+          </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="font-outfit text-sm font-medium text-jungle">
-          Card details
-        </label>
-        <div className={fieldCls(cardError)}>
-          <CardElement
-            options={{
-              hidePostalCode: true,
-              style: {
-                base: {
-                  fontSize: "14px",
-                  color: "#1f2d27",
-                  fontFamily: "Outfit, sans-serif",
-                  "::placeholder": { color: "#9ca3af" },
-                },
-                invalid: { color: "#ef4444" },
-              },
-            }}
-            onChange={(e) => setCardError(e.error?.message)}
-          />
-        </div>
-        {cardError ? (
-          <p className="font-outfit text-sm text-red-500">{cardError}</p>
-        ) : (
-          <p className="font-outfit text-xs text-jungle/45">
-            Test mode — use 4242 4242 4242 4242, any future expiry, any CVC.
-          </p>
-        )}
-      </div>
+            {/* Payment — a divided section within the same card, below the
+                guest details. */}
+            <div className="flex flex-col gap-3 border-t border-sand pt-6">
+              <p className="font-jakarta text-[12px] font-medium uppercase tracking-[2px] text-sage">
+                Payment
+              </p>
+            <label className="font-jakarta text-sm font-medium text-jungle">
+              Card details
+            </label>
+            <div className={cardWrapCls(cardError)}>
+              <div className="w-full">
+                <CardElement
+                  options={{
+                    hidePostalCode: true,
+                    style: {
+                      base: {
+                        fontSize: "15px",
+                        color: "#1f3d2b",
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        "::placeholder": { color: "#7c8a72" },
+                      },
+                      invalid: { color: "#ef4444" },
+                    },
+                  }}
+                  onChange={(e) => setCardError(e.error?.message)}
+                />
+              </div>
+            </div>
+            {cardError ? (
+              <p className="font-jakarta text-sm text-red-500">{cardError}</p>
+            ) : (
+              <p className="font-jakarta text-xs text-jungle/45">
+                Test mode — use 4242 4242 4242 4242, any future expiry, any CVC.
+              </p>
+            )}
 
-      <div className="flex flex-col gap-2">
-        <label className="flex items-start gap-3 font-outfit text-sm text-jungle cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={agreedTerms}
-            onChange={(e) => {
-              setAgreedTerms(e.target.checked);
-              if (e.target.checked) setTermsError("");
-            }}
-            className="mt-1 h-4 w-4 rounded border-sand text-sage focus:ring-sage"
-          />
-          <span>
-            I agree to the{" "}
-            <a
-              href="/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
+            <label className="mt-1 flex items-start gap-3 border-t border-sand pt-4 font-jakarta text-sm text-jungle cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={agreedTerms}
+                onChange={(e) => {
+                  setAgreedTerms(e.target.checked);
+                  if (e.target.checked) setTermsError("");
+                }}
+                className={`form-checkbox mt-0.5 ${
+                  termsError ? "border-red-400" : "border-sand"
+                }`}
+              />
+              <span>
+                I agree to the{" "}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-jungle-dark underline hover:text-jungle"
+                >
+                  Terms &amp; Conditions
+                </a>{" "}
+                and confirm that my booking details are correct.
+              </span>
+            </label>
+            {termsError && (
+              <p className="font-jakarta text-sm text-red-500">{termsError}</p>
+            )}
+
+            {submitError && (
+              <div className="rounded-2xl border border-red-300 bg-red-50 p-3 font-jakarta text-sm text-red-600">
+                {submitError}
+              </div>
+            )}
+
+            {/* Warning prompt if user is not signed in */}
+            {!user && (
+              <p className="font-jakarta text-xs text-clay">
+                * You must be signed in to complete your booking.
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-primary mt-1 sm:w-auto sm:self-start sm:px-10 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Terms & Conditions
-            </a>{" "}
-            and confirm that my booking details are correct.
-          </span>
-        </label>
-        {termsError && (
-          <p className="font-outfit text-sm text-red-500">{termsError}</p>
-        )}
-      </div>
-
-      {submitError && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-3 font-outfit text-sm text-red-600">
-          {submitError}
+              {!user
+                ? "Sign In to Pay & Book"
+                : paymentStep === "processing"
+                ? "Reserving Your Room..."
+                : paymentStep === "confirming"
+                ? "Authorizing Payment..."
+                : paymentStep === "saving"
+                ? "Confirming Booking..."
+                : "Pay & Book"}
+            </button>
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* Warning prompt if user is not signed in */}
-      {!user && (
-        <p className="font-outfit text-xs text-amber-800">
-          * You must be signed in to complete your booking.
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="btn-primary sm:w-auto sm:self-start sm:px-10 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {!user
-          ? "Sign In to Pay & Book"
-          : paymentStep === "processing"
-          ? "Reserving Your Room..."
-          : paymentStep === "confirming"
-          ? "Authorizing Payment..."
-          : paymentStep === "saving"
-          ? "Confirming Booking..."
-          : "Pay & Book"}
-      </button>
+        {/* ── Right column: your stay + price (one card) ────────────── */}
+        <div className="lg:col-span-1">
+          <div className="lg:sticky lg:top-24">
+            {summary}
+          </div>
+        </div>
+      </div>
     </form>
   );
 }

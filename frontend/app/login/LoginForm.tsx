@@ -30,6 +30,29 @@ function validate(f: Fields): Errors {
   return e;
 }
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+// Same split SignUpForm uses: shared .input-field base + stateful border/focus.
+
+function fieldCls(hasError?: string) {
+  return `input-field ${hasError ? "border-red-400 focus:border-red-400" : "border-sand focus:border-sage"}`;
+}
+
+// ── Eye icon ──────────────────────────────────────────────────────────────────
+
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+}
+
 // ── Inner Form Component ──────────────────────────────────────────────────────
 
 function LoginFormContent() {
@@ -55,6 +78,7 @@ function LoginFormContent() {
   const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -108,12 +132,21 @@ function LoginFormContent() {
   const err = (field: keyof Fields) => (touched[field] ? errors[field] : undefined);
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col items-start gap-[24px]">
+    <form onSubmit={handleSubmit} noValidate className="flex w-full max-w-[400px] flex-col items-start gap-[24px]">
+      {/* ── Heading ── */}
       <div className="flex w-full flex-col items-start gap-[10px]">
-        <h1 className="font-lora text-heading-md font-medium text-jungle-dark">Welcome Back</h1>
-        <p className="font-outfit text-field text-jungle/65">Log in to manage your reservation.</p>
+        <p className="font-jakarta text-[12px] font-medium uppercase tracking-[3px] text-sage">
+          Member Access
+        </p>
+        <h1 className="font-fraunces text-heading-sm font-medium tracking-[-0.5px] text-jungle-dark sm:text-heading-md lg:text-heading-lg">
+          Welcome back
+        </h1>
+        <p className="font-jakarta text-field text-jungle/65 lg:text-[16px]">
+          Log in to manage your reservation.
+        </p>
       </div>
 
+      {/* ── Fields ── */}
       <div className="flex w-full flex-col gap-[14px]">
         <div className="flex flex-col gap-[4px]">
           <input
@@ -122,37 +155,58 @@ function LoginFormContent() {
             value={fields.email}
             onChange={(e) => set("email", e.target.value)}
             onBlur={() => touch("email")}
-            className={`input-field ${err("email") ? "border-red-400" : "border-sand"}`}
+            className={fieldCls(err("email"))}
           />
           <FieldError message={err("email")} />
         </div>
 
         <div className="flex flex-col gap-[4px]">
-          <input
-            type="password"
-            placeholder="Password*"
-            value={fields.password}
-            onChange={(e) => set("password", e.target.value)}
-            onBlur={() => touch("password")}
-            className={`input-field ${err("password") ? "border-red-400" : "border-sand"}`}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password*"
+              value={fields.password}
+              onChange={(e) => set("password", e.target.value)}
+              onBlur={() => touch("password")}
+              className={`${fieldCls(err("password"))} pr-[44px]`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-[16px] top-1/2 -translate-y-1/2 text-jungle/50 transition-colors hover:text-jungle"
+            >
+              <EyeIcon open={showPassword} />
+            </button>
+          </div>
           <FieldError message={err("password")} />
         </div>
       </div>
 
+      {/* ── Remember me ── */}
+      <label className="flex cursor-pointer select-none items-center gap-[10px]">
+        <input
+          type="checkbox"
+          checked={fields.rememberMe}
+          onChange={(e) => set("rememberMe", e.target.checked)}
+          className="form-checkbox border-sage"
+        />
+        <span className="font-jakarta text-meta text-jungle/85">Remember me</span>
+      </label>
+
       {submitError && (
-        <div className="w-full rounded-input border border-red-400 px-4 py-3 font-outfit text-[13px] text-red-500">
+        <div className="w-full rounded-input border border-red-400 px-4 py-3 font-jakarta text-[13px] text-red-500">
           {submitError}
         </div>
       )}
 
       <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
-        {submitting ? "LOGGING IN..." : "LOG IN"}
+        {submitting ? "Logging in…" : "Log In"}
       </button>
 
       <div className="flex w-full items-center justify-center gap-[6px] text-meta">
-        <span className="font-outfit text-jungle/65">Don&apos;t have an account?</span>
-        <Link href={signUpUrl} className="font-outfit font-semibold text-jungle-dark hover:underline">
+        <span className="font-jakarta text-jungle/65">Don&apos;t have an account?</span>
+        <Link href={signUpUrl} className="font-jakarta font-semibold text-jungle-dark hover:underline">
           Sign up
         </Link>
       </div>
@@ -162,7 +216,7 @@ function LoginFormContent() {
 
 export default function LoginForm() {
   return (
-    <Suspense fallback={<div className="p-4 font-outfit text-sm">Loading...</div>}>
+    <Suspense fallback={<div className="p-4 font-jakarta text-sm">Loading...</div>}>
       <LoginFormContent />
     </Suspense>
   );

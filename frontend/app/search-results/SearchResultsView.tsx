@@ -6,6 +6,7 @@ import { ResultsLoadingSkeleton } from "./ResultsLoadingSkeleton";
 import { RoomResultsList } from "./RoomResultsList";
 import { EmptyResultsState } from "./EmptyResultsState";
 import { SortFilterBar, type SortOption } from "./SortFilterBar";
+import { SearchEditBar } from "./SearchEditBar";
 
 type Status = "loading" | "success" | "empty" | "timeout" | "error";
 
@@ -54,10 +55,12 @@ export function SearchResultsView({
   guests,
   checkIn,
   checkOut,
+  staySummary,
 }: {
   guests: number;
   checkIn: string;
   checkOut: string;
+  staySummary: string;
 }) {
   const [status, setStatus] = useState<Status>("loading");
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -125,66 +128,81 @@ export function SearchResultsView({
     };
   }, [checkIn, checkOut, guests]);
 
-  if (status === "loading") return <ResultsLoadingSkeleton />;
-
-  if (status === "timeout") {
-    return (
+  let content;
+  if (status === "loading") {
+    content = <ResultsLoadingSkeleton />;
+  } else if (status === "timeout") {
+    content = (
       <div className="flex w-full flex-col items-center gap-4 rounded-3xl bg-white px-6 py-16 text-center shadow-soft">
-        <h2 className="font-lora text-[24px] font-medium text-jungle-dark">
+        <h2 className="font-fraunces text-[24px] font-medium text-jungle-dark">
           This is taking longer than expected
         </h2>
-        <p className="max-w-md font-outfit text-field text-jungle/70">
+        <p className="max-w-md font-jakarta text-field text-jungle/70">
           Please try your search again in a moment.
         </p>
       </div>
     );
-  }
-
-  if (status === "error") {
-    return (
+  } else if (status === "error") {
+    content = (
       <div className="flex w-full flex-col items-center gap-4 rounded-3xl bg-white px-6 py-16 text-center shadow-soft">
-        <h2 className="font-lora text-[24px] font-medium text-jungle-dark">
+        <h2 className="font-fraunces text-[24px] font-medium text-jungle-dark">
           Something went wrong
         </h2>
-        <p className="max-w-md font-outfit text-field text-jungle/70">
+        <p className="max-w-md font-jakarta text-field text-jungle/70">
           We couldn&apos;t load rooms right now. Please try your search again.
         </p>
       </div>
     );
-  }
-
-  if (status === "empty") {
-    return <EmptyResultsState checkIn={checkIn} checkOut={checkOut} guests={guests} />;
+  } else if (status === "empty") {
+    content = <EmptyResultsState checkIn={checkIn} checkOut={checkOut} guests={guests} />;
+  } else if (visibleRooms.length === 0) {
+    content = (
+      <div className="flex w-full flex-col items-center gap-2 rounded-3xl bg-white px-6 py-16 text-center shadow-soft">
+        <h2 className="font-fraunces text-[24px] font-medium text-jungle-dark">
+          No rooms match those filters
+        </h2>
+        <p className="max-w-md font-jakarta text-field text-jungle/70">
+          Try removing a filter to see more rooms.
+        </p>
+      </div>
+    );
+  } else {
+    content = (
+      <RoomResultsList rooms={visibleRooms} checkIn={checkIn} checkOut={checkOut} guests={guests} />
+    );
   }
 
   return (
     <div className="flex w-full flex-col">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-lora text-[24px] font-medium text-jungle-dark sm:text-[28px]">
-          We found {rooms.length} {rooms.length === 1 ? "room" : "rooms"} for you
+      {/* Page header — anchors the results and echoes the active search. */}
+      <div className="mb-4">
+        <p className="font-jakarta text-[12px] font-medium uppercase tracking-[3px] text-sage">
+          Kitulgala · Sri Lanka
+        </p>
+        <h1 className="mt-2 font-fraunces text-[30px] font-medium text-jungle-dark lg:text-[38px]">
+          Available Rooms
         </h1>
-
-        <SortFilterBar
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          availableAmenities={availableAmenities}
-          selectedAmenities={selectedAmenities}
-          onToggleAmenity={toggleAmenity}
-        />
+        <p className="mt-1 font-jakarta text-[14px] text-jungle/60">
+          {staySummary}
+        </p>
       </div>
 
-      {visibleRooms.length === 0 ? (
-        <div className="flex w-full flex-col items-center gap-2 rounded-3xl bg-white px-6 py-16 text-center shadow-soft">
-          <h2 className="font-lora text-[24px] font-medium text-jungle-dark">
-            No rooms match those filters
-          </h2>
-          <p className="max-w-md font-outfit text-field text-jungle/70">
-            Try removing a filter to see more rooms.
-          </p>
-        </div>
-      ) : (
-        <RoomResultsList rooms={visibleRooms} checkIn={checkIn} checkOut={checkOut} guests={guests} />
-      )}
+      <SearchEditBar
+        guests={guests}
+        checkIn={checkIn}
+        checkOut={checkOut}
+        sortBar={
+          <SortFilterBar
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            availableAmenities={availableAmenities}
+            selectedAmenities={selectedAmenities}
+            onToggleAmenity={toggleAmenity}
+          />
+        }
+      />
+
+      {content}
     </div>
   );
 }

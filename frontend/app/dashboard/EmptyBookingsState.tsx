@@ -8,15 +8,15 @@ export function EmptyBookingsState() {
         <CalendarPlus size={30} className="text-sage" />
       </div>
       <div>
-        <h2 className="font-lora text-3xl text-jungle-dark">No reservations yet</h2>
-        <p className="mt-2 max-w-md font-outfit text-jungle/70">
+        <h2 className="font-fraunces text-3xl text-jungle-dark">No reservations yet</h2>
+        <p className="mt-2 max-w-md font-jakarta text-jungle/70">
           You haven&apos;t made any bookings with us yet. Find your perfect stay and start
           planning your escape into the rainforest.
         </p>
       </div>
       <Link
         href="/search-results"
-        className="rounded-full bg-sage px-7 py-3 font-outfit font-semibold text-jungle-dark transition hover:bg-sage/90"
+        className="rounded-full bg-sage px-7 py-3 font-jakarta font-semibold text-jungle-dark transition hover:bg-sage/90"
       >
         Book a Room
       </Link>

@@ -8,12 +8,12 @@ export function UpcomingReservations({ bookings }: { bookings: DashboardBooking[
   return (
     <section>
       <div className="mb-6">
-        <p className="font-outfit text-sm uppercase tracking-[3px] text-sage">Upcoming Stay</p>
-        <h2 className="mt-2 font-lora text-4xl text-jungle-dark">Upcoming Reservations</h2>
+        <p className="font-jakarta text-sm uppercase tracking-[3px] text-sage">Upcoming Stay</p>
+        <h2 className="mt-2 font-fraunces text-4xl text-jungle-dark">Upcoming Reservations</h2>
       </div>
 
       {bookings.length === 0 ? (
-        <p className="rounded-[30px] border border-sand bg-white p-8 font-outfit text-jungle/60 shadow-sm">
+        <p className="rounded-[30px] border border-sand bg-white p-8 font-jakarta text-jungle/60 shadow-sm">
           No upcoming reservations.
         </p>
       ) : (
@@ -58,7 +58,7 @@ export function UpcomingReservations({ bookings }: { bookings: DashboardBooking[
                 <StatusBadge status={booking.status} />
                 <Link
                   href={`/manage-booking/itinerary?id=${booking.bookingId}`}
-                  className="inline-flex items-center gap-1 font-outfit text-sm font-semibold text-sage transition hover:text-jungle-dark"
+                  className="inline-flex items-center gap-1 font-jakarta text-sm font-semibold text-sage transition hover:text-jungle-dark"
                 >
                   View Itinerary
                   <ArrowRight size={16} />

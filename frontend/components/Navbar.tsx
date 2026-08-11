@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, Leaf } from 'lucide-react';
@@ -7,9 +7,40 @@ import { useAuth } from '@/lib/AuthContext';
 import { ProfileMenu } from '@/components/ProfileMenu';
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+
+  // Track scroll position so the bar can go transparent at the very top.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Routes with a hero behind the nav can show a transparent bar — but only
+  // while at the top with the menu closed.
+  const atTop = !scrolled && !mobileMenuOpen;
+  const isHome = pathname === '/';
+  const isRoomDetails = pathname.startsWith('/room/');
+  const isCheckout = pathname.startsWith('/checkout');
+  const isLogin = pathname === '/login';
+  const isSignup = pathname === '/signup';
+  const transparent = atTop && (isHome || isRoomDetails || isCheckout || isLogin || isSignup);
+
+  // The home hero is dark (light nav text); the room-details, checkout, login,
+  // and signup page-tops are light, so their transparent nav needs dark text.
+  const darkText = transparent && (isRoomDetails || isCheckout || isLogin || isSignup);
+
+  const logoCls = darkText
+    ? 'text-jungle-dark hover:text-jungle'
+    : 'text-sand-light hover:text-sage';
+  const linkIdleCls = darkText
+    ? 'text-jungle-dark hover:text-jungle'
+    : 'text-sand-light hover:text-sage';
+  const linkActiveCls = darkText ? 'text-jungle' : 'text-sage';
 
   function handleSignOut() {
     logout();
@@ -35,13 +66,13 @@ export function Navbar() {
   }];
 
   return (
-    <nav className="fixed w-full z-50 bg-jungle-dark shadow-soft">
+    <nav className={`fixed w-full z-50 transition-colors duration-300 ${transparent ? 'bg-transparent' : 'bg-primary shadow-soft'}`}>
       <div className="mx-auto max-w-7xl px-page-x lg:px-page-x-lg">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
             href="/search-results"
-            className="flex items-center space-x-2 text-sand-light hover:text-sage transition-colors">
+            className={`flex items-center space-x-2 transition-colors ${logoCls}`}>
 
             <Leaf className="h-6 w-6" />
             <span className="font-serif text-xl font-medium tracking-wide">
@@ -55,17 +86,17 @@ export function Navbar() {
             <Link
               key={link.name}
               href={link.path}
-              className={`text-sm font-medium tracking-wide transition-colors ${pathname === link.path ? 'text-sage' : 'text-sand-light hover:text-sage'}`}>
+              className={`text-sm font-medium tracking-wide transition-colors ${pathname === link.path ? linkActiveCls : linkIdleCls}`}>
 
                 {link.name}
               </Link>
             )}
             {user ?
-            <ProfileMenu firstName={user.firstName} onSignOut={handleSignOut} /> :
+            <ProfileMenu firstName={user.firstName} onSignOut={handleSignOut} darkText={darkText} /> :
 
             <Link
               href="/login"
-              className={`text-sm font-medium tracking-wide transition-colors ${pathname === '/login' ? 'text-sage' : 'text-sand-light hover:text-sage'}`}>
+              className={`text-sm font-medium tracking-wide transition-colors ${pathname === '/login' ? linkActiveCls : linkIdleCls}`}>
 
                 Sign In
               </Link>
@@ -82,7 +113,7 @@ export function Navbar() {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-sand-light hover:text-sage focus:outline-none">
+              className={`focus:outline-none transition-colors ${linkIdleCls}`}>
 
               {mobileMenuOpen ?
               <X className="h-6 w-6" /> :
@@ -96,7 +127,7 @@ export function Navbar() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen &&
-      <div className="md:hidden bg-jungle-dark border-t border-jungle/30">
+      <div className="md:hidden bg-primary border-t border-jungle/30">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navLinks.map((link) =>
           <Link

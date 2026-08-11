@@ -45,7 +45,7 @@ export function DashboardContent() {
 
   if (loading || !user) {
     return (
-      <div className="flex items-center justify-center py-24 font-outfit text-jungle/60">
+      <div className="flex items-center justify-center py-24 font-jakarta text-jungle/60">
         Loading...
       </div>
     );
@@ -62,15 +62,15 @@ export function DashboardContent() {
   return (
     <>
       <div>
-        <p className="font-outfit text-sm uppercase tracking-[3px] text-sage">My Account</p>
-        <h1 className="mt-2 font-lora text-4xl text-jungle-dark">Hi, {user.firstName}</h1>
+        <p className="font-jakarta text-sm uppercase tracking-[3px] text-sage">My Account</p>
+        <h1 className="mt-2 font-fraunces text-4xl text-jungle-dark">Hi, {user.firstName}</h1>
       </div>
 
       <div className="flex gap-2 border-b border-sand">
         <button
           type="button"
           onClick={() => setTab("bookings")}
-          className={`px-5 py-3 font-outfit font-semibold transition-colors ${
+          className={`px-5 py-3 font-jakarta font-semibold transition-colors ${
             tab === "bookings" ? "border-b-2 border-sage text-jungle-dark" : "text-jungle/50 hover:text-jungle-dark"
           }`}
         >
@@ -79,7 +79,7 @@ export function DashboardContent() {
         <button
           type="button"
           onClick={() => setTab("profile")}
-          className={`px-5 py-3 font-outfit font-semibold transition-colors ${
+          className={`px-5 py-3 font-jakarta font-semibold transition-colors ${
             tab === "profile" ? "border-b-2 border-sage text-jungle-dark" : "text-jungle/50 hover:text-jungle-dark"
           }`}
         >
@@ -90,11 +90,11 @@ export function DashboardContent() {
       {tab === "bookings" ? (
         <div className="space-y-10">
           {error ? (
-            <p className="rounded-[30px] border border-red-200 bg-red-50 p-8 font-outfit text-red-600 shadow-sm">
+            <p className="rounded-[30px] border border-red-200 bg-red-50 p-8 font-jakarta text-red-600 shadow-sm">
               {error}
             </p>
           ) : bookings === null ? (
-            <div className="rounded-[30px] border border-sand bg-white p-8 text-center font-outfit text-jungle/60 shadow-sm">
+            <div className="rounded-[30px] border border-sand bg-white p-8 text-center font-jakarta text-jungle/60 shadow-sm">
               Loading your bookings...
             </div>
           ) : bookings.length === 0 ? (
@@ -108,8 +108,8 @@ export function DashboardContent() {
         </div>
       ) : (
         <div className="max-w-lg rounded-[30px] border border-sand bg-white p-8 shadow-sm">
-          <p className="font-outfit text-sm uppercase tracking-[3px] text-sage">Account Information</p>
-          <h2 className="mt-2 font-lora text-3xl text-jungle-dark">Profile</h2>
+          <p className="font-jakarta text-sm uppercase tracking-[3px] text-sage">Account Information</p>
+          <h2 className="mt-2 font-fraunces text-3xl text-jungle-dark">Profile</h2>
 
           <div className="mt-8 space-y-6">
             <div>
