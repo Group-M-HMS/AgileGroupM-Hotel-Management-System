@@ -3,22 +3,31 @@ import { Footer } from "@/components/Footer";
 
 import HomeHero from "./HomeHero";
 import QuickActions from "./QuickActions";
+import VillaSpotlight from "./VillaSpotlight";
 import RecommendedExperiences from "./RecommendedExperiences";
+import Gallery from "./Gallery";
 
 export default function Home() {
   return (
     <>
       <Navbar />
 
-      <div className="pt-16 bg-sand-light min-h-screen">
-        <div className="mx-auto max-w-7xl px-page-x py-10 lg:px-page-x-lg space-y-10">
-          <HomeHero />
+      <main className="min-h-screen bg-sand-light">
+        {/* Full-bleed hero — breaks out of the constrained column and
+            handles its own navbar clearance. */}
+        <HomeHero />
+
+        {/* Constrained marketing sections below the hero. */}
+        <div className="mx-auto max-w-7xl space-y-16 px-page-x py-16 lg:px-page-x-lg">
+          <VillaSpotlight />
 
           <QuickActions />
 
           <RecommendedExperiences />
+
+          <Gallery />
         </div>
-      </div>
+      </main>
 
       <Footer />
     </>

@@ -20,12 +20,18 @@ export function BookingCard({
   guests: string;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-3xl border border-sand bg-white px-6 pb-6 pt-3 shadow-soft">
-      <p className="whitespace-nowrap font-lora text-[30px] font-normal text-jungle-dark">
-        ${price}{" "}
-        <span className="font-outfit text-[16px] font-normal text-jungle/60">/ night</span>
-      </p>
-      <div className="flex flex-col gap-2 border-t border-sand pt-4 font-outfit text-[14px] text-jungle/80">
+    <div className="flex flex-col gap-6 rounded-3xl border border-sand bg-white p-6 shadow-soft">
+      <div>
+        <p className="font-jakarta text-[12px] font-medium uppercase tracking-[2px] text-sage">
+          Nightly Rate
+        </p>
+        <p className="mt-1 whitespace-nowrap font-fraunces text-[34px] font-normal text-jungle-dark">
+          ${price}{" "}
+          <span className="font-jakarta text-[16px] font-normal text-jungle/60">/ night</span>
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2 border-t border-sand pt-5 font-jakarta text-[14px] text-jungle/80">
         <div className="flex items-center justify-between">
           <span className="font-normal">Max Guests</span>
           <span className="font-medium">
@@ -43,6 +49,7 @@ export function BookingCard({
           </span>
         </div>
       </div>
+
       <BookNowButton
         roomId={roomId}
         checkIn={checkIn}

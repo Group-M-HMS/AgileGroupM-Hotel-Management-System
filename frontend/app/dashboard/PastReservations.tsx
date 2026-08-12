@@ -8,12 +8,12 @@ export function PastReservations({ bookings }: { bookings: DashboardBooking[] })
   return (
     <section>
       <div className="mb-6">
-        <p className="font-outfit text-sm uppercase tracking-[3px] text-sage">My Reservations</p>
-        <h2 className="mt-2 font-lora text-4xl text-jungle-dark">Past Reservations</h2>
+        <p className="font-jakarta text-sm uppercase tracking-[3px] text-sage">My Reservations</p>
+        <h2 className="mt-2 font-fraunces text-4xl text-jungle-dark">Past Reservations</h2>
       </div>
 
       {bookings.length === 0 ? (
-        <p className="rounded-[30px] border border-sand bg-white p-8 font-outfit text-jungle/60 shadow-sm">
+        <p className="rounded-[30px] border border-sand bg-white p-8 font-jakarta text-jungle/60 shadow-sm">
           No past reservations yet.
         </p>
       ) : (
@@ -21,11 +21,11 @@ export function PastReservations({ bookings }: { bookings: DashboardBooking[] })
           <table className="w-full min-w-[700px]">
             <thead>
               <tr className="border-b border-sand text-left">
-                <th className="w-[30%] pb-4 font-outfit font-semibold text-jungle-dark">Booking</th>
-                <th className="w-[25%] pb-4 font-outfit font-semibold text-jungle-dark">Stay</th>
-                <th className="w-[15%] pb-4 font-outfit font-semibold text-jungle-dark">Guests</th>
-                <th className="w-[15%] pb-4 font-outfit font-semibold text-jungle-dark">Total</th>
-                <th className="w-[12%] pb-4 font-outfit font-semibold text-jungle-dark">Status</th>
+                <th className="w-[30%] pb-4 font-jakarta font-semibold text-jungle-dark">Booking</th>
+                <th className="w-[25%] pb-4 font-jakarta font-semibold text-jungle-dark">Stay</th>
+                <th className="w-[15%] pb-4 font-jakarta font-semibold text-jungle-dark">Guests</th>
+                <th className="w-[15%] pb-4 font-jakarta font-semibold text-jungle-dark">Total</th>
+                <th className="w-[12%] pb-4 font-jakarta font-semibold text-jungle-dark">Status</th>
                 <th className="w-[13%] pb-4"></th>
               </tr>
             </thead>

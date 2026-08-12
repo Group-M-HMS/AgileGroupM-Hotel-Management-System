@@ -1,35 +1,26 @@
-import Link from "next/link";
-import {
-  CalendarPlus,
-  Compass,
-  User,
-  Heart,
-} from "lucide-react";
+import { Leaf, Compass, Droplets, Sun } from "lucide-react";
 
-const actions = [
+// Feature highlights — marketing value props (not navigation).
+const features = [
   {
-    title: "Book a Stay",
-    description: "Reserve your next rainforest escape.",
-    href: "/book",
-    icon: CalendarPlus,
+    title: "Eco Friendly Stay",
+    description: "100% solar powered and built with sustainable local materials.",
+    icon: Leaf,
   },
   {
-    title: "Experiences",
-    description: "Discover activities at River Nest.",
-    href: "/experiences",
+    title: "Private Jungle Villa",
+    description: "You are the only guests. Complete privacy in the wild.",
     icon: Compass,
   },
   {
-    title: "My Profile",
-    description: "Update your personal information.",
-    href: "/profile",
-    icon: User,
+    title: "River Access",
+    description: "Private steps leading down to crystal clear natural pools.",
+    icon: Droplets,
   },
   {
-    title: "Wishlist",
-    description: "View your saved villas and experiences.",
-    href: "/wishlist",
-    icon: Heart,
+    title: "Guided Experiences",
+    description: "Local experts to guide you through the jungle safely.",
+    icon: Sun,
   },
 ];
 
@@ -37,70 +28,42 @@ export default function QuickActions() {
   return (
     <section>
 
-      <div className="mb-8">
+      <div className="mb-12">
 
-        <p className="font-outfit text-sm uppercase tracking-[3px] text-sage">
-          Quick Access
+        <p className="font-jakarta text-sm uppercase tracking-[3px] text-sage">
+          Why River Nest
         </p>
 
-        <h2 className="mt-2 font-lora text-4xl text-jungle-dark">
-          Everything You Need
+        <h2 className="mt-2 font-fraunces text-4xl text-jungle-dark">
+          Crafted for a deeper escape
         </h2>
 
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
 
-        {actions.map((action) => {
-          const Icon = action.icon;
+        {features.map((feature) => {
+          const Icon = feature.icon;
 
           return (
-            <Link
-              key={action.title}
-              href={action.href}
-              className="group rounded-[28px] border border-sand bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-sage hover:shadow-xl"
+            <div
+              key={feature.title}
+              className="flex flex-col items-center rounded-[28px] border border-sand bg-white p-8 text-center"
             >
 
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sage/15 transition-all duration-300 group-hover:bg-sage">
-
-                <Icon
-                  size={30}
-                  className="text-sage transition-all duration-300 group-hover:text-jungle-dark"
-                />
-
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sage/15 text-jungle">
+                <Icon size={30} />
               </div>
 
-              <h3 className="mt-6 font-lora text-2xl text-jungle-dark">
-                {action.title}
+              <h3 className="mt-6 font-fraunces text-xl text-jungle-dark">
+                {feature.title}
               </h3>
 
-              <p className="mt-3 font-outfit leading-7 text-jungle/70">
-                {action.description}
+              <p className="mt-3 font-jakarta leading-7 text-jungle/70">
+                {feature.description}
               </p>
 
-              <div className="mt-8 flex items-center gap-2 font-semibold text-sage">
-
-                <span>Explore</span>
-
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 12h14M13 5l7 7-7 7"
-                  />
-                </svg>
-
-              </div>
-
-            </Link>
+            </div>
           );
         })}
 

@@ -30,11 +30,11 @@ export default function RecommendedExperiences() {
 
         <div>
 
-          <p className="font-outfit text-sm uppercase tracking-[3px] text-sage">
+          <p className="font-jakarta text-sm uppercase tracking-[3px] text-sage">
             Discover More
           </p>
 
-          <h2 className="mt-2 font-lora text-4xl text-jungle-dark">
+          <h2 className="mt-2 font-fraunces text-4xl text-jungle-dark">
             Recommended Experiences
           </h2>
 
@@ -42,7 +42,7 @@ export default function RecommendedExperiences() {
 
         <Link
           href="/experiences"
-          className="hidden font-semibold text-sage transition hover:text-jungle-dark lg:flex"
+          className="hidden rounded-full font-semibold text-jungle transition hover:text-jungle-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 lg:flex"
         >
           View All
         </Link>
@@ -55,7 +55,7 @@ export default function RecommendedExperiences() {
 
           <div
             key={item.title}
-            className="group overflow-hidden rounded-[30px] border border-sand bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-xl"
+            className="group overflow-hidden rounded-[30px] border border-sand bg-white"
           >
 
             <div className="relative h-64 overflow-hidden">
@@ -63,7 +63,7 @@ export default function RecommendedExperiences() {
               <img
                 src={item.image}
                 alt={item.title}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               />
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -72,19 +72,22 @@ export default function RecommendedExperiences() {
 
             <div className="p-8">
 
-              <h3 className="font-lora text-3xl text-jungle-dark">
+              <h3 className="font-fraunces text-3xl text-jungle-dark">
                 {item.title}
               </h3>
 
-              <p className="mt-4 font-outfit leading-7 text-jungle/70">
+              <p className="mt-4 font-jakarta leading-7 text-jungle/70">
                 {item.description}
               </p>
 
               <Link
                 href="/experiences"
-                className="mt-8 inline-flex items-center gap-2 font-semibold text-sage transition hover:text-jungle-dark"
+                className="mt-8 inline-flex items-center gap-2 rounded-full font-semibold text-jungle transition hover:text-jungle-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2"
               >
-                Explore
+                {/* Underline draws in from the left when the card is hovered */}
+                <span className="relative after:absolute after:-bottom-0.5 after:left-0 after:h-[2px] after:w-0 after:bg-current after:transition-[width] after:duration-300 after:content-[''] group-hover:after:w-full motion-reduce:after:transition-none">
+                  Explore
+                </span>
 
                 <ArrowRight size={18} />
 

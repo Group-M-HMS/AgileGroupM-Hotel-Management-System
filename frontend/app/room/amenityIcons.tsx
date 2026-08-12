@@ -14,12 +14,20 @@ export const AMENITY_ICONS: Record<string, string> = {
   "Valley View": "landscape",
 };
 
-export function AmenityIcon({ name }: { name: string }) {
+export function AmenityIcon({
+  name,
+  size = 14,
+  className = "text-jungle/50",
+}: {
+  name: string;
+  size?: number;
+  className?: string;
+}) {
   const icon = AMENITY_ICONS[name] ?? "check_circle";
   return (
     <span
-      className="material-symbols-outlined text-jungle/50"
-      style={{ fontSize: "14px" }}
+      className={`material-symbols-outlined ${className}`}
+      style={{ fontSize: `${size}px` }}
       aria-hidden="true"
     >
       {icon}

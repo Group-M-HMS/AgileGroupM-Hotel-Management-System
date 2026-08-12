@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CalendarCheck } from "lucide-react";
 
 export function BookNowButton({
   roomId,
@@ -23,11 +24,12 @@ export function BookNowButton({
         <button
           type="button"
           disabled
-          className="block w-full rounded-btn bg-jungle-dark px-6 py-2.5 font-outfit text-[16px] font-semibold text-sand-light opacity-40"
+          className="flex w-full items-center justify-center gap-2 rounded-btn bg-primary px-6 py-4 font-jakarta text-[16px] font-semibold text-sand-light opacity-40"
         >
-          Book Now
+          <CalendarCheck size={18} />
+          Book Your Stay
         </button>
-        <p className="text-center font-outfit text-[13px] text-jungle/50">
+        <p className="text-center font-jakarta text-[13px] text-jungle/50">
           Select check-in and check-out dates from search before booking.
         </p>
       </div>
@@ -39,9 +41,10 @@ export function BookNowButton({
   return (
     <Link
       href={checkoutHref}
-      className="block w-full rounded-btn bg-jungle-dark px-6 py-2.5 text-center font-outfit text-[16px] font-semibold text-sand-light transition-opacity hover:opacity-90"
+      className="flex w-full items-center justify-center gap-2 rounded-btn bg-primary px-6 py-4 font-jakarta text-[16px] font-semibold text-sand-light transition-opacity hover:opacity-90"
     >
-      Book Now
+      <CalendarCheck size={18} />
+      Book Your Stay
     </Link>
   );
 }
