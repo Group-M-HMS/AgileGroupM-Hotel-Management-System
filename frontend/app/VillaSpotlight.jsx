@@ -47,7 +47,7 @@ export default function VillaSpotlight() {
 
           <div>
             <Link
-              href="/villa"
+              href="/hotel"
               className="inline-flex items-center rounded-full bg-sage px-7 py-3 font-jakarta font-semibold text-jungle-dark transition hover:bg-sage/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand-light focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
             >
               View Villa Details
