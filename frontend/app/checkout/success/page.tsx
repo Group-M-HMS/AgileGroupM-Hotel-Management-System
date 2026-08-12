@@ -79,30 +79,30 @@ export default async function BookingSuccessPage({
             </svg>
           </div>
 
-          <h1 className="mt-6 text-center font-lora text-3xl text-jungle">
+          <h1 className="mt-6 text-center font-fraunces text-3xl text-jungle">
             Booking Confirmed
           </h1>
-          <p className="mt-2 text-center font-outfit text-field text-jungle/70">
+          <p className="mt-2 text-center font-jakarta text-field text-jungle/70">
             Thank you — your reservation is all set. A confirmation has been
             recorded on your account.
           </p>
 
           {reference ? (
             <div className="mt-8 w-full rounded-xl border-2 border-sage/30 bg-white px-6 py-5 text-center">
-              <p className="font-outfit text-xs uppercase tracking-wide text-jungle/50">
+              <p className="font-jakarta text-xs uppercase tracking-wide text-jungle/50">
                 Booking Reference
               </p>
-              <p className="mt-1 font-lora text-2xl tracking-wide text-jungle">
+              <p className="mt-1 font-fraunces text-2xl tracking-wide text-jungle">
                 {reference}
               </p>
             </div>
           ) : null}
 
           <div className="mt-6 w-full rounded-xl border-2 border-sand bg-white px-6 py-5">
-            <h2 className="font-outfit text-sm font-semibold text-jungle">
+            <h2 className="font-jakarta text-sm font-semibold text-jungle">
               Stay details
             </h2>
-            <dl className="mt-4 space-y-3 font-outfit text-field text-jungle/80">
+            <dl className="mt-4 space-y-3 font-jakarta text-field text-jungle/80">
               <div className="flex justify-between gap-4">
                 <dt className="text-jungle/60">Room</dt>
                 <dd className="text-right">{roomTitle}</dd>
@@ -138,14 +138,14 @@ export default async function BookingSuccessPage({
 
           <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
-              href="/dashboard"
+              href="/bookings"
               className="btn-primary text-center sm:px-8"
             >
               View My Bookings
             </Link>
             <Link
               href="/"
-              className="rounded-md border-2 border-sand px-6 py-3 text-center font-outfit text-sm text-jungle transition-colors hover:border-sage"
+              className="rounded-md border-2 border-sand px-6 py-3 text-center font-jakarta text-sm text-jungle transition-colors hover:border-sage"
             >
               Back to Home
             </Link>
