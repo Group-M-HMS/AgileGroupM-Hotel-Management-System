@@ -96,7 +96,7 @@ export function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className={`flex items-center space-x-2 transition-colors ${logoCls}`}>
+            className="flex items-center space-x-2 text-sand-light hover:text-sage transition-colors">
 
             <Leaf className="h-6 w-6" />
             <span className="font-serif text-xl font-medium tracking-wide">
