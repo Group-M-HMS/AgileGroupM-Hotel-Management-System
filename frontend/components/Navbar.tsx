@@ -30,16 +30,30 @@ export function Navbar() {
   const isSignup = pathname === '/signup';
   const isHotel = pathname === '/hotel';
   const isExperiences = pathname === '/experiences';
+  const isRooms = pathname === '/rooms';
   const transparent =
     atTop &&
-    (isHome || isRoomDetails || isCheckout || isLogin || isSignup || isHotel || isExperiences);
+    (isHome ||
+      isRoomDetails ||
+      isCheckout ||
+      isLogin ||
+      isSignup ||
+      isHotel ||
+      isExperiences ||
+      isRooms);
 
   // The home hero is dark (light nav text); the room-details, checkout, login,
-  // signup, hotel, and experiences page-tops are light, so their transparent
-  // nav needs dark text.
+  // signup, hotel, experiences, and rooms page-tops are light, so their
+  // transparent nav needs dark text.
   const darkText =
     transparent &&
-    (isRoomDetails || isCheckout || isLogin || isSignup || isHotel || isExperiences);
+    (isRoomDetails ||
+      isCheckout ||
+      isLogin ||
+      isSignup ||
+      isHotel ||
+      isExperiences ||
+      isRooms);
 
   const logoCls = darkText
     ? 'text-jungle-dark hover:text-jungle'
