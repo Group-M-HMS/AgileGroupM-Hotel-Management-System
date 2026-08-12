@@ -28,11 +28,18 @@ export function Navbar() {
   const isCheckout = pathname.startsWith('/checkout');
   const isLogin = pathname === '/login';
   const isSignup = pathname === '/signup';
-  const transparent = atTop && (isHome || isRoomDetails || isCheckout || isLogin || isSignup);
+  const isHotel = pathname === '/hotel';
+  const isExperiences = pathname === '/experiences';
+  const transparent =
+    atTop &&
+    (isHome || isRoomDetails || isCheckout || isLogin || isSignup || isHotel || isExperiences);
 
   // The home hero is dark (light nav text); the room-details, checkout, login,
-  // and signup page-tops are light, so their transparent nav needs dark text.
-  const darkText = transparent && (isRoomDetails || isCheckout || isLogin || isSignup);
+  // signup, hotel, and experiences page-tops are light, so their transparent
+  // nav needs dark text.
+  const darkText =
+    transparent &&
+    (isRoomDetails || isCheckout || isLogin || isSignup || isHotel || isExperiences);
 
   const logoCls = darkText
     ? 'text-jungle-dark hover:text-jungle'
