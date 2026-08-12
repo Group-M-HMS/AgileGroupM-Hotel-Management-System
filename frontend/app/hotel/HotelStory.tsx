@@ -2,10 +2,10 @@
 // Two-column narrative with a supporting image, followed by a property-overview
 // stat row.
 const overview = [
-  { value: "1", label: "Secluded villa" },
-  { value: "4", label: "Guests, max" },
+  { value: "12", label: "Rooms & suites" },
+  { value: "8 acres", label: "Private rainforest" },
   { value: "100%", label: "Solar powered" },
-  { value: "2 acres", label: "Private rainforest" },
+  { value: "4.9", label: "Guest rating" },
 ];
 
 export default function HotelStory() {
@@ -42,7 +42,7 @@ export default function HotelStory() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=1200&auto=format&fit=crop"
-            alt="The River Nest eco-villa nestled in the rainforest canopy"
+            alt="River Nest eco-hotel nestled in the rainforest canopy"
             className="h-full min-h-[320px] w-full object-cover lg:min-h-[460px]"
           />
         </div>

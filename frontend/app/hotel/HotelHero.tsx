@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const IMAGES = [
   {
     src: "https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=2574&auto=format&fit=crop",
-    alt: "The River Nest eco-villa nestled in the rainforest canopy",
+    alt: "River Nest eco-hotel nestled in the rainforest canopy",
   },
   {
     src: "https://images.unsplash.com/photo-1590073844006-332e0787caa5?q=80&w=2574&auto=format&fit=crop",
@@ -17,7 +17,7 @@ const IMAGES = [
   },
   {
     src: "https://images.unsplash.com/photo-1510798831971-661eb04b3739?q=80&w=2574&auto=format&fit=crop",
-    alt: "River running through the Kitulgala jungle beside the villa",
+    alt: "River running through the Kitulgala jungle beside the hotel",
   },
 ];
 
@@ -38,9 +38,9 @@ export default function HotelHero() {
             A rainforest retreat, built to disappear into the trees
           </h1>
           <p className="mt-6 max-w-2xl font-jakarta text-[16px] leading-[30px] text-jungle/75">
-            River Nest Eco Villa is a single secluded sanctuary on the edge of
-            Sri Lanka&apos;s Kitulgala rainforest — designed for quiet, privacy,
-            and an unbroken connection to nature.
+            River Nest Eco Villa is a secluded rainforest hotel on the edge of
+            Sri Lanka&apos;s Kitulgala jungle — a collection of rooms and suites
+            designed for quiet, privacy, and an unbroken connection to nature.
           </p>
         </div>
 
