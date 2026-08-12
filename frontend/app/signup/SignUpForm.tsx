@@ -86,8 +86,8 @@ function SignUpFormContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
-  // Extract return URL if available, default to dashboard
-  const redirectUrl = searchParams.get("redirect") || "/dashboard";
+  // Extract return URL if available, default to bookings
+  const redirectUrl = searchParams.get("redirect") || "/bookings";
 
   // Preserve redirect query parameter when switching to Login
   const loginUrl = searchParams.get("redirect")

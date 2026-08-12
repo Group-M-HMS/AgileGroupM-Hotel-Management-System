@@ -3,13 +3,19 @@ import { CalendarDays, Users, BedDouble, ArrowRight } from "lucide-react";
 import { formatDate } from "@/app/checkout/formatDate";
 import type { DashboardBooking } from "@/lib/bookings";
 import { StatusBadge } from "./StatusBadge";
+import { BookingThumbnail } from "./BookingThumbnail";
 
-export function UpcomingReservations({ bookings }: { bookings: DashboardBooking[] }) {
+export function UpcomingReservations({
+  bookings,
+  thumbnails,
+}: {
+  bookings: DashboardBooking[];
+  thumbnails: Record<number, string | null>;
+}) {
   return (
     <section>
       <div className="mb-6">
-        <p className="font-jakarta text-sm uppercase tracking-[3px] text-sage">Upcoming Stay</p>
-        <h2 className="mt-2 font-fraunces text-4xl text-jungle-dark">Upcoming Reservations</h2>
+        <h2 className="font-fraunces text-4xl text-jungle-dark">Upcoming Reservations</h2>
       </div>
 
       {bookings.length === 0 ? (
@@ -21,8 +27,13 @@ export function UpcomingReservations({ bookings }: { bookings: DashboardBooking[
           {bookings.map(booking => (
             <div
               key={booking.bookingId}
-              className="flex flex-col gap-4 rounded-[30px] border border-sand bg-white p-8 md:flex-row md:items-center md:justify-between"
+              className="flex flex-col gap-5 rounded-[30px] border border-sand bg-white p-8 md:flex-row md:items-center md:justify-between"
             >
+              <BookingThumbnail
+                src={thumbnails[booking.bookingId]}
+                alt={booking.roomName || "Room"}
+                className="h-24 w-full rounded-2xl md:w-36"
+              />
               <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
                 <div>
                   <div className="flex items-center gap-2">

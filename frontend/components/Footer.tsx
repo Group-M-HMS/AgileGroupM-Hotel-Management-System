@@ -108,14 +108,6 @@ export function Footer() {
                   Book Your Stay
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/hotel#sustainability"
-                  className="text-sand/80 hover:text-sage transition-colors">
-
-                  Sustainability
-                </Link>
-              </li>
             </ul>
           </div>
 

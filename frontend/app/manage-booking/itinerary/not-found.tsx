@@ -15,7 +15,7 @@ export default function ItineraryNotFound() {
             We couldn&apos;t find a booking for those details. Please try your lookup again.
           </p>
           <Link
-            href="/dashboard"
+            href="/bookings"
             className="rounded-btn bg-primary px-6 py-2.5 font-jakarta text-meta font-semibold text-sand-light transition-opacity hover:opacity-90"
           >
             Back to My Bookings

@@ -80,7 +80,7 @@ export function ItineraryContent() {
 
   const backLink = (
     <Link
-      href="/dashboard"
+      href="/bookings"
       className="no-print mb-6 inline-flex items-center gap-1 font-jakarta text-meta text-jungle transition-opacity hover:opacity-70"
     >
       <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">

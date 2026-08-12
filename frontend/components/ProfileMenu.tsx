@@ -52,7 +52,14 @@ export function ProfileMenu({
       {open && (
         <div className="absolute right-0 top-full mt-2 w-44 overflow-hidden rounded-2xl border border-sand bg-white py-1 shadow-soft-lg">
           <Link
-            href="/dashboard"
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 font-jakarta text-sm text-jungle-dark hover:bg-sand-light"
+          >
+            Profile
+          </Link>
+          <Link
+            href="/bookings"
             onClick={() => setOpen(false)}
             className="block px-4 py-2 font-jakarta text-sm text-jungle-dark hover:bg-sand-light"
           >
