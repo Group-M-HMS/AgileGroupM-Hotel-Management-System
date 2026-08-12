@@ -1,15 +1,21 @@
 import Link from "next/link";
-import { CalendarDays, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { formatDate } from "@/app/checkout/formatDate";
 import type { DashboardBooking } from "@/lib/bookings";
 import { StatusBadge } from "./StatusBadge";
+import { BookingThumbnail } from "./BookingThumbnail";
 
-export function PastReservations({ bookings }: { bookings: DashboardBooking[] }) {
+export function PastReservations({
+  bookings,
+  thumbnails,
+}: {
+  bookings: DashboardBooking[];
+  thumbnails: Record<number, string | null>;
+}) {
   return (
     <section>
       <div className="mb-6">
-        <p className="font-jakarta text-sm uppercase tracking-[3px] text-sage">My Reservations</p>
-        <h2 className="mt-2 font-fraunces text-4xl text-jungle-dark">Past Reservations</h2>
+        <h2 className="font-fraunces text-4xl text-jungle-dark">Past Reservations</h2>
       </div>
 
       {bookings.length === 0 ? (
@@ -17,7 +23,7 @@ export function PastReservations({ bookings }: { bookings: DashboardBooking[] })
           No past reservations yet.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-[30px] border border-sand bg-white p-8 shadow-sm">
+        <div className="overflow-x-auto rounded-[30px] border border-sand bg-white p-8">
           <table className="w-full min-w-[700px]">
             <thead>
               <tr className="border-b border-sand text-left">
@@ -37,9 +43,11 @@ export function PastReservations({ bookings }: { bookings: DashboardBooking[] })
                 >
                   <td className="py-6">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sage/20">
-                        <CalendarDays size={20} className="text-sage" />
-                      </div>
+                      <BookingThumbnail
+                        src={thumbnails[booking.bookingId]}
+                        alt={booking.roomName || "Room"}
+                        className="h-12 w-16 rounded-xl"
+                      />
                       <div>
                         <p className="font-semibold text-jungle-dark">{booking.roomName}</p>
                         <p className="text-sm text-jungle/50">#{booking.bookingId}</p>

@@ -60,8 +60,8 @@ function LoginFormContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
-  // 1. Extract return target or fallback to dashboard
-  const redirectUrl = searchParams.get("redirect") || "/dashboard";
+  // 1. Extract return target or fallback to bookings
+  const redirectUrl = searchParams.get("redirect") || "/bookings";
 
   // 2. Preserve redirect URL when switching to Sign Up
   const signUpUrl = searchParams.get("redirect")

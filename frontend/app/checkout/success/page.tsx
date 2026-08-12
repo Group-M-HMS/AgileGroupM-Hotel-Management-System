@@ -138,7 +138,7 @@ export default async function BookingSuccessPage({
 
           <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
-              href="/dashboard"
+              href="/bookings"
               className="btn-primary text-center sm:px-8"
             >
               View My Bookings

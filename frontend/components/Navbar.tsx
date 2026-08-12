@@ -31,6 +31,7 @@ export function Navbar() {
   const isHotel = pathname === '/hotel';
   const isExperiences = pathname === '/experiences';
   const isRooms = pathname === '/rooms';
+  const isProfile = pathname === '/profile';
   const transparent =
     atTop &&
     (isHome ||
@@ -40,10 +41,11 @@ export function Navbar() {
       isSignup ||
       isHotel ||
       isExperiences ||
-      isRooms);
+      isRooms ||
+      isProfile);
 
   // The home hero is dark (light nav text); the room-details, checkout, login,
-  // signup, hotel, experiences, and rooms page-tops are light, so their
+  // signup, hotel, experiences, rooms, and profile page-tops are light, so their
   // transparent nav needs dark text.
   const darkText =
     transparent &&
@@ -53,7 +55,8 @@ export function Navbar() {
       isSignup ||
       isHotel ||
       isExperiences ||
-      isRooms);
+      isRooms ||
+      isProfile);
 
   const logoCls = darkText
     ? 'text-jungle-dark hover:text-jungle'
@@ -163,9 +166,16 @@ export function Navbar() {
             {user ?
             <>
               <Link
-                href="/dashboard"
+                href="/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === '/dashboard' ? 'text-sage bg-jungle' : 'text-sand-light hover:text-sage hover:bg-jungle/50'}`}>
+                className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === '/profile' ? 'text-sage bg-jungle' : 'text-sand-light hover:text-sage hover:bg-jungle/50'}`}>
+
+                  Profile
+                </Link>
+              <Link
+                href="/bookings"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === '/bookings' ? 'text-sage bg-jungle' : 'text-sand-light hover:text-sage hover:bg-jungle/50'}`}>
 
                   My Bookings
                 </Link>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { StatusBadge } from "@/app/dashboard/StatusBadge";
+import { StatusBadge } from "@/app/bookings/StatusBadge";
 import { cancelBooking, type BookingStatus } from "@/lib/bookings";
 
 export function CancelBookingControl({

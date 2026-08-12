@@ -4,6 +4,10 @@ import { auth } from "./firebase";
 const BOOKING_SERVICE_URL =
   process.env.NEXT_PUBLIC_BOOKING_SERVICE_URL ?? "http://168.138.170.92:8085";
 
+// Room photos live in room-service, keyed by roomId (same source as the itinerary page).
+const ROOM_SERVICE_URL =
+  process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
+
 type ApiEnvelope<T> = { success: boolean; message: string | null; data: T };
 
 async function unwrap<T>(res: Response): Promise<T> {
@@ -140,4 +144,37 @@ export async function cancelBooking(
   });
   const result = await unwrap<{ bookingId: number; status: BookingStatus }>(res);
   return result.status;
+}
+
+/** First room photo for a room, or null. Same shape the itinerary page reads. */
+async function fetchRoomThumbnail(roomId: number): Promise<string | null> {
+  try {
+    const res = await fetch(`${ROOM_SERVICE_URL}/api/rooms/${roomId}`);
+    if (!res.ok) return null;
+    const room = await res.json();
+    return room.images?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Best-effort thumbnail per booking, keyed by bookingId. The list DTO carries no
+ * image or roomId, so each entry needs two hops: booking detail (for roomId) →
+ * room-service (for the photo). Failures resolve to null rather than throwing.
+ */
+export async function fetchBookingThumbnails(
+  bookingIds: number[]
+): Promise<Record<number, string | null>> {
+  const entries = await Promise.all(
+    bookingIds.map(async id => {
+      try {
+        const detail = await fetchBookingDetail(id);
+        return [id, await fetchRoomThumbnail(detail.roomId)] as const;
+      } catch {
+        return [id, null] as const;
+      }
+    })
+  );
+  return Object.fromEntries(entries);
 }
