@@ -49,18 +49,21 @@ export function Footer() {
             <div className="flex space-x-4">
               <a
                 href="#"
+                aria-label="River Nest on Instagram"
                 className="text-sand/80 hover:text-sage transition-colors">
 
                 <Instagram />
               </a>
               <a
                 href="#"
+                aria-label="River Nest on Facebook"
                 className="text-sand/80 hover:text-sage transition-colors">
 
                 <Facebook />
               </a>
               <a
                 href="#"
+                aria-label="River Nest on Twitter"
                 className="text-sand/80 hover:text-sage transition-colors">
 
                 <Twitter />
@@ -75,10 +78,18 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li>
                 <Link
-                  href="/villa"
+                  href="/hotel"
                   className="text-sand/80 hover:text-sage transition-colors">
 
-                  The Villa
+                  The Hotel
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/rooms"
+                  className="text-sand/80 hover:text-sage transition-colors">
+
+                  Rooms
                 </Link>
               </li>
               <li>
@@ -91,7 +102,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/book"
+                  href="/#search-stay"
                   className="text-sand/80 hover:text-sage transition-colors">
 
                   Book Your Stay
@@ -99,7 +110,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/hotel#sustainability"
                   className="text-sand/80 hover:text-sage transition-colors">
 
                   Sustainability
