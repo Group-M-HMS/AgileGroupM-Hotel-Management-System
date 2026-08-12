@@ -47,15 +47,15 @@ export default function DashboardStats() {
 
               <div>
 
-                <p className="font-outfit text-sm text-jungle/60">
+                <p className="font-jakarta text-sm text-jungle/60">
                   {item.title}
                 </p>
 
-                <h2 className="mt-3 font-lora text-[42px] leading-none text-jungle-dark">
+                <h2 className="mt-3 font-fraunces text-[42px] leading-none text-jungle-dark">
                   {item.value}
                 </h2>
 
-                <p className="mt-3 font-outfit text-sm text-sage">
+                <p className="mt-3 font-jakarta text-sm text-sage">
                   {item.subtitle}
                 </p>
 

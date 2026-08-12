@@ -86,8 +86,8 @@ function SignUpFormContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
-  // Extract return URL if available, default to dashboard
-  const redirectUrl = searchParams.get("redirect") || "/dashboard";
+  // Extract return URL if available, default to bookings
+  const redirectUrl = searchParams.get("redirect") || "/bookings";
 
   // Preserve redirect query parameter when switching to Login
   const loginUrl = searchParams.get("redirect")
@@ -178,14 +178,17 @@ function SignUpFormContent() {
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="flex w-full flex-col items-start gap-[24px] px-6 sm:px-10 lg:px-0"
+      className="flex w-full max-w-[440px] flex-col items-start gap-[24px]"
     >
       {/* ── Heading ── */}
       <div className="flex w-full flex-col items-start gap-[10px] leading-[normal]">
-        <h1 className="font-lora text-heading-sm font-medium tracking-[-0.5px] text-jungle-dark sm:text-heading-md lg:text-heading-lg">
-          Sign Up
+        <p className="font-jakarta text-[12px] font-medium uppercase tracking-[3px] text-sage">
+          Join River Nest
+        </p>
+        <h1 className="font-fraunces text-heading-sm font-medium tracking-[-0.5px] text-jungle-dark sm:text-heading-md lg:text-heading-lg">
+          Create account
         </h1>
-        <p className="font-outfit text-field font-normal text-jungle/65 lg:text-[16px]">
+        <p className="font-jakarta text-field font-normal text-jungle/65 lg:text-[16px]">
           Create an account to start booking your perfect stay.
         </p>
       </div>
@@ -312,10 +315,10 @@ function SignUpFormContent() {
             htmlFor="terms"
             className="flex cursor-pointer flex-wrap items-center gap-[4px] leading-[normal]"
           >
-            <span className="font-outfit text-meta font-normal text-jungle/85">
+            <span className="font-jakarta text-meta font-normal text-jungle/85">
               I agree to the
             </span>
-            <span className="font-outfit text-meta font-semibold text-jungle">
+            <span className="font-jakarta text-meta font-semibold text-jungle">
               Terms &amp; Conditions
             </span>
           </label>
@@ -325,7 +328,7 @@ function SignUpFormContent() {
 
       {/* ── Submit error ── */}
       {submitError && (
-        <div className="w-full rounded-input border border-red-400 px-4 py-3 font-outfit text-[13px] text-red-500">
+        <div className="w-full rounded-input border border-red-400 px-4 py-3 font-jakarta text-[13px] text-red-500">
           {submitError}
         </div>
       )}
@@ -336,57 +339,20 @@ function SignUpFormContent() {
         disabled={submitting}
         className="btn-primary disabled:opacity-60"
       >
-        {submitting ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
+        {submitting ? "Creating account…" : "Create Account"}
       </button>
 
-      {/* ── Login / OR / Social ── */}
-      <div className="flex w-full flex-col items-center gap-[14px]">
-        <div className="flex items-center gap-[6px] leading-[normal]">
-          <span className="font-outfit text-meta font-normal text-jungle/65">
-            Already have an account?
-          </span>
-          <Link
-            href={loginUrl}
-            className="font-outfit text-meta font-semibold text-jungle-dark hover:underline"
-          >
-            Log in
-          </Link>
-        </div>
-
-        <div className="flex w-full items-center gap-[16px]">
-          <div className="h-px flex-1 bg-sand" />
-          <span className="font-outfit text-[12px] font-normal leading-[normal] tracking-[2px] text-jungle/55">
-            OR
-          </span>
-          <div className="h-px flex-1 bg-sand" />
-        </div>
-
-        <div className="flex items-center justify-center gap-[18px]">
-          <button
-            type="button"
-            aria-label="Sign up with Google"
-            className="btn-social"
-          >
-            <img
-              src="/icons/google.svg"
-              alt=""
-              aria-hidden="true"
-              className="h-6 w-6"
-            />
-          </button>
-          <button
-            type="button"
-            aria-label="Sign up with Apple"
-            className="btn-social"
-          >
-            <img
-              src="/icons/apple.svg"
-              alt=""
-              aria-hidden="true"
-              className="h-6 w-6"
-            />
-          </button>
-        </div>
+      {/* ── Login link ── */}
+      <div className="flex w-full items-center justify-center gap-[6px] leading-[normal]">
+        <span className="font-jakarta text-meta font-normal text-jungle/65">
+          Already have an account?
+        </span>
+        <Link
+          href={loginUrl}
+          className="font-jakarta text-meta font-semibold text-jungle-dark hover:underline"
+        >
+          Log in
+        </Link>
       </div>
     </form>
   );
@@ -394,7 +360,7 @@ function SignUpFormContent() {
 
 export default function SignUpForm() {
   return (
-    <Suspense fallback={<div className="text-sm font-outfit p-4">Loading...</div>}>
+    <Suspense fallback={<div className="text-sm font-jakarta p-4">Loading...</div>}>
       <SignUpFormContent />
     </Suspense>
   );

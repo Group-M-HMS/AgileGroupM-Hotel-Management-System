@@ -80,8 +80,8 @@ export function ItineraryContent() {
 
   const backLink = (
     <Link
-      href="/dashboard"
-      className="no-print mb-6 inline-flex items-center gap-1 font-outfit text-meta text-jungle transition-opacity hover:opacity-70"
+      href="/bookings"
+      className="no-print mb-6 inline-flex items-center gap-1 font-jakarta text-meta text-jungle transition-opacity hover:opacity-70"
     >
       <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">
         arrow_back
@@ -97,7 +97,7 @@ export function ItineraryContent() {
     return (
       <>
         {backLink}
-        <p className="rounded-3xl border border-red-200 bg-red-50 p-8 text-center font-outfit text-red-600 shadow-soft">
+        <p className="rounded-3xl border border-red-200 bg-red-50 p-8 text-center font-jakarta text-red-600 shadow-soft">
           {pageError}
         </p>
       </>
@@ -108,7 +108,7 @@ export function ItineraryContent() {
     return (
       <>
         {backLink}
-        <p className="rounded-3xl border border-sand bg-white p-8 text-center font-outfit text-jungle/60 shadow-soft">
+        <p className="rounded-3xl border border-sand bg-white p-8 text-center font-jakarta text-jungle/60 shadow-soft">
           Loading your itinerary...
         </p>
       </>
@@ -127,7 +127,7 @@ export function ItineraryContent() {
         {room?.thumbnail && <RoomThumbnail src={room.thumbnail} alt={booking.roomName} />}
         <div className="flex flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-lora text-heading-sm font-normal text-jungle-dark sm:text-[32px]">
+            <h1 className="font-fraunces text-heading-sm font-normal text-jungle-dark sm:text-[32px]">
               {booking.roomName || "Room details unavailable"}
             </h1>
             <CancelBookingControl bookingId={booking.bookingId} initialStatus={booking.status} />
@@ -137,7 +137,7 @@ export function ItineraryContent() {
               {room.amenities.map(name => (
                 <span
                   key={name}
-                  className="flex items-center gap-1 font-outfit text-[13px] text-jungle/70"
+                  className="flex items-center gap-1 font-jakarta text-[13px] text-jungle/70"
                 >
                   <AmenityIcon name={name} />
                   {name}
@@ -149,7 +149,7 @@ export function ItineraryContent() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <p className="font-outfit text-meta text-jungle/60">
+        <p className="font-jakarta text-meta text-jungle/60">
           {booking.bookingReference ? (
             <>
               Reference: <span className="font-semibold text-jungle-dark">{booking.bookingReference}</span>
@@ -162,7 +162,7 @@ export function ItineraryContent() {
         </p>
         <Link
           href={roomDetailsHref}
-          className="no-print inline-flex w-fit items-center gap-1 font-outfit text-meta font-semibold text-jungle-dark hover:underline"
+          className="no-print inline-flex w-fit items-center gap-1 font-jakarta text-meta font-semibold text-jungle-dark hover:underline"
         >
           View Room Details
           <span className="material-symbols-outlined" style={{ fontSize: "16px" }} aria-hidden="true">
@@ -176,7 +176,7 @@ export function ItineraryContent() {
         {/* NIBM2-302 — reservation summary: dates, guests */}
         <div className="flex flex-col gap-3">
           <SectionHeading icon="calendar_month">Stay Details</SectionHeading>
-          <div className="flex flex-col gap-2 font-outfit text-[14px] text-jungle/80 sm:flex-row sm:justify-between">
+          <div className="flex flex-col gap-2 font-jakarta text-[14px] text-jungle/80 sm:flex-row sm:justify-between">
             <div className="flex items-center justify-between gap-2 sm:flex-col sm:items-start">
               <span>Check-In</span>
               <span className="font-medium text-jungle-dark">{formatDate(booking.checkIn)}</span>
@@ -199,7 +199,7 @@ export function ItineraryContent() {
         {/* Payment: booking-service stores the total only (no per-line breakdown). */}
         <div className="flex flex-col gap-3 border-t border-dashed border-sand pt-6">
           <SectionHeading icon="payments">Payment</SectionHeading>
-          <div className="flex flex-col gap-2 font-outfit text-[14px] text-jungle/80">
+          <div className="flex flex-col gap-2 font-jakarta text-[14px] text-jungle/80">
             <div className="flex items-center justify-between">
               <span>Payment status</span>
               <span className="font-medium text-jungle-dark">{booking.paymentStatus}</span>

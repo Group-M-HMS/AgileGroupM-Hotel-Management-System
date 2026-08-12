@@ -8,15 +8,15 @@ export default function ItineraryNotFound() {
       <Navbar />
       <div className="pt-16">
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-page-x py-24 text-center lg:px-page-x-lg">
-          <h1 className="font-lora text-heading-sm font-medium text-jungle-dark sm:text-heading-md">
+          <h1 className="font-fraunces text-heading-sm font-medium text-jungle-dark sm:text-heading-md">
             Booking not found
           </h1>
-          <p className="font-outfit text-field text-jungle/70">
+          <p className="font-jakarta text-field text-jungle/70">
             We couldn&apos;t find a booking for those details. Please try your lookup again.
           </p>
           <Link
-            href="/dashboard"
-            className="rounded-btn bg-jungle-dark px-6 py-2.5 font-outfit text-meta font-semibold text-sand-light transition-opacity hover:opacity-90"
+            href="/bookings"
+            className="rounded-btn bg-primary px-6 py-2.5 font-jakarta text-meta font-semibold text-sand-light transition-opacity hover:opacity-90"
           >
             Back to My Bookings
           </Link>

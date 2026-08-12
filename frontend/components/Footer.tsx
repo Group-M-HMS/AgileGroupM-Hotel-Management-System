@@ -29,7 +29,7 @@ function Twitter({ className }: { className?: string }) {
 }
 export function Footer() {
   return (
-    <footer className="bg-jungle-dark text-sand pt-16 pb-8">
+    <footer className="bg-primary text-sand pt-16 pb-8">
       <div className="mx-auto max-w-7xl px-page-x lg:px-page-x-lg">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="col-span-1 md:col-span-1">
@@ -49,18 +49,21 @@ export function Footer() {
             <div className="flex space-x-4">
               <a
                 href="#"
+                aria-label="River Nest on Instagram"
                 className="text-sand/80 hover:text-sage transition-colors">
 
                 <Instagram />
               </a>
               <a
                 href="#"
+                aria-label="River Nest on Facebook"
                 className="text-sand/80 hover:text-sage transition-colors">
 
                 <Facebook />
               </a>
               <a
                 href="#"
+                aria-label="River Nest on Twitter"
                 className="text-sand/80 hover:text-sage transition-colors">
 
                 <Twitter />
@@ -75,10 +78,18 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li>
                 <Link
-                  href="/villa"
+                  href="/hotel"
                   className="text-sand/80 hover:text-sage transition-colors">
 
-                  The Villa
+                  The Hotel
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/rooms"
+                  className="text-sand/80 hover:text-sage transition-colors">
+
+                  Rooms
                 </Link>
               </li>
               <li>
@@ -91,18 +102,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/book"
+                  href="/#search-stay"
                   className="text-sand/80 hover:text-sage transition-colors">
 
                   Book Your Stay
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#"
-                  className="text-sand/80 hover:text-sage transition-colors">
-
-                  Sustainability
                 </Link>
               </li>
             </ul>
