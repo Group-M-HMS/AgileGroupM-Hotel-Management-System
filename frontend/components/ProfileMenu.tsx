@@ -7,9 +7,13 @@ import { ChevronDown, User } from "lucide-react";
 export function ProfileMenu({
   firstName,
   onSignOut,
+  darkText = false,
 }: {
   firstName: string;
   onSignOut: () => void;
+  // When the nav is transparent over a light page-top, the trigger needs dark
+  // text instead of the default light-on-dark colour.
+  darkText?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -36,7 +40,9 @@ export function ProfileMenu({
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 text-sm font-medium tracking-wide text-sand-light transition-colors hover:text-sage"
+        className={`flex items-center gap-1.5 text-sm font-medium tracking-wide transition-colors ${
+          darkText ? "text-jungle-dark hover:text-jungle" : "text-sand-light hover:text-sage"
+        }`}
       >
         <User className="h-4 w-4" />
         {firstName}
@@ -46,9 +52,16 @@ export function ProfileMenu({
       {open && (
         <div className="absolute right-0 top-full mt-2 w-44 overflow-hidden rounded-2xl border border-sand bg-white py-1 shadow-soft-lg">
           <Link
-            href="/dashboard"
+            href="/profile"
             onClick={() => setOpen(false)}
-            className="block px-4 py-2 font-outfit text-sm text-jungle-dark hover:bg-sand-light"
+            className="block px-4 py-2 font-jakarta text-sm text-jungle-dark hover:bg-sand-light"
+          >
+            Profile
+          </Link>
+          <Link
+            href="/bookings"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 font-jakarta text-sm text-jungle-dark hover:bg-sand-light"
           >
             My Bookings
           </Link>
@@ -58,7 +71,7 @@ export function ProfileMenu({
               setOpen(false);
               onSignOut();
             }}
-            className="block w-full px-4 py-2 text-left font-outfit text-sm text-jungle-dark hover:bg-sand-light"
+            className="block w-full px-4 py-2 text-left font-jakarta text-sm text-jungle-dark hover:bg-sand-light"
           >
             Sign Out
           </button>

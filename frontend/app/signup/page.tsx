@@ -24,62 +24,66 @@ export default function SignUpPage() {
   return (
     <>
       <Navbar />
-      <div className="pt-16">
-      <div className="flex flex-col lg:h-[calc(100vh-4rem)] lg:flex-row">
+      <div className="min-h-[calc(100vh-4rem)] bg-sand-light pt-16">
+        <div className="mx-auto max-w-7xl px-page-x py-8 lg:px-page-x-lg lg:py-12">
 
-      {/* ══════════════════════════════════════════
-          Brand Panel — desktop only, left 50%
-          ══════════════════════════════════════════ */}
-      <div className="relative hidden h-full w-1/2 shrink-0 flex-col items-start justify-around overflow-hidden bg-jungle-dark p-[56px] lg:flex">
+          {/* Single card — the forest image is the card background; the brand
+              copy and the sign-up form both sit inside it. */}
+          <div
+            className="relative overflow-hidden rounded-[32px] border border-sand bg-primary bg-cover bg-center shadow-soft-lg"
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1553755322-56baa43a31d7?q=80&w=1200&auto=format&fit=crop')",
+            }}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2">
 
-        {/* Decorative ellipse */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/icons/ellipse.svg"
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute left-[280px] top-[-160px] h-[420px] w-[520px] select-none"
-        />
+              {/* Brand side — sits over the image, desktop only */}
+              <div className="relative hidden flex-col justify-between gap-10 p-[56px] lg:flex lg:min-h-[620px]">
 
-        {/* Tagline */}
-        <div className="relative z-10 flex shrink-0 flex-col items-start gap-[20px]">
-          <p className="font-outfit text-[12px] font-medium leading-[normal] tracking-[3px] text-sage">
-            ECO VILLA · KITULGALA
-          </p>
-          <div className="flex flex-col items-start gap-[2px] font-lora text-[40px] font-normal leading-[46px]">
-            <p className="text-sand-light">Disconnect from noise.</p>
-            <p className="text-sage">Reconnect with nature.</p>
-          </div>
-          <p className="w-[432px] font-outfit text-field font-normal leading-[26px] text-sand-light/85">
-            A sustainable eco-retreat nestled in the heart of Sri Lanka&apos;s
-            lush rainforests. Create your account to plan stays, curate
-            experiences, and track your bookings.
-          </p>
-        </div>
+                {/* Dark overlay for text legibility */}
+                <div className="pointer-events-none absolute inset-0 bg-primary/55" />
 
-        {/* Feature bullets */}
-        <div className="relative z-10 flex shrink-0 flex-col items-start gap-[16px]">
-          {facts.map(fact => (
-            <div key={fact} className="flex items-center gap-[14px]">
-              <div className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[18px] border-[0.8px] border-sage/40 bg-sage/16">
-                <CheckIcon />
+                {/* Tagline */}
+                <div className="relative z-10 flex shrink-0 flex-col items-start gap-[20px]">
+                  <p className="font-jakarta text-[12px] font-medium leading-[normal] tracking-[3px] text-sage">
+                    ECO VILLA · KITULGALA
+                  </p>
+                  <div className="flex flex-col items-start gap-[2px] font-fraunces text-[40px] font-normal leading-[46px]">
+                    <p className="text-sand-light">Disconnect from noise.</p>
+                    <p className="text-sage">Reconnect with nature.</p>
+                  </div>
+                  <p className="max-w-[432px] font-jakarta text-field font-normal leading-[26px] text-sand-light/85">
+                    A sustainable eco-retreat nestled in the heart of Sri Lanka&apos;s
+                    lush rainforests. Create your account to plan stays, curate
+                    experiences, and track your bookings.
+                  </p>
+                </div>
+
+                {/* Feature bullets */}
+                <div className="relative z-10 flex shrink-0 flex-col items-start gap-[16px]">
+                  {facts.map(fact => (
+                    <div key={fact} className="flex items-center gap-[14px]">
+                      <div className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[18px] border-[0.8px] border-sage/40 bg-sage/16">
+                        <CheckIcon />
+                      </div>
+                      <p className="font-jakarta text-meta font-normal leading-[normal] text-sand-light/85">
+                        {fact}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="font-outfit text-meta font-normal leading-[normal] text-sand-light/85">
-                {fact}
-              </p>
+
+              {/* Form side — solid light panel inside the card */}
+              <div className="relative flex items-center justify-center bg-sand-light px-6 py-12 sm:px-10 lg:px-14 lg:py-16">
+                <SignUpForm />
+              </div>
+
             </div>
-          ))}
+          </div>
+
         </div>
-      </div>
-
-      {/* ══════════════════════════════════════════
-          Form Panel — right 50% on desktop, full width on mobile
-          ══════════════════════════════════════════ */}
-      <div className="flex flex-1 flex-col items-center overflow-y-auto bg-sand-light px-6 py-10 sm:px-10 lg:w-1/2 lg:shrink-0 lg:justify-center lg:overflow-hidden lg:px-14 lg:py-0">
-        <SignUpForm />
-      </div>
-
-    </div>
       </div>
       <Footer />
     </>

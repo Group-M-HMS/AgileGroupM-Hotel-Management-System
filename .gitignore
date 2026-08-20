@@ -1,12 +1,20 @@
 06973e2f-43c0-40c6-86c1-582fd877c7cf/
+9fc59e9f-1c82-4953-ba49-0a3ea549b60a/
+d1f7e5b9-ec61-45ba-a4f8-0c4b486b3bce/
 CLAUDE.md
 SPRINT1_TRACKER.md
 /docs
 /frontend/.superpowers
 /.remember
 /.superpowers
+/.worktrees
 target/
 .idea/
 *.iml
 .env
 /deploy/VM_SETUP.md
+
+# Firebase service-account credentials — must never be committed (Google auto-disables
+# public keys). Provided at runtime via FIREBASE_CREDENTIALS_PATH; devs may drop a local
+# copy at the path below for local runs.
+backend/user-service/src/main/resources/secrets/firebase-service-account.json
