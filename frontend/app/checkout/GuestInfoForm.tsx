@@ -201,7 +201,7 @@ function GuestInfoFormInner({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
+    
     // ⛔ Block proceeding if user is NOT logged in
     if (!user) {
       router.push(loginRedirectUrl);
