@@ -10,7 +10,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "bookings")
+@Table(
+    name = "bookings",
+    indexes = {
+        @Index(name = "idx_bookings_checkin", columnList = "check_in_date"),
+        @Index(name = "idx_bookings_status_dates", columnList = "status, check_in_date, check_out_date")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -55,6 +61,12 @@ public class Booking {
 
     @Column(name = "cancellation_reason")
     private String cancellationReason;
+
+    @Column(name = "checked_in_at")
+    private LocalDateTime checkedInAt;
+
+    @Column(name = "checked_out_at")
+    private LocalDateTime checkedOutAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
