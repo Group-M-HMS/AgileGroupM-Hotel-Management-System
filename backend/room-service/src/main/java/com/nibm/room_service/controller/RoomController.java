@@ -2,6 +2,9 @@ package com.nibm.room_service.controller;
 
 import com.nibm.room_service.dto.RoomResponse;
 import com.nibm.room_service.dto.RoomSearchRequest;
+import com.nibm.room_service.dto.RoomStatusUpdateRequest;
+import com.nibm.room_service.dto.RoomStatusUpdateResponse;
+import com.nibm.room_service.entity.AdminAuditLog;
 import com.nibm.room_service.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/rooms")
-@Tag(name = "Rooms", description = "Room search and availability")
+@Tag(name = "Rooms", description = "Room search, availability, and status management")
 public class RoomController {
 
     private final RoomService roomService;
@@ -36,5 +39,26 @@ public class RoomController {
     @GetMapping("/search")
     public List<RoomResponse> searchRooms(@Valid RoomSearchRequest request) {
         return roomService.searchAvailableRooms(request);
+    }
+
+    /**
+     * Update operational/housekeeping status of a room with audit logging.
+     * Subtask: NIBM2-567, NIBM2-555, NIBM2-616, NIBM2-608
+     */
+    @Operation(summary = "Update room status (Available, Occupied, Cleaning, Maintenance)")
+    @PatchMapping("/{id}/status")
+    public RoomStatusUpdateResponse updateRoomStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody RoomStatusUpdateRequest request) {
+        return roomService.updateRoomStatus(id, request);
+    }
+
+    /**
+     * Fetch status transition history for a room.
+     */
+    @Operation(summary = "Get room status audit history")
+    @GetMapping("/{id}/audit-logs")
+    public List<AdminAuditLog> getRoomAuditLogs(@PathVariable Long id) {
+        return roomService.getRoomAuditLogs(id);
     }
 }
