@@ -36,6 +36,13 @@ public class Room {
     @Column(name = "room_type")
     private String roomType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private RoomStatus status = RoomStatus.AVAILABLE;
+
+    @Column(name = "guest_name")
+    private String guestName;
+
     @Column(name = "short_description", columnDefinition = "TEXT")
     private String shortDescription;
 
