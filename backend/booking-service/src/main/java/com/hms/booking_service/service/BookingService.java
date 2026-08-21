@@ -87,7 +87,7 @@ public class BookingService {
         RoomDetailInfo room = roomDetailServiceClient.getRoomDetail(booking.getRoomId());
 
         String paymentStatus = switch (booking.getStatus()) {
-            case CONFIRMED -> "PAID";
+            case CONFIRMED, CHECKED_IN, CHECKED_OUT -> "PAID";
             case CANCELLED -> "CANCELLED";
             case PENDING -> "PENDING";
         };
