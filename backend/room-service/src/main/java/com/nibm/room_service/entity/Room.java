@@ -8,9 +8,15 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "rooms")
+@Table(
+    name = "rooms",
+    indexes = {
+        @Index(name = "idx_rooms_price_bed", columnList = "price_per_night, bed_type")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,6 +29,12 @@ public class Room {
 
     @Column(nullable = false)
     private String title;
+
+    @Column(name = "room_number")
+    private String roomNumber;
+
+    @Column(name = "room_type")
+    private String roomType;
 
     @Column(name = "short_description", columnDefinition = "TEXT")
     private String shortDescription;
@@ -54,4 +66,20 @@ public class Room {
 
     @Column(name = "review_count")
     private Integer reviewCount = 0;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }
