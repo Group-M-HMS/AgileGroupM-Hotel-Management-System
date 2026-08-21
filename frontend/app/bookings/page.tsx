@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { DashboardContent } from "./DashboardContent";
 
 export const metadata = {
-  title: "My Dashboard — River Nest Eco Villa",
+  title: "My Bookings — River Nest Eco Villa",
 };
 
 export default function DashboardPage() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { StatusBadge } from "@/app/dashboard/StatusBadge";
+import { StatusBadge } from "@/app/bookings/StatusBadge";
 import { cancelBooking, type BookingStatus } from "@/lib/bookings";
 
 export function CancelBookingControl({
@@ -58,14 +58,14 @@ export function CancelBookingControl({
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="no-print ml-auto font-outfit text-meta font-semibold text-red-600 hover:underline"
+          className="no-print ml-auto font-jakarta text-meta font-semibold text-red-600 hover:underline"
         >
           Cancel Booking
         </button>
       )}
 
       {showBanner && (
-        <div className="no-print w-full rounded-input border border-green-200 bg-green-50 px-4 py-3 font-outfit text-meta text-green-700">
+        <div className="no-print w-full rounded-input border border-green-200 bg-green-50 px-4 py-3 font-jakarta text-meta text-green-700">
           <div className="flex items-center justify-between gap-3">
             <span>Your booking has been canceled successfully.</span>
             <button
@@ -83,15 +83,15 @@ export function CancelBookingControl({
       )}
 
       {modalOpen && (
-        <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-jungle-dark/40 px-4">
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-primary/40 px-4">
           <div className="flex w-full max-w-sm flex-col gap-4 rounded-3xl bg-white p-6 shadow-soft-lg">
-            <h2 className="font-lora text-[20px] font-medium text-jungle-dark">Cancel this booking?</h2>
-            <div className="rounded-input border border-red-200 bg-red-50 px-4 py-3 font-outfit text-[13px] text-red-700">
+            <h2 className="font-fraunces text-[20px] font-medium text-jungle-dark">Cancel this booking?</h2>
+            <div className="rounded-input border border-red-200 bg-red-50 px-4 py-3 font-jakarta text-[13px] text-red-700">
               This action is final and cannot be undone. Your reservation will be canceled
               immediately.
             </div>
             <div className="flex flex-col gap-[4px]">
-              <label htmlFor="cancel-reason" className="font-outfit text-[13px] font-medium text-jungle-dark">
+              <label htmlFor="cancel-reason" className="font-jakarta text-[13px] font-medium text-jungle-dark">
                 Reason for cancelling
               </label>
               <textarea
@@ -100,11 +100,11 @@ export function CancelBookingControl({
                 onChange={e => setReason(e.target.value)}
                 rows={3}
                 placeholder="e.g. Travel plans changed"
-                className="w-full resize-none rounded-input border-2 border-sand bg-white px-field-x py-3 font-outfit text-[13px] text-jungle placeholder:text-jungle/50 outline-none transition-colors focus:border-sage"
+                className="w-full resize-none rounded-input border-2 border-sand bg-white px-field-x py-3 font-jakarta text-[13px] text-jungle placeholder:text-jungle/50 outline-none transition-colors focus:border-sage"
               />
             </div>
             {error && (
-              <p className="font-outfit text-[13px] text-red-600">{error}</p>
+              <p className="font-jakarta text-[13px] text-red-600">{error}</p>
             )}
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
@@ -115,7 +115,7 @@ export function CancelBookingControl({
                   setReason("");
                 }}
                 disabled={submitting}
-                className="flex h-btn w-full items-center justify-center rounded-btn border border-sand font-outfit text-field font-semibold text-jungle-dark transition-colors hover:border-sage disabled:opacity-60"
+                className="flex h-btn w-full items-center justify-center rounded-btn border border-sand font-jakarta text-field font-semibold text-jungle-dark transition-colors hover:border-sage disabled:opacity-60"
               >
                 No, Keep Booking
               </button>

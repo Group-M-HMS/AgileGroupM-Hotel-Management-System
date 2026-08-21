@@ -12,7 +12,7 @@ export function PasswordRequirements({ password }: { password: string }) {
         return (
           <li
             key={rule.label}
-            className={`flex items-center gap-1.5 font-outfit text-[12px] ${
+            className={`flex items-center gap-1.5 font-jakarta text-[12px] ${
               met ? "text-jungle-light" : "text-jungle/50"
             }`}
           >

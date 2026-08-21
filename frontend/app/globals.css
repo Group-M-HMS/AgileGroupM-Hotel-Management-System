@@ -2,7 +2,7 @@
 
 :root {
   color-scheme: light;
-  --background: #F4F3F0;
+  --background: #f6f4ec ;
   --foreground: #171717;
 }
 
@@ -16,17 +16,26 @@
 /* Brand fonts — loaded via Google Fonts <link> in layout.tsx */
 /* Brand colours and palette */
 @theme {
-  --font-lora: 'Lora', serif;
-  --font-outfit: 'Outfit', sans-serif;
-  --font-serif: 'Lora', serif;
+  --font-fraunces: 'Fraunces', Georgia, serif;
+  --font-jakarta: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
 
   --color-jungle-dark:  #1f3d2b;
   --color-jungle:       #3a5a40;
+
+  /* Primary brand colour — mirrors the navbar background (jungle-dark).
+     Generates bg-primary / text-primary / border-primary. */
+  --color-primary:      var(--color-jungle-dark);
   --color-jungle-light: #588157;
   --color-sage:         #a3b18a;
   --color-sage-light:   #c8d5b9;
   --color-sand:         #dad7cd;
   --color-sand-light:   #f4f3f0;
+
+  /* Warm earth accent — for ratings, tags, and small highlights.
+     Deliberately NOT for primary CTAs (those stay jungle/primary).
+     Generates bg-clay / text-clay / fill-clay. */
+  --color-clay:         #a4713f;
 
   --shadow-soft:    0 10px 40px -10px rgba(31, 61, 43, 0.08);
   --shadow-soft-lg: 0 20px 50px -10px rgba(31, 61, 43, 0.12);
@@ -56,6 +65,15 @@
   --text-heading-sm:    38px;   /* mobile heading */
   --text-heading-md:    46px;   /* tablet heading */
   --text-heading-lg:    52px;   /* desktop heading */
+
+  /* Admin console (/admin) — light brand theme now matches the guest site
+     directly (jungle/sand/sage/clay above). These three remain only for the
+     Drawer/Modal/Field `theme="light"` branch, which the admin console never
+     passes (it stays on `theme="dark"`, whose classes now resolve to the same
+     light brand palette via the renamed utility classes, not via these vars). */
+  --color-admin-jungle:     #1f3d2b;
+  --color-admin-sand:       #f6f4ec;
+  --color-admin-clay:       #a4713f;
 }
 
 /* Reusable component classes — single source of truth for control patterns.
@@ -64,19 +82,19 @@
 @layer components {
   .input-field {
     @apply h-control w-full rounded-input border-2 bg-white px-field-x
-           font-outfit text-field leading-[normal] text-jungle
+           font-jakarta text-field leading-[normal] text-jungle
            placeholder:text-jungle/50 outline-none transition-colors;
   }
 
   .select-field {
     @apply h-control w-full appearance-none rounded-input border-2 bg-white
-           pl-field-x pr-[44px] font-outfit text-field leading-[normal]
+           pl-field-x pr-[44px] font-jakarta text-field leading-[normal]
            outline-none transition-colors;
   }
 
   .btn-primary {
     @apply flex h-btn w-full cursor-pointer items-center justify-center
-           rounded-btn bg-jungle-dark font-outfit text-field font-semibold
+           rounded-btn bg-primary font-jakarta text-field font-semibold
            leading-[normal] tracking-[1.5px] text-sand-light
            transition-opacity hover:opacity-90;
   }
@@ -98,7 +116,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -117,6 +135,19 @@ body {
   word-wrap: normal;
   direction: ltr;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+/* Custom scrollbars inside the admin console (/admin) */
+.thin-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: #a3b18a;
+  border-radius: 999px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Print — used by /manage-booking/itinerary's "Print Itinerary" button */

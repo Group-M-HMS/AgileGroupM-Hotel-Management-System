@@ -12,7 +12,7 @@ function RoomThumbnail({ room }: { room: Room }) {
 
   if (failed) {
     return (
-      <div className="flex h-full w-44 shrink-0 items-center justify-center rounded-2xl bg-sand font-outfit text-error text-jungle/50 sm:w-56">
+      <div className="flex h-full w-44 shrink-0 items-center justify-center rounded-2xl bg-sand font-jakarta text-error text-jungle/50 sm:w-56">
         No image
       </div>
     );
@@ -44,17 +44,17 @@ function RoomCard({
   const detailsHref = `/room/${room.id}?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${guests}`;
 
   return (
-    <div className="flex h-36 w-full gap-6 rounded-3xl bg-white p-2 shadow-soft transition-shadow hover:shadow-soft-lg">
+    <div className="flex h-36 w-full gap-6 rounded-3xl border border-sand bg-white p-2 shadow-soft transition-shadow hover:shadow-soft-lg">
       <RoomThumbnail room={room} />
       <div className="flex flex-1 flex-col justify-between gap-2 overflow-hidden py-3">
-        <h3 className="truncate font-lora text-[20px] font-medium text-jungle-dark">
+        <h3 className="truncate font-fraunces text-[20px] font-medium text-jungle-dark">
           {room.title}
         </h3>
-        <p className="line-clamp-2 font-outfit text-field text-jungle/70">
+        <p className="line-clamp-2 font-jakarta text-field text-jungle/70">
           {room.shortDescription}
         </p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 overflow-hidden">
-          <span className="flex items-center gap-1 font-outfit text-meta text-jungle/50">
+          <span className="flex items-center gap-1 font-jakarta text-meta text-jungle/50">
             <span
               className="material-symbols-outlined text-jungle/50"
               style={{ fontSize: "16px" }}
@@ -67,7 +67,7 @@ function RoomCard({
           {room.topAmenities.map(amenity => (
             <span
               key={amenity}
-              className="flex items-center gap-1 font-outfit text-meta text-jungle/50"
+              className="flex items-center gap-1 font-jakarta text-meta text-jungle/50"
             >
               <AmenityIcon name={amenity} />
               {amenity}
@@ -76,13 +76,13 @@ function RoomCard({
         </div>
       </div>
       <div className="flex shrink-0 flex-col items-end justify-between gap-2 py-3 pr-3">
-        <p className="whitespace-nowrap font-lora text-[26px] font-normal text-jungle-dark">
+        <p className="whitespace-nowrap font-fraunces text-[26px] font-normal text-jungle-dark">
           ${room.pricePerNight}{" "}
-          <span className="font-outfit text-meta font-normal text-jungle/50">/ night</span>
+          <span className="font-jakarta text-meta font-normal text-jungle/50">/ night</span>
         </p>
         <Link
           href={detailsHref}
-          className="whitespace-nowrap rounded-btn bg-jungle-dark px-6 py-2.5 font-outfit text-meta font-semibold text-sand-light transition-opacity hover:opacity-90"
+          className="whitespace-nowrap rounded-btn bg-primary px-6 py-2.5 font-jakarta text-meta font-semibold text-sand-light transition-opacity hover:opacity-90"
         >
           Book Now
         </Link>
@@ -127,7 +127,7 @@ export function RoomResultsList({
             type="button"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-full px-4 py-2 font-outfit text-meta text-jungle-dark transition-opacity hover:opacity-70 disabled:opacity-30"
+            className="rounded-full px-4 py-2 font-jakarta text-meta text-jungle-dark transition-opacity hover:opacity-70 disabled:opacity-30"
           >
             Prev
           </button>
@@ -139,9 +139,9 @@ export function RoomResultsList({
                 type="button"
                 onClick={() => setPage(pageNumber)}
                 aria-current={page === pageNumber ? "page" : undefined}
-                className={`h-9 w-9 rounded-full font-outfit text-meta transition-colors ${
+                className={`h-9 w-9 rounded-full font-jakarta text-meta transition-colors ${
                   page === pageNumber
-                    ? "bg-jungle-dark text-sand-light"
+                    ? "bg-primary text-sand-light"
                     : "text-jungle-dark hover:bg-sand"
                 }`}
               >
@@ -153,7 +153,7 @@ export function RoomResultsList({
             type="button"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="rounded-full px-4 py-2 font-outfit text-meta text-jungle-dark transition-opacity hover:opacity-70 disabled:opacity-30"
+            className="rounded-full px-4 py-2 font-jakarta text-meta text-jungle-dark transition-opacity hover:opacity-70 disabled:opacity-30"
           >
             Next
           </button>
