@@ -9,4 +9,5 @@ public interface RoomImageRepository extends JpaRepository<RoomImage, Long> {
 
     List<RoomImage> findByRoomIdOrderByDisplayOrderAsc(Long roomId);
     boolean existsByRoomId(Long roomId);
+    void deleteByRoomId(Long roomId);
 }

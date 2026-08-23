@@ -17,12 +17,16 @@ public class BookingHistoryService {
         this.roomServiceClient = roomServiceClient;
     }
 
-    private List<BookingDto> fetchAllBookings(String email) {
-        BookingDto[] bookings = roomServiceClient.get()
-                .uri("/api/bookings?email={email}", email)
-                .retrieve()
-                .body(BookingDto[].class);
-        return bookings != null ? List.of(bookings) : List.of();
+    public List<BookingDto> fetchAllBookings(String email) {
+        try {
+            BookingDto[] bookings = roomServiceClient.get()
+                    .uri("/api/bookings?email={email}", email)
+                    .retrieve()
+                    .body(BookingDto[].class);
+            return bookings != null ? List.of(bookings) : List.of();
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     public List<BookingDto> getUpcomingReservations(String email) {

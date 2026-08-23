@@ -18,10 +18,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
 
     Optional<Booking> findByIdAndCustomerId(Long id, String customerId);
 
+    Optional<Booking> findByBookingReference(String bookingReference);
+
     boolean existsByBookingReference(String bookingReference);
 
-    // NIBM2-583: all non-cancelled bookings whose stay overlaps [from, to),
-    // used for the calendar timeline. Relies on idx_bookings_daterange_gist (Commit 3).
+    List<Booking> findAllByOrderByCreatedAtDesc();
+
+    List<Booking> findByStatusOrderByCheckInDateAsc(BookingStatus status);
+
+    List<Booking> findByCheckInDate(LocalDate checkInDate);
+
+
     @Query("""
         SELECT b FROM Booking b
         WHERE b.status <> com.hms.booking_service.entity.BookingStatus.CANCELLED
@@ -31,12 +38,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
         """)
     List<Booking> findScheduleBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    // NIBM2-623: Postgres advisory lock, scoped to the current transaction
-    // (released automatically on commit/rollback - no manual unlock needed).
-    // Serializes concurrent walk-in booking attempts for the SAME room, so two
-    // front-desk creates for the same room can't race between the availability
-    // check and the insert. hashtext() folds the room id into the lock key
-    // space pg_advisory_xact_lock expects.
+
     @Query(value = "SELECT pg_advisory_xact_lock(hashtext(CAST(:roomId AS text)))", nativeQuery = true)
     void lockRoomForBooking(@Param("roomId") Long roomId);
 }
