@@ -1,4 +1,4 @@
--- V2__admin_booking_extensions.sql
+-- V3__admin_booking_extensions.sql
 -- Admin console support for Booking Service.
 
 -- NIBM2-619: customer_id must become nullable for walk-in bookings
