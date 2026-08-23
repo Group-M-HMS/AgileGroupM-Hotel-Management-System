@@ -87,13 +87,13 @@ public class BookingService {
 
         RoomDetailInfo room = roomDetailServiceClient.getRoomDetail(booking.getRoomId());
 
-        String paymentStatus = switch (booking.getStatus()) {
-            case CONFIRMED -> "PAID";
-            case CHECKED_IN -> "CHECKED_IN";
-            case CHECKED_OUT -> "COMPLETED";
-            case CANCELLED -> "CANCELLED";
-            case PENDING -> "PENDING";
-        };
+    String paymentStatus = switch (booking.getStatus()) {
+        case CONFIRMED -> "PAID";
+        case CHECKED_IN -> "CHECKED_IN";
+        case CHECKED_OUT -> "COMPLETED";
+        case CANCELLED -> "CANCELLED";
+        case PENDING -> "PENDING";
+    };
 
         return new BookingDetailResponse(
                 booking.getId(), booking.getRoomId(), room.name(), room.description(),

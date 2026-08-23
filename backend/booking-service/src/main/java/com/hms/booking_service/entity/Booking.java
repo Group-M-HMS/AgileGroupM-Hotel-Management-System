@@ -26,8 +26,23 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "customer_id", nullable = false)
+    @Column(name = "customer_id")
     private String customerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", nullable = false, length = 20)
+    private BookingSource source = BookingSource.WEBSITE;   // NIBM2-622
+
+    // Denormalized guest contact info - only populated for WALK_IN bookings
+    // where there's no linked customer account to look this up from.
+    @Column(name = "guest_name")
+    private String guestName;
+
+    @Column(name = "guest_email")
+    private String guestEmail;
+
+    @Column(name = "guest_phone")
+    private String guestPhone;
 
     @Column(name = "room_id", nullable = false)
     private Long roomId;

@@ -17,4 +17,9 @@ public class WebClientConfig {
     public WebClient pricingServiceWebClient(@Value("${pricing-service.base-url}") String baseUrl) {
         return WebClient.builder().baseUrl(baseUrl).build();
     }
+
+    @Bean
+    public WebClient roomServiceWebClient(@Value("${room-service.base-url}") String baseUrl) {
+        return WebClient.builder().baseUrl(baseUrl).build();
+    }
 }
