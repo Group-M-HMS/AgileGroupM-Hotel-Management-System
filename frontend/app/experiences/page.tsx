@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import ExperiencesGrid from "./ExperiencesGrid";
+import { fetchExperiences } from "./api";
 
 export const metadata: Metadata = {
   title: "Experiences — River Nest Eco Villa",
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
     "Explore the activities and tours available during your stay at River Nest Eco Villa — jungle treks, white-water rafting, river bathing, bird watching, wellness and more.",
 };
 
-export default function ExperiencesPage() {
+export default async function ExperiencesPage() {
+  const experiences = await fetchExperiences();
   return (
     <>
       <Navbar />
@@ -33,7 +35,7 @@ export default function ExperiencesPage() {
 
           {/* Activity catalog */}
           <div className="mt-14">
-            <ExperiencesGrid />
+            <ExperiencesGrid experiences={experiences} />
           </div>
         </div>
       </main>

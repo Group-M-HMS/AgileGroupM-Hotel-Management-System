@@ -171,25 +171,25 @@ function AdminBookingsInner() {
           </header>
 
           <div className="overflow-x-auto thin-scroll">
-            <table className="w-full min-w-[960px] text-left text-sm">
+            <table className="w-full min-w-[960px] table-fixed text-left text-sm">
               <thead>
                 <tr className="border-b border-sand text-[11px] uppercase tracking-wider text-jungle/45">
-                  <th scope="col" className="px-5 py-3 font-semibold">Ref</th>
-                  <th scope="col" className="px-5 py-3 font-semibold">Guest</th>
+                  <th scope="col" className="w-[110px] px-5 py-3 font-semibold">Ref</th>
+                  <th scope="col" className="w-[180px] px-5 py-3 font-semibold">Guest</th>
                   <th scope="col" className="px-5 py-3 font-semibold">Room</th>
-                  <th scope="col" className="px-5 py-3 font-semibold">Dates</th>
-                  <th scope="col" className="px-5 py-3 font-semibold">Payment</th>
-                  <th scope="col" className="px-5 py-3 font-semibold">Status</th>
-                  <th scope="col" className="px-5 py-3 text-right font-semibold">Actions</th>
+                  <th scope="col" className="w-[130px] px-5 py-3 font-semibold">Dates</th>
+                  <th scope="col" className="w-[170px] px-5 py-3 font-semibold">Payment</th>
+                  <th scope="col" className="w-[100px] px-5 py-3 font-semibold">Status</th>
+                  <th scope="col" className="w-64 px-5 py-3 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((b) => (
                   <tr key={b.id} className="border-b border-sand/60 transition-colors duration-150 hover:bg-sand-light/50">
                     <td className="px-5 py-3 font-mono text-xs text-clay">{b.ref}</td>
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-jungle-dark">{b.guestName}</p>
-                      <p className="text-xs text-jungle/45">{b.guests} guests · {b.source}</p>
+                    <td className="w-[180px] px-5 py-3">
+                      <p className="truncate font-medium text-jungle-dark">{b.guestName}</p>
+                      <p className="truncate text-xs text-jungle/45">{b.guests} guests · {b.source}</p>
                     </td>
                     <td className="px-5 py-3">
                       <p className="text-jungle">{b.roomTitle}</p>
@@ -200,13 +200,13 @@ function AdminBookingsInner() {
                     </td>
                     <td className="px-5 py-3">
                       <span
-                        className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                        className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
                           b.paid
                             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
                             : 'border-amber-500/30 bg-amber-500/10 text-amber-700'
                         }`}>
 
-                        {money(b.amount)} {b.paid ? 'Paid' : 'Unpaid'}
+                        {money(b.amount)}&nbsp;{b.paid ? 'Paid' : 'Unpaid'}
                       </span>
                     </td>
                     <td className="px-5 py-3">
@@ -219,7 +219,7 @@ function AdminBookingsInner() {
                             <button
                               type="button"
                               onClick={() => doCheckIn(b)}
-                              className="rounded-md bg-emerald-500 px-2.5 py-1.5 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
+                              className="flex h-[30px] items-center justify-center rounded-md bg-emerald-500 px-2.5 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
 
                               Check-In
                             </button>
@@ -230,7 +230,7 @@ function AdminBookingsInner() {
                                 setReason('');
                                 setReasonError('');
                               }}
-                              className="rounded-md border border-rose-500/40 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 transition-colors duration-150 hover:bg-rose-500/10">
+                              className="flex h-[30px] items-center justify-center rounded-md border border-rose-500/40 px-2.5 text-[11px] font-semibold text-rose-700 transition-colors duration-150 hover:bg-rose-500/10">
 
                               Cancel
                             </button>
@@ -240,7 +240,7 @@ function AdminBookingsInner() {
                           <button
                             type="button"
                             onClick={() => doCheckOut(b)}
-                            className="rounded-md bg-amber-500 px-2.5 py-1.5 text-[11px] font-semibold text-jungle-dark transition-colors duration-150 hover:bg-amber-400">
+                            className="flex h-[30px] items-center justify-center rounded-md bg-amber-500 px-2.5 text-[11px] font-semibold text-jungle-dark transition-colors duration-150 hover:bg-amber-400">
 
                             Check-Out
                           </button>
@@ -248,7 +248,7 @@ function AdminBookingsInner() {
                         <button
                           type="button"
                           onClick={() => setSelected(b)}
-                          className="flex items-center gap-1.5 rounded-md border border-sand px-2.5 py-1.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
+                          className="flex h-[30px] items-center justify-center gap-1.5 rounded-md border border-sand px-2.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
 
                           <EyeIcon className="h-3.5 w-3.5" /> View
                         </button>

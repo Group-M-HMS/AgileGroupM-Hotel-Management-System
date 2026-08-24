@@ -4,11 +4,15 @@
 import { useEffect, useState } from "react";
 import { Clock, X, Mail, CalendarCheck } from "lucide-react";
 import Link from "next/link";
-import { experiences, type Experience } from "./experiences";
+import type { Experience } from "./experiences";
 import { ExperienceCard } from "./ExperienceCard";
 import { ExperienceImage, difficultyClasses } from "./ExperienceImage";
 
-export default function ExperiencesGrid() {
+export default function ExperiencesGrid({
+  experiences,
+}: {
+  experiences: Experience[];
+}) {
   const [selected, setSelected] = useState<Experience | null>(null);
 
   // Close on Escape and lock body scroll while the modal is open.
@@ -24,6 +28,14 @@ export default function ExperiencesGrid() {
       document.body.style.overflow = "";
     };
   }, [selected]);
+
+  if (experiences.length === 0) {
+    return (
+      <p className="rounded-[28px] border border-dashed border-sand bg-sand-light/40 py-20 text-center font-jakarta text-[15px] text-jungle/60">
+        Our activity catalog is being updated — check back soon.
+      </p>
+    );
+  }
 
   return (
     <>
