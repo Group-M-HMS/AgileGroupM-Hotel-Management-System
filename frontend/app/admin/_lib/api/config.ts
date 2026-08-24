@@ -71,6 +71,10 @@ export function bookingAdminFetch<T>(path: string, init: RequestInit = {}): Prom
 
 /** user-service calls requiring a real Firebase Bearer token (UserController's admin guest-directory endpoints). */
 export async function userServiceFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  // HotelDataProvider fires this on mount, before Firebase's async session
+  // restore (onAuthStateChanged) has resolved -- without this, auth.currentUser
+  // is still null on a fresh page load even for a signed-in admin.
+  await auth.authStateReady();
   const token = await auth.currentUser?.getIdToken();
   if (!token) throw new ApiError('Not authenticated', 401);
   const response = await fetch(`${USER_SERVICE_URL}${path}`, {
