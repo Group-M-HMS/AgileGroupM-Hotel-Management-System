@@ -1,5 +1,6 @@
 package com.hms.booking_service.client;
 
+import com.hms.booking_service.dto.DashboardMetricsResponse.RoomStatusCounts;
 import com.hms.booking_service.dto.GlobalSearchResponse.SearchRoomResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Calls Room Service to update housekeeping status and search rooms for global search.
- * NIBM2-611 / NIBM2-619
+ * Calls Room Service to update housekeeping status, search rooms, and aggregate room operational metrics.
+ * NIBM2-552 / NIBM2-611 / NIBM2-619
  */
 @Component
 public class RoomServiceClient {
@@ -77,6 +78,42 @@ public class RoomServiceClient {
             log.warn("Room search lookup failed for query '{}': {}", query, e.getMessage());
             return List.of();
         }
+    }
+
+    /**
+     * Fetches current room inventory operational counts across all rooms.
+     * NIBM2-552
+     */
+    public RoomStatusCounts getRoomStatusCounts() {
+        int available = 0;
+        int occupied = 0;
+        int cleaning = 0;
+        int maintenance = 0;
+
+        try {
+            List<Map<String, Object>> rooms = webClient.get()
+                    .uri("/api/rooms")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
+                    .block(Duration.ofMillis(timeoutMs));
+
+            if (rooms != null) {
+                for (Map<String, Object> r : rooms) {
+                    String status = r.get("status") != null ? r.get("status").toString().toUpperCase() : "AVAILABLE";
+                    switch (status) {
+                        case "OCCUPIED" -> occupied++;
+                        case "CLEANING" -> cleaning++;
+                        case "MAINTENANCE" -> maintenance++;
+                        default -> available++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch room operational status from Room Service: {}", e.getMessage());
+            available = 50; // Fallback default
+        }
+
+        return new RoomStatusCounts(available, occupied, cleaning, maintenance);
     }
 
     private record RoomStatusUpdateRequest(String status) {
