@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useHotel } from '../_lib/contexts/HotelDataContext';
+import { useAuth } from '@/lib/AuthContext';
 import { WalkInBookingModal } from './WalkInBookingModal';
 
 const nav = [
@@ -34,6 +35,7 @@ const nav = [
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { rooms, guests, bookings, alerts } = useHotel();
+  const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [query, setQuery] = useState('');
   const [bellOpen, setBellOpen] = useState(false);
@@ -74,6 +76,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   };
 
   const isActive = (to: string, end?: boolean) => (end ? pathname === to : pathname === to || pathname?.startsWith(`${to}/`));
+
+  const displayName = user ? `${user.firstName} ${user.lastName}`.trim() || user.email : 'Signed out';
+  const initials =
+    user && (user.firstName || user.lastName)
+      ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || user.email[0]?.toUpperCase()
+      : (user?.email[0]?.toUpperCase() ?? '?');
+
+  const handleSignOut = async () => {
+    setProfileOpen(false);
+    try {
+      await logout();
+      toast.success('Signed out of the operations console');
+      router.push('/login');
+    } catch {
+      toast.error('Could not sign out. Please try again.');
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-sand-light text-jungle">
@@ -263,22 +282,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 className="flex items-center gap-2 rounded-lg border border-sand py-1 pl-1 pr-2 transition-colors duration-150 hover:bg-white">
 
                 <span className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-500/15 text-xs font-bold text-emerald-700">
-                  DR
+                  {initials}
                 </span>
                 <ChevronDownIcon className="h-3.5 w-3.5 text-jungle/60" />
               </button>
               {profileOpen && (
                 <div className="absolute right-0 top-12 w-56 overflow-hidden rounded-xl border border-sand bg-white shadow-2xl">
                   <div className="border-b border-sand px-4 py-3">
-                    <p className="text-sm font-semibold text-jungle-dark">Dinuka Rajapaksa</p>
-                    <p className="text-xs text-jungle/60">Resort Manager</p>
+                    <p className="truncate text-sm font-semibold text-jungle-dark">{displayName}</p>
+                    <p className="truncate text-xs text-jungle/60">{user?.email ?? 'Not signed in'}</p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      toast.success('Signed out of the operations console');
-                    }}
+                    onClick={handleSignOut}
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-rose-700 transition-colors duration-150 hover:bg-sand">
 
                     <LogOutIcon className="h-4 w-4" /> Sign out
