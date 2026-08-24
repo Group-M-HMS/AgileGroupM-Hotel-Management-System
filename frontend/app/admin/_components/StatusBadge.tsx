@@ -2,8 +2,8 @@ import React from 'react';
 import type { BookingStatus, RoomStatus } from '../_lib/types/hotel';
 
 export const roomStatusMeta: Record<RoomStatus, { label: string; dot: string; chip: string }> = {
-  available: { label: 'Available', dot: 'bg-cyan-400', chip: 'bg-cyan-500/12 text-cyan-700 border-cyan-500/30' },
-  occupied: { label: 'Occupied', dot: 'bg-emerald-400', chip: 'bg-emerald-500/12 text-emerald-700 border-emerald-500/30' },
+  available: { label: 'Available', dot: 'bg-emerald-400', chip: 'bg-emerald-500/12 text-emerald-700 border-emerald-500/30' },
+  occupied: { label: 'Occupied', dot: 'bg-cyan-400', chip: 'bg-cyan-500/12 text-cyan-700 border-cyan-500/30' },
   cleaning: { label: 'Needs Cleaning', dot: 'bg-amber-400', chip: 'bg-amber-500/12 text-amber-700 border-amber-500/30' },
   maintenance: { label: 'Maintenance', dot: 'bg-rose-400', chip: 'bg-rose-500/12 text-rose-700 border-rose-500/30' },
 };

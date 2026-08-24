@@ -5,7 +5,9 @@ import com.hms.booking_service.dto.DashboardMetricsResponse;
 import com.hms.booking_service.dto.DashboardMetricsResponse.*;
 import com.hms.booking_service.entity.Booking;
 import com.hms.booking_service.entity.BookingStatus;
+import com.hms.booking_service.entity.RequestStatus;
 import com.hms.booking_service.repository.BookingRepository;
+import com.hms.booking_service.repository.GuestRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +26,14 @@ public class DashboardMetricsService {
 
     private final BookingRepository bookingRepository;
     private final RoomServiceClient roomServiceClient;
+    private final GuestRequestRepository guestRequestRepository;
 
     public DashboardMetricsService(BookingRepository bookingRepository,
-                                   RoomServiceClient roomServiceClient) {
+                                   RoomServiceClient roomServiceClient,
+                                   GuestRequestRepository guestRequestRepository) {
         this.bookingRepository = bookingRepository;
         this.roomServiceClient = roomServiceClient;
+        this.guestRequestRepository = guestRequestRepository;
     }
 
     @Transactional(readOnly = true)
@@ -95,10 +100,10 @@ public class DashboardMetricsService {
         long totalBookings = bookingRepository.count();
         long activeStays = bookingRepository.countByStatus(BookingStatus.CHECKED_IN);
         long confirmedBookings = bookingRepository.countByStatus(BookingStatus.CONFIRMED);
-        long pendingBookings = bookingRepository.countByStatus(BookingStatus.PENDING);
+        long pendingAlerts = guestRequestRepository.countByStatus(RequestStatus.PENDING);
 
         ActivityMetric activity = new ActivityMetric(
-                pendingBookings, // pending actions count
+                pendingAlerts,
                 totalBookings,
                 activeStays,
                 confirmedBookings
