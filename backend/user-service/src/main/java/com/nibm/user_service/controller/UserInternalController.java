@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 /**
  * Service-to-service endpoints, not customer-facing. Lets other services (e.g.
  * booking-service resolving a guest's display name for a booking) look up a
@@ -32,7 +35,7 @@ public class UserInternalController {
             @RequestHeader(value = "X-Internal-Secret", required = false) String providedSecret,
             @PathVariable String id) {
 
-        if (providedSecret == null || !providedSecret.equals(internalSecret)) {
+        if (providedSecret == null || !constantTimeEquals(providedSecret, internalSecret)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid internal service credentials");
         }
 
@@ -45,5 +48,9 @@ public class UserInternalController {
                 user.getPhone(),
                 user.getCreatedAt()
         );
+    }
+
+    private boolean constantTimeEquals(String a, String b) {
+        return MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8), b.getBytes(StandardCharsets.UTF_8));
     }
 }
