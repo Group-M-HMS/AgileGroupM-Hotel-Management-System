@@ -3,6 +3,7 @@ package com.hms.booking_service.service;
 import com.hms.booking_service.client.PricingServiceClient;
 import com.hms.booking_service.client.RoomDetailServiceClient;
 import com.hms.booking_service.client.RoomServiceClient;
+import com.hms.booking_service.client.UserServiceClient;
 import com.hms.booking_service.dto.*;
 import com.hms.booking_service.entity.Booking;
 import com.hms.booking_service.entity.BookingSource;
@@ -30,15 +31,21 @@ public class BookingAdminService {
     private final PricingServiceClient pricingServiceClient;
     private final RoomDetailServiceClient roomDetailServiceClient;
     private final RoomServiceClient roomServiceClient;
+    private final UserServiceClient userServiceClient;
+    private final BookingReferenceGenerator referenceGenerator;
 
     public BookingAdminService(BookingRepository bookingRepository,
                                PricingServiceClient pricingServiceClient,
                                RoomDetailServiceClient roomDetailServiceClient,
-                               RoomServiceClient roomServiceClient) {
+                               RoomServiceClient roomServiceClient,
+                               UserServiceClient userServiceClient,
+                               BookingReferenceGenerator referenceGenerator) {
         this.bookingRepository = bookingRepository;
         this.pricingServiceClient = pricingServiceClient;
         this.roomDetailServiceClient = roomDetailServiceClient;
         this.roomServiceClient = roomServiceClient;
+        this.userServiceClient = userServiceClient;
+        this.referenceGenerator = referenceGenerator;
     }
 
     /**
@@ -193,6 +200,9 @@ public class BookingAdminService {
         booking.setGuestPhone(request.guestPhone());
         booking.setCustomerId(null); // no customer account for a walk-in
         booking.setStatus(request.paid() ? BookingStatus.CONFIRMED : BookingStatus.PENDING);
+        // Walk-ins never go through BookingService.confirmPayment(), so unlike online
+        // bookings they need their reference assigned here at creation time.
+        booking.setBookingReference(referenceGenerator.generate());
 
         try {
             bookingRepository.saveAndFlush(booking);
@@ -230,9 +240,12 @@ public class BookingAdminService {
     }
 
     private String resolveGuestName(Booking booking) {
-        // Walk-in bookings store the name directly; website bookings would need
-        // a User/Guest service lookup by customerId - not wired up here since
-        // that entity isn't owned by this service (open question - flag with team).
-        return booking.getGuestName() != null ? booking.getGuestName() : "Customer #" + booking.getCustomerId();
+        // Walk-in bookings store the name directly. Website bookings only store the
+        // Firebase UID as customerId, so look the real name up from User Service;
+        // fall back to the UID placeholder only if that lookup itself fails.
+        if (booking.getGuestName() != null) return booking.getGuestName();
+        if (booking.getCustomerId() == null) return "Customer #unknown";
+        String name = userServiceClient.getGuestName(booking.getCustomerId());
+        return name != null ? name : "Customer #" + booking.getCustomerId();
     }
 }
