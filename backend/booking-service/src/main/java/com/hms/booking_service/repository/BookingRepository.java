@@ -8,7 +8,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +31,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
     List<Booking> findByStatusOrderByCheckInDateAsc(BookingStatus status);
 
     List<Booking> findByCheckInDate(LocalDate checkInDate);
+
+    List<Booking> findByCheckInDateAndStatusNot(LocalDate checkInDate, BookingStatus status);
+
+    List<Booking> findByCheckOutDateAndStatusNot(LocalDate checkOutDate, BookingStatus status);
+
+    long countByStatus(BookingStatus status);
+
+    long countByStatusIn(Collection<BookingStatus> statuses);
+
+    @Query("""
+        SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b
+        WHERE b.status <> com.hms.booking_service.entity.BookingStatus.CANCELLED
+          AND b.createdAt >= :start AND b.createdAt < :end
+        """)
+    BigDecimal sumRevenueBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
         SELECT b FROM Booking b
