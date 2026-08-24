@@ -11,26 +11,25 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class BookingService {
 
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final String REFERENCE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I ambiguity
-
     private final BookingRepository bookingRepository;
     private final PricingServiceClient pricingServiceClient;
     private final RoomDetailServiceClient roomDetailServiceClient;
+    private final BookingReferenceGenerator referenceGenerator;
 
     public BookingService(BookingRepository bookingRepository,
                           PricingServiceClient pricingServiceClient,
-                          RoomDetailServiceClient roomDetailServiceClient) {
+                          RoomDetailServiceClient roomDetailServiceClient,
+                          BookingReferenceGenerator referenceGenerator) {
         this.bookingRepository = bookingRepository;
         this.pricingServiceClient = pricingServiceClient;
         this.roomDetailServiceClient = roomDetailServiceClient;
+        this.referenceGenerator = referenceGenerator;
     }
 
     /**
@@ -237,24 +236,11 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.CONFIRMED);
-        booking.setBookingReference(generateUniqueBookingReference());
+        booking.setBookingReference(referenceGenerator.generate());
         bookingRepository.save(booking);
 
         return new BookingConfirmPaymentResponse(
                 booking.getId(), booking.getStatus(), booking.getBookingReference());
-    }
-
-    /** NIBM2-271: e.g. "BK-7F3K9QZP2H" - short, unambiguous, human-readable. */
-    private String generateUniqueBookingReference() {
-        String reference;
-        do {
-            StringBuilder sb = new StringBuilder("BK-");
-            for (int i = 0; i < 10; i++) {
-                sb.append(REFERENCE_CHARS.charAt(RANDOM.nextInt(REFERENCE_CHARS.length())));
-            }
-            reference = sb.toString();
-        } while (bookingRepository.existsByBookingReference(reference));
-        return reference;
     }
 
     private BookingSummary toSummary(Booking booking) {

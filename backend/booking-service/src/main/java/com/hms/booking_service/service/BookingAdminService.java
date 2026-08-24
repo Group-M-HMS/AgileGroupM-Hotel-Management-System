@@ -30,15 +30,18 @@ public class BookingAdminService {
     private final PricingServiceClient pricingServiceClient;
     private final RoomDetailServiceClient roomDetailServiceClient;
     private final RoomServiceClient roomServiceClient;
+    private final BookingReferenceGenerator referenceGenerator;
 
     public BookingAdminService(BookingRepository bookingRepository,
                                PricingServiceClient pricingServiceClient,
                                RoomDetailServiceClient roomDetailServiceClient,
-                               RoomServiceClient roomServiceClient) {
+                               RoomServiceClient roomServiceClient,
+                               BookingReferenceGenerator referenceGenerator) {
         this.bookingRepository = bookingRepository;
         this.pricingServiceClient = pricingServiceClient;
         this.roomDetailServiceClient = roomDetailServiceClient;
         this.roomServiceClient = roomServiceClient;
+        this.referenceGenerator = referenceGenerator;
     }
 
     /**
@@ -193,6 +196,9 @@ public class BookingAdminService {
         booking.setGuestPhone(request.guestPhone());
         booking.setCustomerId(null); // no customer account for a walk-in
         booking.setStatus(request.paid() ? BookingStatus.CONFIRMED : BookingStatus.PENDING);
+        // Walk-ins never go through BookingService.confirmPayment(), so unlike online
+        // bookings they need their reference assigned here at creation time.
+        booking.setBookingReference(referenceGenerator.generate());
 
         try {
             bookingRepository.saveAndFlush(booking);
