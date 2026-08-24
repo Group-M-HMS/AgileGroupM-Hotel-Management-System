@@ -10,7 +10,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "bookings")
+@Table(
+    name = "bookings",
+    indexes = {
+        @Index(name = "idx_bookings_checkin", columnList = "check_in_date"),
+        @Index(name = "idx_bookings_status_dates", columnList = "status, check_in_date, check_out_date"),
+        @Index(name = "idx_bookings_guest_name", columnList = "guest_name"),
+        @Index(name = "idx_bookings_reference_search", columnList = "booking_reference")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,8 +28,23 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "customer_id", nullable = false)
+    @Column(name = "customer_id")
     private String customerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", nullable = false, length = 20)
+    private BookingSource source = BookingSource.WEBSITE;   // NIBM2-622
+
+    // Denormalized guest contact info - only populated for WALK_IN bookings
+    // where there's no linked customer account to look this up from.
+    @Column(name = "guest_name")
+    private String guestName;
+
+    @Column(name = "guest_email")
+    private String guestEmail;
+
+    @Column(name = "guest_phone")
+    private String guestPhone;
 
     @Column(name = "room_id", nullable = false)
     private Long roomId;
@@ -55,6 +78,12 @@ public class Booking {
 
     @Column(name = "cancellation_reason")
     private String cancellationReason;
+
+    @Column(name = "checked_in_at")
+    private LocalDateTime checkedInAt;
+
+    @Column(name = "checked_out_at")
+    private LocalDateTime checkedOutAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

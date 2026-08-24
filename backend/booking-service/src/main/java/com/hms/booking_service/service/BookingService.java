@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -86,17 +87,98 @@ public class BookingService {
 
         RoomDetailInfo room = roomDetailServiceClient.getRoomDetail(booking.getRoomId());
 
-        String paymentStatus = switch (booking.getStatus()) {
-            case CONFIRMED -> "PAID";
-            case CANCELLED -> "CANCELLED";
-            case PENDING -> "PENDING";
-        };
+    String paymentStatus = switch (booking.getStatus()) {
+        case CONFIRMED -> "PAID";
+        case CHECKED_IN -> "CHECKED_IN";
+        case CHECKED_OUT -> "COMPLETED";
+        case CANCELLED -> "CANCELLED";
+        case PENDING -> "PENDING";
+    };
 
         return new BookingDetailResponse(
                 booking.getId(), booking.getRoomId(), room.name(), room.description(),
                 booking.getCheckInDate(), booking.getCheckOutDate(), booking.getNumberOfGuests(),
                 booking.getSpecialRequests(), booking.getStatus(), paymentStatus,
                 booking.getTotalAmount(), booking.getBookingReference());
+    }
+
+    /**
+     * Check in a guest for a confirmed booking.
+     * Subtask: NIBM2-558, NIBM2-609
+     */
+    @Transactional
+    public CheckInOutResponse checkInBooking(Long bookingId, CheckInRequest request) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+        if (booking.getStatus() == BookingStatus.CHECKED_IN) {
+            throw new InvalidBookingStateException("Booking is already checked in");
+        }
+        if (booking.getStatus() == BookingStatus.CHECKED_OUT) {
+            throw new InvalidBookingStateException("Cannot check in a completed booking");
+        }
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new InvalidBookingStateException("Cannot check in a cancelled booking");
+        }
+
+        booking.setStatus(BookingStatus.CHECKED_IN);
+        booking.setCheckedInAt(LocalDateTime.now());
+        Booking saved = bookingRepository.save(booking);
+
+        // Update room operational status to OCCUPIED
+        String operator = request != null && request.checkedBy() != null ? request.checkedBy() : "FRONT_DESK";
+        String remarks = request != null && request.remarks() != null ? request.remarks() : "Guest checked in for booking " + saved.getBookingReference();
+        String guestName = request != null && request.guestName() != null ? request.guestName() : saved.getCustomerId();
+        roomDetailServiceClient.updateRoomStatus(saved.getRoomId(), "OCCUPIED", operator, remarks, guestName);
+
+        return new CheckInOutResponse(
+                saved.getId(),
+                saved.getBookingReference(),
+                saved.getRoomId(),
+                saved.getStatus(),
+                "OCCUPIED",
+                saved.getCheckedInAt(),
+                "Guest checked in successfully"
+        );
+    }
+
+    /**
+     * Check out a guest for an active stay.
+     * Subtask: NIBM2-558, NIBM2-609
+     */
+    @Transactional
+    public CheckInOutResponse checkOutBooking(Long bookingId, CheckOutRequest request) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+        if (booking.getStatus() == BookingStatus.CHECKED_OUT) {
+            throw new InvalidBookingStateException("Booking is already checked out");
+        }
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new InvalidBookingStateException("Cannot check out a cancelled booking");
+        }
+        if (booking.getStatus() != BookingStatus.CHECKED_IN && booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new InvalidBookingStateException("Booking must be in confirmed or checked-in status to check out");
+        }
+
+        booking.setStatus(BookingStatus.CHECKED_OUT);
+        booking.setCheckedOutAt(LocalDateTime.now());
+        Booking saved = bookingRepository.save(booking);
+
+        // Update room operational status to CLEANING queue
+        String operator = request != null && request.checkedBy() != null ? request.checkedBy() : "FRONT_DESK";
+        String remarks = request != null && request.remarks() != null ? request.remarks() : "Guest checked out, room queued for cleaning";
+        roomDetailServiceClient.updateRoomStatus(saved.getRoomId(), "CLEANING", operator, remarks, null);
+
+        return new CheckInOutResponse(
+                saved.getId(),
+                saved.getBookingReference(),
+                saved.getRoomId(),
+                saved.getStatus(),
+                "CLEANING",
+                saved.getCheckedOutAt(),
+                "Guest checked out successfully, room queued for cleaning"
+        );
     }
 
     /**
@@ -186,8 +268,8 @@ public class BookingService {
                 booking.getStatus(),
                 booking.getTotalAmount(),
                 booking.getNumberOfGuests(),
-                null, // subTotal - would require Pricing Service's stored quote (NIBM2-251 in Pricing Service)
-                null  // taxAmount - same
+                null,
+                null
         );
     }
 }
