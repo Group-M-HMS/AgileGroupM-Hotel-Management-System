@@ -121,25 +121,25 @@ export function ReservationsTable({ initialQuery = '' }: { initialQuery?: string
 
       <div className="overflow-x-auto thin-scroll">
         {tab === 'bookings' ? (
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[900px] table-fixed text-left text-sm">
             <thead>
               <tr className="border-b border-sand text-[11px] uppercase tracking-wider text-jungle/45">
-                <th scope="col" className="px-5 py-3 font-semibold">Ref</th>
-                <th scope="col" className="px-5 py-3 font-semibold">Guest</th>
+                <th scope="col" className="w-[110px] px-5 py-3 font-semibold">Ref</th>
+                <th scope="col" className="w-[180px] px-5 py-3 font-semibold">Guest</th>
                 <th scope="col" className="px-5 py-3 font-semibold">Room</th>
-                <th scope="col" className="px-5 py-3 font-semibold">Dates</th>
-                <th scope="col" className="px-5 py-3 font-semibold">Payment</th>
-                <th scope="col" className="px-5 py-3 font-semibold">Status</th>
-                <th scope="col" className="px-5 py-3 text-right font-semibold">Actions</th>
+                <th scope="col" className="w-[130px] px-5 py-3 font-semibold">Dates</th>
+                <th scope="col" className="w-[170px] px-5 py-3 font-semibold">Payment</th>
+                <th scope="col" className="w-[100px] px-5 py-3 font-semibold">Status</th>
+                <th scope="col" className="w-64 px-5 py-3 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((b) => (
                 <tr key={b.id} className="border-b border-sand/60 transition-colors duration-150 hover:bg-sand-light/50">
                   <td className="px-5 py-3 font-mono text-xs text-clay">{b.ref}</td>
-                  <td className="px-5 py-3">
-                    <p className="font-medium text-jungle-dark">{b.guestName}</p>
-                    <p className="text-xs text-jungle/45">{b.guests} guests · {b.source}</p>
+                  <td className="w-[180px] px-5 py-3">
+                    <p className="truncate font-medium text-jungle-dark">{b.guestName}</p>
+                    <p className="truncate text-xs text-jungle/45">{b.guests} guests · {b.source}</p>
                   </td>
                   <td className="px-5 py-3">
                     <p className="text-jungle">{b.roomTitle}</p>

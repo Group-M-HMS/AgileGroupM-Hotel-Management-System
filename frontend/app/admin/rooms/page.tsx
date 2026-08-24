@@ -2,7 +2,7 @@
 
 import React, { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { BedDoubleIcon, MaximizeIcon, PencilIcon, PlusIcon, SearchIcon, Trash2Icon, UsersIcon } from 'lucide-react';
+import { BedDoubleIcon, ChevronDownIcon, MaximizeIcon, PencilIcon, PlusIcon, SearchIcon, Trash2Icon, UsersIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useHotel } from '../_lib/contexts/HotelDataContext';
 import { Modal } from '../_components/ui/Modal';
@@ -58,6 +58,16 @@ function AdminRoomsInner() {
   });
   const [deleting, setDeleting] = useState<Room | null>(null);
   const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (title: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title);
+      else next.add(title);
+      return next;
+    });
+  };
 
   const q = search.trim().toLowerCase();
   const visible = useMemo(
@@ -68,6 +78,24 @@ function AdminRoomsInner() {
         .sort((a, b) => (sort === 'low' ? a.price - b.price : b.price - a.price)),
     [rooms, statusFilter, q, sort]
   );
+
+  /** Groups by room title (e.g. "Family Suite") so the page shows one summary card
+   * per room type, with its numbered instances tucked behind an expand toggle. */
+  const groupedVisible = useMemo(() => {
+    const groups = new Map<string, Room[]>();
+    for (const room of visible) {
+      const group = groups.get(room.title);
+      if (group) group.push(room);
+      else groups.set(room.title, [room]);
+    }
+    return Array.from(groups.entries()).map(([title, roomsInGroup]) => {
+      const statusCounts = roomsInGroup.reduce<Record<RoomStatus, number>>(
+        (acc, r) => ({ ...acc, [r.status]: (acc[r.status] ?? 0) + 1 }),
+        { available: 0, occupied: 0, cleaning: 0, maintenance: 0 }
+      );
+      return { title, rooms: roomsInGroup, representative: roomsInGroup[0], statusCounts };
+    });
+  }, [visible]);
 
   const metrics = [
     ['Total Rooms', rooms.length, 'text-jungle-dark'],
@@ -208,53 +236,95 @@ function AdminRoomsInner() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {visible.map((room) => (
-          <article key={room.id} className="flex flex-col overflow-hidden rounded-xl border border-sand bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={room.image} alt={room.title} className="h-40 w-full object-cover" />
-            <div className="flex flex-1 flex-col p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs text-jungle/45">No. {room.number} · {room.type}</p>
-                  <h2 className="mt-0.5 text-sm font-semibold text-jungle-dark">{room.title}</h2>
+      <div className="space-y-4">
+        {groupedVisible.map(({ title, rooms: roomsInGroup, representative, statusCounts }) => {
+          const isOpen = expanded.has(title);
+          return (
+            <div key={title} className="overflow-hidden rounded-xl border border-sand bg-white">
+              <button
+                type="button"
+                onClick={() => toggleExpanded(title)}
+                aria-expanded={isOpen}
+                className="flex w-full items-center gap-4 p-4 text-left transition-colors duration-150 hover:bg-sand-light/50">
+
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={representative.image} alt={title} className="h-16 w-20 shrink-0 rounded-lg object-cover" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-sm font-semibold text-jungle-dark">{title}</h2>
+                    <span className="rounded-full border border-sand bg-sand-light px-2 py-0.5 text-[11px] font-semibold text-jungle/60">
+                      {roomsInGroup.length} {roomsInGroup.length === 1 ? 'room' : 'rooms'}
+                    </span>
+                  </div>
+                  <dl className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-jungle/60">
+                    <div className="flex items-center gap-1.5"><BedDoubleIcon className="h-3.5 w-3.5" /><dd>{representative.bedType}</dd></div>
+                    <div className="flex items-center gap-1.5"><UsersIcon className="h-3.5 w-3.5" /><dd>Sleeps {representative.capacity}</dd></div>
+                    <div className="flex items-center gap-1.5"><MaximizeIcon className="h-3.5 w-3.5" /><dd>{representative.sqm} m²</dd></div>
+                  </dl>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {(Object.entries(statusCounts) as Array<[RoomStatus, number]>)
+                      .filter(([, count]) => count > 0)
+                      .map(([roomStatus, count]) => (
+                        <span key={roomStatus} className="flex items-center gap-1 text-[11px] font-medium text-jungle/60">
+                          <RoomStatusBadge status={roomStatus} /> × {count}
+                        </span>
+                      ))}
+                  </div>
                 </div>
-                <RoomStatusBadge status={room.status} />
-              </div>
-              <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-jungle/60">
-                <div className="flex items-center gap-1.5"><BedDoubleIcon className="h-3.5 w-3.5" /><dd>{room.bedType}</dd></div>
-                <div className="flex items-center gap-1.5"><UsersIcon className="h-3.5 w-3.5" /><dd>Sleeps {room.capacity}</dd></div>
-                <div className="flex items-center gap-1.5"><MaximizeIcon className="h-3.5 w-3.5" /><dd>{room.sqm} m²</dd></div>
-              </dl>
-              <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-jungle/60">{room.description}</p>
-              <div className="mt-auto flex items-center justify-between gap-3 border-t border-sand pt-4">
-                <p className="text-sm font-semibold text-jungle-dark">
-                  {moneyShort(room.price)}
+                <p className="shrink-0 text-sm font-semibold text-jungle-dark">
+                  {moneyShort(representative.price)}
                   <span className="text-xs font-normal text-jungle/45"> / night</span>
                 </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(room)}
-                    className="flex items-center gap-1.5 rounded-md border border-sand px-2.5 py-1.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
+                <ChevronDownIcon
+                  className={`h-4 w-4 shrink-0 text-jungle/45 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
 
-                    <PencilIcon className="h-3.5 w-3.5" /> Edit Details & Pricing
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleting(room)}
-                    aria-label={`Delete room ${room.number}`}
-                    className="rounded-md border border-sand p-1.5 text-rose-700 transition-colors duration-150 hover:bg-rose-500/10">
+              {isOpen && (
+                <div className="grid gap-4 border-t border-sand bg-sand-light/40 p-4 md:grid-cols-2 xl:grid-cols-3">
+                  {roomsInGroup.map((room) => (
+                    <article key={room.id} className="flex flex-col overflow-hidden rounded-xl border border-sand bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={room.image} alt={room.title} className="h-32 w-full object-cover" />
+                      <div className="flex flex-1 flex-col p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-xs text-jungle/45">No. {room.number} · {room.type}</p>
+                          <RoomStatusBadge status={room.status} />
+                        </div>
+                        <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-jungle/60">{room.description}</p>
+                        <div className="mt-auto flex items-center justify-between gap-3 border-t border-sand pt-3">
+                          <p className="text-sm font-semibold text-jungle-dark">
+                            {moneyShort(room.price)}
+                            <span className="text-xs font-normal text-jungle/45"> / night</span>
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEdit(room)}
+                              className="flex items-center gap-1.5 rounded-md border border-sand px-2.5 py-1.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
 
-                    <Trash2Icon className="h-3.5 w-3.5" />
-                  </button>
+                              <PencilIcon className="h-3.5 w-3.5" /> Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleting(room)}
+                              aria-label={`Delete room ${room.number}`}
+                              className="rounded-md border border-sand p-1.5 text-rose-700 transition-colors duration-150 hover:bg-rose-500/10">
+
+                              <Trash2Icon className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
-          </article>
-        ))}
+          );
+        })}
         {visible.length === 0 && (
-          <p className="col-span-full rounded-xl border border-dashed border-sand py-16 text-center text-sm text-jungle/45">
+          <p className="rounded-xl border border-dashed border-sand py-16 text-center text-sm text-jungle/45">
             No rooms match that search.
           </p>
         )}
