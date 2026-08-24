@@ -1,20 +1,21 @@
 package com.hms.booking_service.client;
 
+import com.hms.booking_service.dto.GlobalSearchResponse.SearchRoomResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Calls Room Service to update housekeeping status after a check-in/check-out.
- * NIBM2-619: this crosses into Room Service's territory (housekeeping status
- * lives on the Room entity, owned by Uvisha). This client fails SOFT -
- * a Room Service outage or an endpoint that doesn't exist yet must not block
- * the booking status transition itself. Confirm the real endpoint shape with
- * Uvisha; this assumes PATCH /api/admin/rooms/{roomId}/status per the doc.
+ * Calls Room Service to update housekeeping status and search rooms for global search.
+ * NIBM2-611 / NIBM2-619
  */
 @Component
 public class RoomServiceClient {
@@ -38,9 +39,43 @@ public class RoomServiceClient {
                     .toBodilessEntity()
                     .block(Duration.ofMillis(timeoutMs));
         } catch (Exception e) {
-            // Soft failure by design - see class comment.
+            // Soft failure by design
             log.warn("Failed to sync room {} status to {} on Room Service: {}",
                     roomId, status, e.getMessage());
+        }
+    }
+
+    /**
+     * Search room catalog by query term for global search.
+     */
+    public List<SearchRoomResult> searchRooms(String query) {
+        try {
+            List<Map<String, Object>> response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/rooms")
+                            .queryParam("q", query)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
+                    .block(Duration.ofMillis(timeoutMs));
+
+            if (response == null) return List.of();
+
+            List<SearchRoomResult> results = new ArrayList<>();
+            for (Map<String, Object> r : response) {
+                Long id = r.get("id") != null ? Long.valueOf(r.get("id").toString()) : null;
+                String number = r.get("roomNumber") != null ? r.get("roomNumber").toString() : (r.get("number") != null ? r.get("number").toString() : "");
+                String title = r.get("title") != null ? r.get("title").toString() : "Room";
+                String bedType = r.get("bedType") != null ? r.get("bedType").toString() : "";
+                String roomType = r.get("roomType") != null ? r.get("roomType").toString() : "";
+                String status = r.get("status") != null ? r.get("status").toString() : "AVAILABLE";
+
+                results.add(new SearchRoomResult(id, number, title, bedType, roomType, status));
+            }
+            return results;
+        } catch (Exception e) {
+            log.warn("Room search lookup failed for query '{}': {}", query, e.getMessage());
+            return List.of();
         }
     }
 

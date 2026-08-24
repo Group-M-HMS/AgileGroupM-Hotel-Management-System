@@ -22,4 +22,9 @@ public class WebClientConfig {
     public WebClient roomServiceWebClient(@Value("${room-service.base-url}") String baseUrl) {
         return WebClient.builder().baseUrl(baseUrl).build();
     }
+
+    @Bean
+    public WebClient userServiceWebClient(@Value("${user-service.base-url:http://localhost:8082}") String baseUrl) {
+        return WebClient.builder().baseUrl(baseUrl).build();
+    }
 }
