@@ -24,10 +24,38 @@ public class UserServiceClient {
 
     private final WebClient webClient;
     private final long timeoutMs;
+    private final String internalSecret;
 
     public UserServiceClient(WebClient userServiceWebClient, Environment env) {
         this.webClient = userServiceWebClient;
         this.timeoutMs = env.getProperty("user-service.timeout-ms", Long.class, 3000L);
+        this.internalSecret = env.getProperty("internal.service-secret", "change-me-in-every-environment");
+    }
+
+    /**
+     * Resolves a customer's display name for a booking (customerId is their Firebase UID).
+     * Returns null on any failure so callers can fall back to a placeholder -- a guest
+     * name is a display nicety, not something worth failing a booking list over.
+     */
+    public String getGuestName(String customerId) {
+        try {
+            Map<String, Object> response = webClient.get()
+                    .uri("/api/v1/users/internal/{id}", customerId)
+                    .header("X-Internal-Secret", internalSecret)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .block(Duration.ofMillis(timeoutMs));
+
+            if (response == null) return null;
+
+            String firstName = response.get("firstName") != null ? response.get("firstName").toString() : "";
+            String lastName = response.get("lastName") != null ? response.get("lastName").toString() : "";
+            String name = (firstName + " " + lastName).trim();
+            return name.isEmpty() ? null : name;
+        } catch (Exception e) {
+            log.warn("Guest name lookup failed for customer '{}': {}", customerId, e.getMessage());
+            return null;
+        }
     }
 
     /**

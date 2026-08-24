@@ -43,6 +43,7 @@ services:
       ROOM_SERVICE_URL: http://room-service:8081
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
       FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-service-account.json
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
     ports:
       - "8082:8082"
     volumes:
@@ -84,6 +85,7 @@ services:
       ROOM_SERVICE_URL: http://room-service:8081
       ROOM_DETAIL_SERVICE_URL: http://room-service:8081
       PRICING_SERVICE_URL: http://pricing-service:8083
+      USER_SERVICE_URL: http://user-service:8082
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
       ADMIN_SHARED_SECRET: ${ADMIN_SHARED_SECRET:-change-me-in-every-environment}
