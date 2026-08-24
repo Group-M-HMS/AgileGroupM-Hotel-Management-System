@@ -150,13 +150,13 @@ export function ReservationsTable({ initialQuery = '' }: { initialQuery?: string
                   </td>
                   <td className="px-5 py-3">
                     <span
-                      className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                      className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
                         b.paid
                           ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
                           : 'border-amber-500/30 bg-amber-500/10 text-amber-700'
                       }`}>
 
-                      {money(b.amount)} {b.paid ? 'Paid via Stripe' : 'Unpaid'}
+                      {money(b.amount)}&nbsp;{b.paid ? 'Paid via Stripe' : 'Unpaid'}
                     </span>
                   </td>
                   <td className="px-5 py-3">
@@ -164,11 +164,11 @@ export function ReservationsTable({ initialQuery = '' }: { initialQuery?: string
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      {b.status === 'confirmed' && b.paid && (
+                      {b.status === 'confirmed' && (
                         <button
                           type="button"
                           onClick={() => doCheckIn(b)}
-                          className="rounded-md bg-emerald-500 px-2.5 py-1.5 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
+                          className="flex h-[30px] items-center justify-center rounded-md bg-emerald-500 px-2.5 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
 
                           Check-In
                         </button>
@@ -177,7 +177,7 @@ export function ReservationsTable({ initialQuery = '' }: { initialQuery?: string
                         <button
                           type="button"
                           onClick={() => doCheckOut(b)}
-                          className="rounded-md bg-amber-500 px-2.5 py-1.5 text-[11px] font-semibold text-jungle-dark transition-colors duration-150 hover:bg-amber-400">
+                          className="flex h-[30px] items-center justify-center rounded-md bg-amber-500 px-2.5 text-[11px] font-semibold text-jungle-dark transition-colors duration-150 hover:bg-amber-400">
 
                           Check-Out
                         </button>
@@ -185,7 +185,7 @@ export function ReservationsTable({ initialQuery = '' }: { initialQuery?: string
                       <button
                         type="button"
                         onClick={() => setSelected(b)}
-                        className="flex items-center gap-1.5 rounded-md border border-sand px-2.5 py-1.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
+                        className="flex h-[30px] items-center justify-center gap-1.5 rounded-md border border-sand px-2.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
 
                         <EyeIcon className="h-3.5 w-3.5" /> View Details
                       </button>

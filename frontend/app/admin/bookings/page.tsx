@@ -200,13 +200,13 @@ function AdminBookingsInner() {
                     </td>
                     <td className="px-5 py-3">
                       <span
-                        className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                        className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
                           b.paid
                             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
                             : 'border-amber-500/30 bg-amber-500/10 text-amber-700'
                         }`}>
 
-                        {money(b.amount)} {b.paid ? 'Paid' : 'Unpaid'}
+                        {money(b.amount)}&nbsp;{b.paid ? 'Paid' : 'Unpaid'}
                       </span>
                     </td>
                     <td className="px-5 py-3">
@@ -216,15 +216,13 @@ function AdminBookingsInner() {
                       <div className="flex items-center justify-end gap-2">
                         {b.status === 'confirmed' && (
                           <>
-                            {b.paid && (
-                              <button
-                                type="button"
-                                onClick={() => doCheckIn(b)}
-                                className="rounded-md bg-emerald-500 px-2.5 py-1.5 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
+                            <button
+                              type="button"
+                              onClick={() => doCheckIn(b)}
+                              className="flex h-[30px] items-center justify-center rounded-md bg-emerald-500 px-2.5 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
 
-                                Check-In
-                              </button>
-                            )}
+                              Check-In
+                            </button>
                             <button
                               type="button"
                               onClick={() => {
@@ -232,7 +230,7 @@ function AdminBookingsInner() {
                                 setReason('');
                                 setReasonError('');
                               }}
-                              className="rounded-md border border-rose-500/40 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 transition-colors duration-150 hover:bg-rose-500/10">
+                              className="flex h-[30px] items-center justify-center rounded-md border border-rose-500/40 px-2.5 text-[11px] font-semibold text-rose-700 transition-colors duration-150 hover:bg-rose-500/10">
 
                               Cancel
                             </button>
@@ -242,7 +240,7 @@ function AdminBookingsInner() {
                           <button
                             type="button"
                             onClick={() => doCheckOut(b)}
-                            className="rounded-md bg-amber-500 px-2.5 py-1.5 text-[11px] font-semibold text-jungle-dark transition-colors duration-150 hover:bg-amber-400">
+                            className="flex h-[30px] items-center justify-center rounded-md bg-amber-500 px-2.5 text-[11px] font-semibold text-jungle-dark transition-colors duration-150 hover:bg-amber-400">
 
                             Check-Out
                           </button>
@@ -250,7 +248,7 @@ function AdminBookingsInner() {
                         <button
                           type="button"
                           onClick={() => setSelected(b)}
-                          className="flex items-center gap-1.5 rounded-md border border-sand px-2.5 py-1.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
+                          className="flex h-[30px] items-center justify-center gap-1.5 rounded-md border border-sand px-2.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
 
                           <EyeIcon className="h-3.5 w-3.5" /> View
                         </button>

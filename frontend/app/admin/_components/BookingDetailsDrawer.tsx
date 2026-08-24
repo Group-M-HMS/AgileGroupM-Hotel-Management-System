@@ -27,7 +27,7 @@ export function BookingDetailsDrawer({ booking, onClose, onCheckIn, onCheckOut }
       footer={
         booking && (
           <>
-            {booking.status === 'confirmed' && booking.paid && onCheckIn && (
+            {booking.status === 'confirmed' && onCheckIn && (
               <button
                 type="button"
                 onClick={() => onCheckIn(booking)}
