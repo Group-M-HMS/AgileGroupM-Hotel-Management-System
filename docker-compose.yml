@@ -81,6 +81,7 @@ services:
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      ROOM_SERVICE_URL: http://room-service:8081
       ROOM_DETAIL_SERVICE_URL: http://room-service:8081
       PRICING_SERVICE_URL: http://pricing-service:8083
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
