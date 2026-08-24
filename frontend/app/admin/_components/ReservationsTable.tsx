@@ -42,14 +42,22 @@ export function ReservationsTable({ initialQuery = '' }: { initialQuery?: string
     [guests, q]
   );
 
-  const doCheckIn = (booking: Booking) => {
-    checkInBooking(booking.id);
-    toast.success(`${booking.guestName} checked in — room ${booking.roomNumber} now occupied`);
+  const doCheckIn = async (booking: Booking) => {
+    try {
+      await checkInBooking(booking.id);
+      toast.success(`${booking.guestName} checked in — room ${booking.roomNumber} now occupied`);
+    } catch {
+      toast.error('Could not check in this guest. Please try again.');
+    }
     setSelected(null);
   };
-  const doCheckOut = (booking: Booking) => {
-    checkOutBooking(booking.id);
-    toast.success(`${booking.guestName} checked out — room ${booking.roomNumber} queued for cleaning`);
+  const doCheckOut = async (booking: Booking) => {
+    try {
+      await checkOutBooking(booking.id);
+      toast.success(`${booking.guestName} checked out — room ${booking.roomNumber} queued for cleaning`);
+    } catch {
+      toast.error('Could not check out this guest. Please try again.');
+    }
     setSelected(null);
   };
 

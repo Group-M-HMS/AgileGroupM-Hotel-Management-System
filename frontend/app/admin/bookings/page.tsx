@@ -51,24 +51,36 @@ function AdminBookingsInner() {
     ['Checked-Out', bookings.filter((b) => b.status === 'checked-out').length, 'text-jungle'],
   ] as const;
 
-  const doCheckIn = (b: Booking) => {
-    checkInBooking(b.id);
-    toast.success(`${b.guestName} checked in — room ${b.roomNumber} now occupied`);
+  const doCheckIn = async (b: Booking) => {
+    try {
+      await checkInBooking(b.id);
+      toast.success(`${b.guestName} checked in — room ${b.roomNumber} now occupied`);
+    } catch {
+      toast.error('Could not check in this guest. Please try again.');
+    }
     setSelected(null);
   };
-  const doCheckOut = (b: Booking) => {
-    checkOutBooking(b.id);
-    toast.success(`${b.guestName} checked out — room ${b.roomNumber} queued for cleaning`);
+  const doCheckOut = async (b: Booking) => {
+    try {
+      await checkOutBooking(b.id);
+      toast.success(`${b.guestName} checked out — room ${b.roomNumber} queued for cleaning`);
+    } catch {
+      toast.error('Could not check out this guest. Please try again.');
+    }
     setSelected(null);
   };
-  const submitCancel = () => {
+  const submitCancel = async () => {
     if (reason.trim().length < 5) {
       setReasonError('A cancellation reason is required before dates are released.');
       return;
     }
     if (cancelling) {
-      cancelBooking(cancelling.id, reason.trim());
-      toast.success(`${cancelling.ref} cancelled — room ${cancelling.roomNumber} released`);
+      try {
+        await cancelBooking(cancelling.id, reason.trim());
+        toast.success(`${cancelling.ref} cancelled — room ${cancelling.roomNumber} released`);
+      } catch {
+        toast.error('Could not cancel this booking. Please try again.');
+      }
     }
     setCancelling(null);
     setReason('');

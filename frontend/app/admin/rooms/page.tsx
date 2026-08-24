@@ -76,7 +76,7 @@ function AdminRoomsInner() {
     ['Cleaning Queue', rooms.filter((r) => r.status === 'cleaning').length, 'text-amber-700'],
   ] as const;
 
-  const submitAdd = (e: React.FormEvent) => {
+  const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: { [k: string]: string } = {};
     if (form.title.trim().length < 3) next.title = 'Room title is required.';
@@ -92,18 +92,21 @@ function AdminRoomsInner() {
       return;
     }
     setSaving(true);
-    setTimeout(() => {
-      addRoom({
+    try {
+      await addRoom({
         ...form,
         image: form.gallery[0],
         amenities: ['Free WiFi', 'Air Conditioning'],
         guestName: undefined,
       });
-      setSaving(false);
       setAddOpen(false);
       setForm(emptyForm);
       toast.success(`Room ${form.number} added to inventory`);
-    }, 650);
+    } catch {
+      toast.error('Could not add the room. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const openEdit = (room: Room) => {
@@ -117,7 +120,7 @@ function AdminRoomsInner() {
     });
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editing) return;
     if (editForm.price <= 0) {
       toast.error('Nightly rate must be above zero.');
@@ -127,9 +130,13 @@ function AdminRoomsInner() {
       toast.error('All 3 photo URLs are required.');
       return;
     }
-    updateRoom(editing.id, { ...editForm, image: editForm.gallery[0] });
-    toast.success(`Room ${editing.number} updated`);
-    setEditing(null);
+    try {
+      await updateRoom(editing.id, { ...editForm, image: editForm.gallery[0] });
+      toast.success(`Room ${editing.number} updated`);
+      setEditing(null);
+    } catch {
+      toast.error('Could not save changes. Please try again.');
+    }
   };
 
   return (
@@ -459,10 +466,14 @@ function AdminRoomsInner() {
             </button>
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 if (deleting) {
-                  deleteRoom(deleting.id);
-                  toast.success(`Room ${deleting.number} removed from inventory`);
+                  try {
+                    await deleteRoom(deleting.id);
+                    toast.success(`Room ${deleting.number} removed from inventory`);
+                  } catch {
+                    toast.error('Could not delete the room. Please try again.');
+                  }
                 }
                 setDeleting(null);
               }}

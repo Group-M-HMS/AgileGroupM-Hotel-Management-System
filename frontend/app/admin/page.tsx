@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -11,29 +11,34 @@ import {
   LogInIcon,
   PercentIcon,
 } from 'lucide-react';
-import { useHotel, todayISO } from './_lib/contexts/HotelDataContext';
+import { useHotel } from './_lib/contexts/HotelDataContext';
+import { fetchDashboardMetrics, type DashboardMetrics } from './_lib/api/dashboard';
 import { RoomStatusGrid } from './_components/RoomStatusGrid';
 import { ReservationsTable } from './_components/ReservationsTable';
 import { money } from './_lib/utils/format';
 
 function AdminDashboardInner() {
-  const { rooms, bookings, experiences, alerts } = useHotel();
+  const { experiences } = useHotel();
   const params = useSearchParams();
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
 
-  const today = todayISO();
-  const inService = rooms.filter((r) => r.status !== 'available').length;
-  const occupancy = rooms.length ? Math.round((inService / rooms.length) * 100) : 0;
-  const arrivals = bookings.filter((b) => b.checkIn === today && b.status !== 'cancelled');
-  const arrivedToday = arrivals.filter((b) => b.status === 'checked-in' || b.status === 'checked-out').length;
-  const pendingArrivals = arrivals.length - arrivedToday;
-  const monthlyRevenue = 45280;
-  const pendingAlerts = alerts.filter((a) => a.resolved === 'pending').length;
+  useEffect(() => {
+    let cancelled = false;
+    fetchDashboardMetrics()
+      .then((m) => {
+        if (!cancelled) setMetrics(m);
+      })
+      .catch((err) => console.error('Failed to load dashboard metrics', err));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const kpis = [
     {
       label: 'Total Monthly Revenue',
-      value: money(monthlyRevenue),
-      meta: '+12.4% vs last month',
+      value: money(metrics?.monthlyRevenue ?? 0),
+      meta: metrics ? `${metrics.growthPercentage >= 0 ? '+' : ''}${metrics.growthPercentage.toFixed(1)}% vs last month` : '—',
       metaTone: 'text-emerald-700',
       icon: DollarSignIcon,
       accent: 'bg-emerald-500/12 text-emerald-700',
@@ -41,16 +46,16 @@ function AdminDashboardInner() {
     },
     {
       label: 'Occupancy Rate',
-      value: `${occupancy}%`,
-      meta: `${inService}/${rooms.length} Rooms Occupied`,
+      value: `${metrics?.occupancyPercentage ?? 0}%`,
+      meta: `${metrics?.inServiceRooms ?? 0}/${metrics?.totalRooms ?? 0} Rooms Occupied`,
       metaTone: 'text-jungle/60',
       icon: PercentIcon,
       accent: 'bg-clay/12 text-clay',
     },
     {
       label: 'Today’s Check-ins',
-      value: `${arrivals.length} Guests`,
-      meta: `${arrivedToday} Checked-In, ${pendingArrivals} Pending`,
+      value: `${metrics?.todayTotalArrivals ?? 0} Guests`,
+      meta: `${metrics?.arrivedTodayCount ?? 0} Checked-In, ${metrics?.pendingArrivalsCount ?? 0} Pending`,
       metaTone: 'text-jungle/60',
       icon: LogInIcon,
       accent: 'bg-cyan-500/12 text-cyan-700',
@@ -65,13 +70,15 @@ function AdminDashboardInner() {
     },
   ];
 
+  const pendingAlerts = metrics?.pendingAlerts ?? 0;
+
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-jungle-dark">Dashboard overview</h1>
           <p className="mt-1 text-sm text-jungle/60">
-            Front desk, housekeeping and reservations, live across all 50 rooms.
+            Front desk, housekeeping and reservations, live across all {metrics?.totalRooms ?? '—'} rooms.
           </p>
         </div>
         <Link

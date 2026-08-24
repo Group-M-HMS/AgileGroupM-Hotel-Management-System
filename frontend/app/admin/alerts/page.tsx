@@ -110,9 +110,13 @@ export default function AdminAlerts() {
                   <div className="mt-3 flex gap-2 border-t border-sand pt-3">
                     <button
                       type="button"
-                      onClick={() => {
-                        resolveAlert(alert.id, 'approved');
-                        toast.success('Request approved and sent to the team');
+                      onClick={async () => {
+                        try {
+                          await resolveAlert(alert.id, 'approved');
+                          toast.success('Request approved and sent to the team');
+                        } catch {
+                          toast.error('Could not approve this request. Please try again.');
+                        }
                       }}
                       className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
 
@@ -120,9 +124,13 @@ export default function AdminAlerts() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        resolveAlert(alert.id, 'dismissed');
-                        toast.message('Alert dismissed');
+                      onClick={async () => {
+                        try {
+                          await resolveAlert(alert.id, 'dismissed');
+                          toast.message('Alert dismissed');
+                        } catch {
+                          toast.error('Could not dismiss this alert. Please try again.');
+                        }
                       }}
                       className="flex items-center gap-1.5 rounded-lg border border-sand px-3 py-1.5 text-xs font-semibold text-jungle transition-colors duration-150 hover:bg-white">
 

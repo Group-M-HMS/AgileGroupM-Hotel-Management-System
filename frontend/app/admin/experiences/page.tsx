@@ -62,28 +62,36 @@ export default function AdminExperiences() {
     return Object.keys(next).length === 0;
   };
 
-  const submitAdd = (e: React.FormEvent) => {
+  const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate(form)) {
       toast.error('Check the highlighted fields.');
       return;
     }
-    addExperience(form);
-    setAddOpen(false);
-    setForm(emptyForm);
-    toast.success(`${form.title} published to the experiences catalog`);
+    try {
+      await addExperience(form);
+      setAddOpen(false);
+      setForm(emptyForm);
+      toast.success(`${form.title} published to the experiences catalog`);
+    } catch {
+      toast.error('Could not publish the experience. Please try again.');
+    }
   };
 
-  const submitEdit = (e: React.FormEvent) => {
+  const submitEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing) return;
     if (!validate(editForm)) {
       toast.error('Check the highlighted fields.');
       return;
     }
-    updateExperience(editing.id, editForm);
-    toast.success(`${editForm.title} updated`);
-    setEditing(null);
+    try {
+      await updateExperience(editing.id, editForm);
+      toast.success(`${editForm.title} updated`);
+      setEditing(null);
+    } catch {
+      toast.error('Could not save changes. Please try again.');
+    }
   };
 
   const openEdit = (exp: Experience) => {
@@ -311,10 +319,14 @@ export default function AdminExperiences() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   if (viewing) {
-                    deleteExperience(viewing.id);
-                    toast.success(`${viewing.title} removed from the catalog`);
+                    try {
+                      await deleteExperience(viewing.id);
+                      toast.success(`${viewing.title} removed from the catalog`);
+                    } catch {
+                      toast.error('Could not delete the experience. Please try again.');
+                    }
                   }
                   setViewing(null);
                   setConfirmDelete(false);

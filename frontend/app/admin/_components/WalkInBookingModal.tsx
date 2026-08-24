@@ -30,7 +30,7 @@ export function WalkInBookingModal({ open, onClose }: { open: boolean; onClose: 
 
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: { [k: string]: string } = {};
     if (form.guestName.trim().length < 3) next.guestName = 'Guest name is required.';
@@ -44,19 +44,20 @@ export function WalkInBookingModal({ open, onClose }: { open: boolean; onClose: 
       return;
     }
     setSaving(true);
-    setTimeout(() => {
-      const booking = createBooking({
+    try {
+      await createBooking({
         ...form,
         guestPhone: form.guestPhone || '—',
-        source: 'Walk-in',
         paid: false,
-        amount: Math.round(total),
       });
-      setSaving(false);
       onClose();
       setForm({ ...form, guestName: '', guestEmail: '', guestPhone: '', specialRequests: '' });
-      toast.success(`Walk-in booked — ${booking.ref} on room ${booking.roomNumber}`);
-    }, 700);
+      toast.success(`Walk-in booking created for ${form.guestName}`);
+    } catch {
+      toast.error('Could not create the booking. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

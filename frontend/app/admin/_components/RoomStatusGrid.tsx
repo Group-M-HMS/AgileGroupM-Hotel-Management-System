@@ -40,11 +40,15 @@ export function RoomStatusGrid() {
     setNextStatus(room.status);
   };
 
-  const applyOverride = () => {
+  const applyOverride = async () => {
     if (!target) return;
-    setRoomStatus(target.id, nextStatus);
-    toast.success(`Room ${target.number} set to ${roomStatusMeta[nextStatus].label}`);
-    setTarget(null);
+    try {
+      await setRoomStatus(target.id, nextStatus);
+      toast.success(`Room ${target.number} set to ${roomStatusMeta[nextStatus].label}`);
+      setTarget(null);
+    } catch {
+      toast.error('Could not update the room status. Please try again.');
+    }
   };
 
   return (

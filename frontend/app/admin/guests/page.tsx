@@ -46,7 +46,7 @@ function AdminGuestsInner() {
     ? bookings.filter((b) => b.guestId === history.id || b.guestEmail.toLowerCase() === history.email.toLowerCase())
     : [];
 
-  const submitAdd = (e: React.FormEvent) => {
+  const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: { [k: string]: string } = {};
     if (form.firstName.trim().length < 2) next.firstName = 'First name is required.';
@@ -60,17 +60,22 @@ function AdminGuestsInner() {
       toast.error('Check the highlighted fields.');
       return;
     }
-    addGuest({
-      name: `${form.firstName.trim()} ${form.lastName.trim()}`,
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-    });
-    setAddOpen(false);
-    setForm({ firstName: '', lastName: '', email: '', phone: '' });
-    toast.success('Guest profile created');
+    try {
+      await addGuest({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+      });
+      setAddOpen(false);
+      setForm({ firstName: '', lastName: '', email: '', phone: '' });
+      toast.success('Guest profile created');
+    } catch {
+      toast.error('Could not create the guest profile. Please try again.');
+    }
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editing) return;
     if (editForm.firstName.trim().length < 2) {
       toast.error('First name is required.');
@@ -84,13 +89,18 @@ function AdminGuestsInner() {
       toast.error('Enter a valid email address.');
       return;
     }
-    updateGuest(editing.id, {
-      name: `${editForm.firstName.trim()} ${editForm.lastName.trim()}`,
-      email: editForm.email,
-      phone: editForm.phone,
-    });
-    toast.success(`${editing.name}’s contact details updated`);
-    setEditing(null);
+    try {
+      await updateGuest(editing.id, {
+        firstName: editForm.firstName.trim(),
+        lastName: editForm.lastName.trim(),
+        email: editForm.email,
+        phone: editForm.phone,
+      });
+      toast.success(`${editing.name}’s contact details updated`);
+      setEditing(null);
+    } catch {
+      toast.error('Could not update the guest profile. Please try again.');
+    }
   };
 
   return (
@@ -360,10 +370,14 @@ function AdminGuestsInner() {
             </button>
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 if (deleting) {
-                  deleteGuest(deleting.id);
-                  toast.success(`${deleting.name}’s profile deleted`);
+                  try {
+                    await deleteGuest(deleting.id);
+                    toast.success(`${deleting.name}’s profile deleted`);
+                  } catch {
+                    toast.error('Could not delete the guest profile. Please try again.');
+                  }
                 }
                 setDeleting(null);
               }}
