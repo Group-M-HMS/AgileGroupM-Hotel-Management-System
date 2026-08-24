@@ -216,13 +216,15 @@ function AdminBookingsInner() {
                       <div className="flex items-center justify-end gap-2">
                         {b.status === 'confirmed' && (
                           <>
-                            <button
-                              type="button"
-                              onClick={() => doCheckIn(b)}
-                              className="rounded-md bg-emerald-500 px-2.5 py-1.5 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
+                            {b.paid && (
+                              <button
+                                type="button"
+                                onClick={() => doCheckIn(b)}
+                                className="rounded-md bg-emerald-500 px-2.5 py-1.5 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-emerald-600">
 
-                              Check-In
-                            </button>
+                                Check-In
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => {

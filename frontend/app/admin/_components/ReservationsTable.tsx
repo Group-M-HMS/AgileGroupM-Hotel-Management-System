@@ -164,7 +164,7 @@ export function ReservationsTable({ initialQuery = '' }: { initialQuery?: string
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      {b.status === 'confirmed' && (
+                      {b.status === 'confirmed' && b.paid && (
                         <button
                           type="button"
                           onClick={() => doCheckIn(b)}
