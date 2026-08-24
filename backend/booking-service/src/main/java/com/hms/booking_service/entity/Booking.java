@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
     name = "bookings",
     indexes = {
         @Index(name = "idx_bookings_checkin", columnList = "check_in_date"),
-        @Index(name = "idx_bookings_status_dates", columnList = "status, check_in_date, check_out_date")
+        @Index(name = "idx_bookings_status_dates", columnList = "status, check_in_date, check_out_date"),
+        @Index(name = "idx_bookings_guest_name", columnList = "guest_name"),
+        @Index(name = "idx_bookings_reference_search", columnList = "booking_reference")
     }
 )
 @Getter
