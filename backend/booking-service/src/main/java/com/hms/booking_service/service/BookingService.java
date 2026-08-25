@@ -5,6 +5,7 @@ import com.hms.booking_service.client.RoomDetailServiceClient;
 import com.hms.booking_service.dto.*;
 import com.hms.booking_service.entity.Booking;
 import com.hms.booking_service.entity.BookingStatus;
+import com.hms.booking_service.entity.RequestKind;
 import com.hms.booking_service.exception.*;
 import com.hms.booking_service.repository.BookingRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,15 +22,18 @@ public class BookingService {
     private final PricingServiceClient pricingServiceClient;
     private final RoomDetailServiceClient roomDetailServiceClient;
     private final BookingReferenceGenerator referenceGenerator;
+    private final GuestRequestService guestRequestService;
 
     public BookingService(BookingRepository bookingRepository,
                           PricingServiceClient pricingServiceClient,
                           RoomDetailServiceClient roomDetailServiceClient,
-                          BookingReferenceGenerator referenceGenerator) {
+                          BookingReferenceGenerator referenceGenerator,
+                          GuestRequestService guestRequestService) {
         this.bookingRepository = bookingRepository;
         this.pricingServiceClient = pricingServiceClient;
         this.roomDetailServiceClient = roomDetailServiceClient;
         this.referenceGenerator = referenceGenerator;
+        this.guestRequestService = guestRequestService;
     }
 
     /**
@@ -42,7 +46,7 @@ public class BookingService {
     @Transactional
     public CreateBookingResponse createBooking(String customerId, CreateBookingRequest request) {
         // Confirms the room exists and gets its nightly rate indirectly through Pricing Service.
-        roomDetailServiceClient.getRoomDetail(request.roomId());
+        RoomDetailInfo room = roomDetailServiceClient.getRoomDetail(request.roomId());
 
         PricingQuote quote = pricingServiceClient.getQuote(
                 request.roomId(), request.checkInDate(), request.checkOutDate());
@@ -64,6 +68,20 @@ public class BookingService {
             // The exclusion constraint fired: someone else booked this exact
             // room/date-range overlap in the moment between our read and write.
             throw new RoomNotAvailableException(request.roomId());
+        }
+
+        // NIBM2-613/614: a special request placed at booking time becomes a
+        // guest-request alert so front desk sees it without opening the booking.
+        if (request.specialRequests() != null && !request.specialRequests().isBlank()) {
+            guestRequestService.createRequest(new CreateGuestRequestDto(
+                    RequestKind.REQUEST,
+                    "Special request — " + room.name(),
+                    request.specialRequests().trim(),
+                    request.roomId(),
+                    booking.getId(),
+                    customerId,
+                    null
+            ));
         }
 
         return new CreateBookingResponse(booking.getId(), booking.getStatus(), booking.getTotalAmount());

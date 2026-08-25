@@ -8,6 +8,7 @@ import com.hms.booking_service.dto.*;
 import com.hms.booking_service.entity.Booking;
 import com.hms.booking_service.entity.BookingSource;
 import com.hms.booking_service.entity.BookingStatus;
+import com.hms.booking_service.entity.RequestKind;
 import com.hms.booking_service.exception.BookingNotFoundException;
 import com.hms.booking_service.exception.InvalidBookingStateException;
 import com.hms.booking_service.exception.RoomNotAvailableException;
@@ -33,19 +34,22 @@ public class BookingAdminService {
     private final RoomServiceClient roomServiceClient;
     private final UserServiceClient userServiceClient;
     private final BookingReferenceGenerator referenceGenerator;
+    private final GuestRequestService guestRequestService;
 
     public BookingAdminService(BookingRepository bookingRepository,
                                PricingServiceClient pricingServiceClient,
                                RoomDetailServiceClient roomDetailServiceClient,
                                RoomServiceClient roomServiceClient,
                                UserServiceClient userServiceClient,
-                               BookingReferenceGenerator referenceGenerator) {
+                               BookingReferenceGenerator referenceGenerator,
+                               GuestRequestService guestRequestService) {
         this.bookingRepository = bookingRepository;
         this.pricingServiceClient = pricingServiceClient;
         this.roomDetailServiceClient = roomDetailServiceClient;
         this.roomServiceClient = roomServiceClient;
         this.userServiceClient = userServiceClient;
         this.referenceGenerator = referenceGenerator;
+        this.guestRequestService = guestRequestService;
     }
 
     /**
@@ -179,7 +183,7 @@ public class BookingAdminService {
      */
     @Transactional
     public CreateBookingResponse createWalkInBooking(WalkInBookingRequest request) {
-        roomDetailServiceClient.getRoomDetail(request.roomId()); // confirms room exists
+        var room = roomDetailServiceClient.getRoomDetail(request.roomId()); // confirms room exists
 
         // NIBM2-623: serialize concurrent attempts for this room before we insert.
         bookingRepository.lockRoomForBooking(request.roomId());
@@ -208,6 +212,20 @@ public class BookingAdminService {
             bookingRepository.saveAndFlush(booking);
         } catch (DataIntegrityViolationException ex) {
             throw new RoomNotAvailableException(request.roomId());
+        }
+
+        // NIBM2-613/614: a special request placed at booking time becomes a
+        // guest-request alert so front desk sees it without opening the booking.
+        if (request.specialRequests() != null && !request.specialRequests().isBlank()) {
+            guestRequestService.createRequest(new CreateGuestRequestDto(
+                    RequestKind.REQUEST,
+                    "Special request — " + room.name(),
+                    request.specialRequests().trim(),
+                    request.roomId(),
+                    booking.getId(),
+                    null,
+                    request.guestName()
+            ));
         }
 
         return new CreateBookingResponse(booking.getId(), booking.getStatus(), booking.getTotalAmount());
