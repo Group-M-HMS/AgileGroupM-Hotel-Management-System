@@ -25,9 +25,13 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
-      ADMIN_SECRET: ${ADMIN_SHARED_SECRET:-change-me-in-every-environment}
+      FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-service-account.json
     ports:
       - "8081:8081"
+    volumes:
+      # Real Firebase key lives only on the host (never in git). Place it at
+      # ./secrets/firebase-service-account.json next to this compose file.
+      - ./secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -88,9 +92,13 @@ services:
       USER_SERVICE_URL: http://user-service:8082
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
-      ADMIN_SHARED_SECRET: ${ADMIN_SHARED_SECRET:-change-me-in-every-environment}
+      FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-service-account.json
     ports:
       - "8085:8085"
+    volumes:
+      # Real Firebase key lives only on the host (never in git). Place it at
+      # ./secrets/firebase-service-account.json next to this compose file.
+      - ./secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
     depends_on:
       postgres:
         condition: service_healthy
