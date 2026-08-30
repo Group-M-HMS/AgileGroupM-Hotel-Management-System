@@ -2,6 +2,7 @@ package com.nibm2.base;
 
 import com.nibm2.config.ConfigReader;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -52,6 +53,10 @@ public class DriverFactory {
                 if (headless) chromeOptions.addArguments("--headless=new");
                 chromeOptions.addArguments("--start-maximized");
                 chromeOptions.addArguments("--disable-notifications");
+                chromeOptions.addArguments("--no-sandbox");
+                chromeOptions.addArguments("--disable-dev-shm-usage");
+                chromeOptions.addArguments("--remote-allow-origins=*");
+                chromeOptions.setPageLoadStrategy(PageLoadStrategy.EAGER);
                 driver = new ChromeDriver(chromeOptions);
                 break;
         }
@@ -67,7 +72,9 @@ public class DriverFactory {
     public static void quitDriver() {
         WebDriver driver = driverThreadLocal.get();
         if (driver != null) {
-            driver.quit();
+            try {
+                driver.quit();
+            } catch (Exception ignored) {}
             driverThreadLocal.remove();
         }
     }
