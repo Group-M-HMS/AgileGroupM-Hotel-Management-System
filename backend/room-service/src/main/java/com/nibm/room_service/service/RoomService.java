@@ -340,6 +340,65 @@ public class RoomService {
         return adminAuditLogRepository.findByEntityTypeAndEntityIdOrderByTimestampDesc("ROOM", String.valueOf(roomId));
     }
 
+    /**
+     * Edits a whole room type: applies the type-level fields to every non-deleted room of that
+     * type (matched case-insensitively, same rule as the public catalog). Room number and status
+     * are never touched. All-or-nothing: one transaction.
+     */
+    @Transactional
+    public RoomTypeResponse updateRoomType(String roomType, RoomTypeUpdateRequest request) {
+        String wanted = "type:" + roomType.trim().toLowerCase();
+        List<Room> rooms = roomRepository.findAllByDeletedFalseOrderByPricePerNightAsc().stream()
+                .filter(r -> typeKey(r).equals(wanted))
+                .toList();
+        if (rooms.isEmpty()) {
+            throw new RoomNotFoundException("No rooms found for room type '" + roomType + "'");
+        }
+
+        List<String> gallery = request.gallery() == null ? null : request.gallery().stream()
+                .filter(u -> u != null && !u.isBlank()).map(String::trim).toList();
+        List<String> amenities = request.amenities() == null ? null : request.amenities().stream()
+                .filter(n -> n != null && !n.isBlank()).map(String::trim).toList();
+
+        for (Room room : rooms) {
+            room.setTitle(request.title().trim());
+            room.setShortDescription(request.shortDescription());
+            room.setFullDescription(request.fullDescription());
+            room.setPricePerNight(request.pricePerNight());
+            room.setMaxOccupancy(request.maxOccupancy());
+            if (request.sizeSqm() != null) room.setSizeSqm(request.sizeSqm());
+            if (request.bedType() != null) room.setBedType(request.bedType());
+            if (gallery != null && !gallery.isEmpty()) room.setThumbnailUrl(gallery.get(0));
+            roomRepository.save(room);
+
+            if (gallery != null) {
+                roomImageRepository.deleteByRoomId(room.getId());
+                int order = 0;
+                for (String url : gallery) {
+                    RoomImage img = new RoomImage();
+                    img.setRoomId(room.getId());
+                    img.setImageUrl(url);
+                    img.setDisplayOrder(order++);
+                    roomImageRepository.save(img);
+                }
+            }
+            if (amenities != null) {
+                roomAmenityRepository.deleteByRoomId(room.getId());
+                for (String name : amenities) {
+                    RoomAmenity amenity = new RoomAmenity();
+                    amenity.setRoomId(room.getId());
+                    amenity.setAmenityName(name);
+                    roomAmenityRepository.save(amenity);
+                }
+            }
+        }
+
+        return listRoomTypes().stream()
+                .filter(t -> t.roomType() != null && ("type:" + t.roomType().trim().toLowerCase()).equals(wanted))
+                .findFirst()
+                .orElseThrow(() -> new RoomNotFoundException("No rooms found for room type '" + roomType + "'"));
+    }
+
     /** Grouping key for "one entry per room type"; rooms with no type stay distinct. */
     private static String typeKey(Room room) {
         return room.getRoomType() != null && !room.getRoomType().isBlank()

@@ -3,7 +3,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { addDays, format } from 'date-fns';
 import type { AlertItem, Booking, Experience, Guest, Room, RoomStatus } from '../types/hotel';
-import { fetchRooms, createRoom as apiCreateRoom, updateRoom as apiUpdateRoom, deleteRoom as apiDeleteRoom, updateRoomStatus as apiUpdateRoomStatus } from '../api/rooms';
+import type { RoomTypeFormInput } from '../api/rooms';
+import { fetchRooms, createRoom as apiCreateRoom, updateRoom as apiUpdateRoom, updateRoomType as apiUpdateRoomType, deleteRoom as apiDeleteRoom, updateRoomStatus as apiUpdateRoomStatus } from '../api/rooms';
 import { fetchBookings, createWalkInBooking, checkInBooking as apiCheckIn, checkOutBooking as apiCheckOut, cancelBooking as apiCancelBooking } from '../api/bookings';
 import { fetchGuests, registerGuest, updateGuest as apiUpdateGuest, deleteGuest as apiDeleteGuest } from '../api/guests';
 import { fetchExperiences, createExperience as apiCreateExperience, updateExperience as apiUpdateExperience, deleteExperience as apiDeleteExperience } from '../api/experiences';
@@ -32,6 +33,8 @@ interface HotelContextValue {
   setRoomStatus: (roomId: string, status: RoomStatus) => Promise<void>;
   addRoom: (room: Omit<Room, 'id' | 'status'>) => Promise<void>;
   updateRoom: (roomId: string, patch: Partial<Room>) => Promise<void>;
+  /** Edits type-level fields on every room of the type, then reloads rooms. */
+  updateRoomType: (roomType: string, input: RoomTypeFormInput) => Promise<void>;
   deleteRoom: (roomId: string) => Promise<void>;
   // bookings
   createBooking: (input: NewBookingInput) => Promise<void>;
@@ -112,6 +115,11 @@ export function HotelDataProvider({ children }: { children: React.ReactNode }) {
     },
     [rooms]
   );
+
+  const updateRoomType = useCallback(async (roomType: string, input: RoomTypeFormInput) => {
+    await apiUpdateRoomType(roomType, input);
+    setRooms(await fetchRooms());
+  }, []);
 
   const deleteRoom = useCallback(async (roomId: string) => {
     await apiDeleteRoom(roomId);
@@ -205,6 +213,7 @@ export function HotelDataProvider({ children }: { children: React.ReactNode }) {
       setRoomStatus,
       addRoom,
       updateRoom,
+      updateRoomType,
       deleteRoom,
       createBooking,
       checkInBooking,
@@ -228,6 +237,7 @@ export function HotelDataProvider({ children }: { children: React.ReactNode }) {
       setRoomStatus,
       addRoom,
       updateRoom,
+      updateRoomType,
       deleteRoom,
       createBooking,
       checkInBooking,
