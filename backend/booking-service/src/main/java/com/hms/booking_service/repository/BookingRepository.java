@@ -23,6 +23,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
 
     Optional<Booking> findByIdAndCustomerId(Long id, String customerId);
 
+    List<Booking> findByCustomerIdAndRoomIdAndStatus(String customerId, Long roomId, BookingStatus status);
+
     Optional<Booking> findByBookingReference(String bookingReference);
 
     boolean existsByBookingReference(String bookingReference);

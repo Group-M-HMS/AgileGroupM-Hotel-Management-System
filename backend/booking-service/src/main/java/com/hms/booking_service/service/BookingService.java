@@ -57,6 +57,29 @@ public class BookingService {
         PricingQuote quote = pricingServiceClient.getQuote(
                 request.roomId(), request.checkInDate(), request.checkOutDate());
 
+        // A retry (card declined, double click, back button) must not collide with the customer's own
+        // earlier unpaid attempt on this room: reuse the identical one, drop any other abandoned one.
+        List<Booking> ownPending = bookingRepository.findByCustomerIdAndRoomIdAndStatus(
+                customerId, request.roomId(), BookingStatus.PENDING);
+        for (Booking earlier : ownPending) {
+            if (earlier.getCheckInDate().equals(request.checkInDate())
+                    && earlier.getCheckOutDate().equals(request.checkOutDate())) {
+                earlier.setNumberOfGuests(request.numberOfGuests());
+                earlier.setSpecialRequests(request.specialRequests());
+                earlier.setTotalAmount(quote.total());
+                earlier.setExpiresAt(LocalDateTime.now().plusMinutes(pendingHoldMinutes));
+                bookingRepository.save(earlier);
+                return new CreateBookingResponse(earlier.getId(), earlier.getStatus(), earlier.getTotalAmount());
+            }
+        }
+        for (Booking abandoned : ownPending) {
+            abandoned.setStatus(BookingStatus.CANCELLED);
+            abandoned.setCancellationReason("Replaced by a new booking attempt");
+        }
+        if (!ownPending.isEmpty()) {
+            bookingRepository.flush(); // release the dates before the new insert hits the exclusion constraint
+        }
+
         Booking booking = new Booking();
         booking.setCustomerId(customerId);
         booking.setRoomId(request.roomId());
