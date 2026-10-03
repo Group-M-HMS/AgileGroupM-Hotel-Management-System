@@ -60,7 +60,7 @@ export function CancelBookingControl({
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="no-print ml-auto font-jakarta text-meta font-semibold text-red-600 hover:underline"
+          className="no-print font-jakarta text-meta font-semibold text-red-600 hover:underline"
         >
           Cancel Booking
         </button>
