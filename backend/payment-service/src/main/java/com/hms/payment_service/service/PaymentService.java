@@ -62,13 +62,18 @@ public class PaymentService {
             return toCreateResponse(open.get());
         }
 
+        // Keys are always scoped to the verified booking, and client-supplied ones live in their own
+        // namespace, so a caller can never supply a key that matches another booking's payment.
         String idempotencyKey = (idempotencyKeyHeader != null && !idempotencyKeyHeader.isBlank())
-                ? idempotencyKeyHeader
+                ? "client-" + request.bookingId() + "-" + idempotencyKeyHeader
                 // Deterministic per booking + attempt number, so Stripe dedupes network retries too.
                 : "booking-" + request.bookingId() + "-attempt-" + earlier.size();
 
         var existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
+            if (!existing.get().getBookingId().equals(request.bookingId())) {
+                throw new InvalidPaymentStateException("Idempotency key is already in use");
+            }
             return toCreateResponse(existing.get());
         }
 
