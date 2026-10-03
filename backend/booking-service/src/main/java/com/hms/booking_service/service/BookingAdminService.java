@@ -1,5 +1,6 @@
 package com.hms.booking_service.service;
 
+import com.hms.booking_service.client.PaymentServiceClient;
 import com.hms.booking_service.client.PricingServiceClient;
 import com.hms.booking_service.client.RoomDetailServiceClient;
 import com.hms.booking_service.client.RoomServiceClient;
@@ -14,6 +15,8 @@ import com.hms.booking_service.exception.InvalidBookingStateException;
 import com.hms.booking_service.exception.RoomNotAvailableException;
 import com.hms.booking_service.repository.BookingRepository;
 import jakarta.persistence.criteria.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,11 +25,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class BookingAdminService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingAdminService.class);
+    /** The hotel's calendar day decides the cancel and refund rules, not the server's (UTC) clock. */
+    private static final ZoneId HOTEL_ZONE = ZoneId.of("Asia/Colombo");
 
     private final BookingRepository bookingRepository;
     private final PricingServiceClient pricingServiceClient;
@@ -35,6 +43,7 @@ public class BookingAdminService {
     private final UserServiceClient userServiceClient;
     private final BookingReferenceGenerator referenceGenerator;
     private final GuestRequestService guestRequestService;
+    private final PaymentServiceClient paymentServiceClient;
 
     public BookingAdminService(BookingRepository bookingRepository,
                                PricingServiceClient pricingServiceClient,
@@ -42,7 +51,8 @@ public class BookingAdminService {
                                RoomServiceClient roomServiceClient,
                                UserServiceClient userServiceClient,
                                BookingReferenceGenerator referenceGenerator,
-                               GuestRequestService guestRequestService) {
+                               GuestRequestService guestRequestService,
+                               PaymentServiceClient paymentServiceClient) {
         this.bookingRepository = bookingRepository;
         this.pricingServiceClient = pricingServiceClient;
         this.roomDetailServiceClient = roomDetailServiceClient;
@@ -50,6 +60,7 @@ public class BookingAdminService {
         this.userServiceClient = userServiceClient;
         this.referenceGenerator = referenceGenerator;
         this.guestRequestService = guestRequestService;
+        this.paymentServiceClient = paymentServiceClient;
     }
 
     /**
@@ -151,8 +162,12 @@ public class BookingAdminService {
      * NOT scoped to a customerId (staff can cancel any booking), and releases
      * an occupied room back toward availability the same way NIBM2-314 already
      * does (the exclusion constraint only blocks overlap against non-cancelled rows).
+     *
+     * Same rules as the customer cancel: a PENDING or CONFIRMED booking can only be cancelled before
+     * its check-in day, and a paid one is refunded in full first (a failed refund leaves the booking
+     * intact). A CHECKED_IN stay is the staff-only early-departure case: cancelled, no refund.
+     * Not @Transactional so the slow refund call never holds a database transaction open.
      */
-    @Transactional
     public BookingStatusChangeResponse adminCancel(Long bookingId, String reason) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException(bookingId));
@@ -161,11 +176,34 @@ public class BookingAdminService {
             throw new InvalidBookingStateException("Booking is already cancelled");
         }
 
+        if (booking.getStatus() == BookingStatus.CHECKED_OUT) {
+            throw new InvalidBookingStateException("A finished stay cannot be cancelled");
+        }
+
         boolean wasOccupying = booking.getStatus() == BookingStatus.CHECKED_IN;
+        boolean refunded = false;
+        if (!wasOccupying) {
+            if (!LocalDate.now(HOTEL_ZONE).isBefore(booking.getCheckInDate())) {
+                throw new InvalidBookingStateException(
+                        "Bookings can only be cancelled up to the day before check-in");
+            }
+            if (booking.getStatus() == BookingStatus.CONFIRMED) {
+                paymentServiceClient.refundBooking(booking.getId());
+                refunded = true;
+            }
+        }
 
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancellationReason(reason);
-        bookingRepository.save(booking);
+        try {
+            bookingRepository.save(booking);
+        } catch (RuntimeException ex) {
+            if (refunded) {
+                log.error("Booking {} was REFUNDED but could not be marked CANCELLED; retry the cancel or cancel it manually",
+                        booking.getId(), ex);
+            }
+            throw ex;
+        }
 
         if (wasOccupying) {
             roomServiceClient.updateRoomStatus(booking.getRoomId(), "CLEANING");
