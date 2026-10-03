@@ -1,12 +1,34 @@
 // Featured Rooms showcase for the home page (NIBM2-536).
-// Pulls from the shared room catalog so the home page and /rooms stay in sync;
-// each card links to that room's card on the /rooms page.
+// Pulls live room types (same source as /rooms) and shows the top three; each card links to
+// that room type's card on the /rooms page.
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Users, Ruler } from "lucide-react";
-import { featuredRooms } from "./rooms/rooms-catalog";
+import type { CatalogRoom } from "./rooms/rooms-catalog";
+import { fetchRoomTypes, pickFeatured } from "./rooms/roomTypes";
 import { RoomImage } from "./rooms/RoomImage";
 
 export default function FeaturedRooms() {
+  const [featuredRooms, setFeaturedRooms] = useState<CatalogRoom[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchRoomTypes()
+      .then((types) => {
+        if (!cancelled) setFeaturedRooms(pickFeatured(types));
+      })
+      .catch(() => {
+        // Showcase only: on failure the section simply stays empty; /rooms shows the error state.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (featuredRooms.length === 0) return null;
+
   return (
     <section>
       <div className="mb-8 flex items-end justify-between">
