@@ -44,6 +44,16 @@ public class RoomController {
     }
 
     /**
+     * Public room-type catalog for the /rooms page: one entry per type, independent of dates.
+     * Covered by the existing public GET /api/rooms/* rule in SecurityConfig.
+     */
+    @Operation(summary = "List every room type once (public catalog)")
+    @GetMapping("/types")
+    public List<RoomTypeResponse> listRoomTypes() {
+        return roomService.listRoomTypes();
+    }
+
+    /**
      * List and filter rooms in hotel inventory.
      * Subtask: NIBM2-564
      */

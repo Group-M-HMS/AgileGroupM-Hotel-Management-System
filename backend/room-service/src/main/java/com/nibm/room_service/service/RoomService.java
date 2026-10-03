@@ -46,10 +46,7 @@ public class RoomService {
         Map<String, Room> cheapestByType = new java.util.LinkedHashMap<>();
         for (Room room : roomRepository.findAvailableRooms(
                 request.getCheckIn(), request.getCheckOut(), request.getGuests())) {
-            String key = room.getRoomType() != null && !room.getRoomType().isBlank()
-                    ? "type:" + room.getRoomType().trim().toLowerCase()
-                    : "id:" + room.getId();
-            cheapestByType.merge(key, room, (kept, candidate) ->
+            cheapestByType.merge(typeKey(room), room, (kept, candidate) ->
                     candidate.getPricePerNight().compareTo(kept.getPricePerNight()) < 0 ? candidate : kept);
         }
         List<Room> rooms = List.copyOf(cheapestByType.values());
@@ -341,6 +338,40 @@ public class RoomService {
     @Transactional(readOnly = true)
     public List<AdminAuditLog> getRoomAuditLogs(Long roomId) {
         return adminAuditLogRepository.findByEntityTypeAndEntityIdOrderByTimestampDesc("ROOM", String.valueOf(roomId));
+    }
+
+    /** Grouping key for "one entry per room type"; rooms with no type stay distinct. */
+    private static String typeKey(Room room) {
+        return room.getRoomType() != null && !room.getRoomType().isBlank()
+                ? "type:" + room.getRoomType().trim().toLowerCase()
+                : "id:" + room.getId();
+    }
+
+    /**
+     * Public catalog: every room type once (cheapest unit is the representative), regardless of
+     * dates or current availability. Ordered by price ascending.
+     */
+    @Transactional(readOnly = true)
+    public List<RoomTypeResponse> listRoomTypes() {
+        Map<String, List<Room>> byType = roomRepository.findAllByDeletedFalseOrderByPricePerNightAsc().stream()
+                .collect(Collectors.groupingBy(RoomService::typeKey, LinkedHashMap::new, Collectors.toList()));
+
+        return byType.values().stream()
+                .map(units -> {
+                    Room rep = units.get(0); // list is price-ascending, so first is cheapest
+                    List<String> gallery = roomImageRepository.findByRoomIdOrderByDisplayOrderAsc(rep.getId()).stream()
+                            .map(RoomImage::getImageUrl)
+                            .toList();
+                    List<String> amenities = roomAmenityRepository.findByRoomId(rep.getId()).stream()
+                            .map(RoomAmenity::getAmenityName)
+                            .toList();
+                    Integer maxOccupancy = units.stream().map(Room::getMaxOccupancy)
+                            .filter(Objects::nonNull).max(Integer::compare).orElse(rep.getMaxOccupancy());
+                    return new RoomTypeResponse(rep.getRoomType(), rep.getTitle(), rep.getShortDescription(),
+                            rep.getFullDescription(), rep.getPricePerNight(), maxOccupancy, rep.getSizeSqm(),
+                            rep.getBedType(), gallery, amenities);
+                })
+                .toList();
     }
 
     private RoomInventoryResponse toInventoryResponse(Room room, List<String> gallery, List<String> amenities) {
