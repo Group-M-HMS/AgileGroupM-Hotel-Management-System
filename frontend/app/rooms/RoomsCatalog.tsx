@@ -4,12 +4,66 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Users, Ruler, BedDouble, X, CalendarCheck } from "lucide-react";
-import { catalogRooms, type CatalogRoom } from "./rooms-catalog";
+import type { CatalogRoom } from "./rooms-catalog";
 import { RoomCard } from "./RoomCard";
 import { RoomGalleryCompact } from "./RoomGalleryCompact";
 
+const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
+
+type ApiRoomType = {
+  roomType: string | null;
+  title: string;
+  shortDescription: string | null;
+  fullDescription: string | null;
+  pricePerNight: number;
+  maxOccupancy: number | null;
+  sizeSqm: number | null;
+  bedType: string | null;
+  gallery: string[];
+  amenities: string[];
+};
+
+function toCatalogRoom(t: ApiRoomType, index: number): CatalogRoom {
+  return {
+    id: `${t.roomType ?? t.title}-${index}`,
+    title: t.title,
+    tagline: t.roomType ?? "Room",
+    images: t.gallery,
+    pricePerNight: t.pricePerNight,
+    maxOccupancy: t.maxOccupancy ?? 1,
+    sizeSqm: t.sizeSqm ?? 0,
+    bedType: t.bedType ?? "",
+    amenities: t.amenities,
+    summary: t.shortDescription ?? "",
+    description: t.fullDescription || t.shortDescription || "",
+    featured: false,
+  };
+}
+
 export default function RoomsCatalog() {
   const [selected, setSelected] = useState<CatalogRoom | null>(null);
+  const [rooms, setRooms] = useState<CatalogRoom[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${ROOM_SERVICE_URL}/api/rooms/types`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Room types failed with status ${res.status}`);
+        return res.json() as Promise<ApiRoomType[]>;
+      })
+      .then((types) => {
+        if (cancelled) return;
+        setRooms(types.map(toCatalogRoom));
+        setStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!selected) return;
@@ -26,11 +80,21 @@ export default function RoomsCatalog() {
 
   return (
     <>
-      <div className="grid gap-8 lg:grid-cols-2">
-        {catalogRooms.map((room) => (
-          <RoomCard key={room.id} room={room} onView={() => setSelected(room)} />
-        ))}
-      </div>
+      {status === "loading" && (
+        <p className="font-jakarta text-[15px] text-jungle/70">Loading room types…</p>
+      )}
+      {status === "error" && (
+        <p className="font-jakarta text-[15px] text-jungle/70">
+          We couldn&apos;t load our rooms right now. Please try again in a moment.
+        </p>
+      )}
+      {status === "ready" && (
+        <div className="grid gap-8 lg:grid-cols-2">
+          {rooms.map((room) => (
+            <RoomCard key={room.id} room={room} onView={() => setSelected(room)} />
+          ))}
+        </div>
+      )}
 
       {selected && (
         <div
