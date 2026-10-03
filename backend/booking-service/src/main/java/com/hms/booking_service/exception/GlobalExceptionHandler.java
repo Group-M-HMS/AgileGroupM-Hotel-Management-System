@@ -4,9 +4,17 @@ import com.hms.booking_service.dto.ApiResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -59,6 +67,23 @@ public class GlobalExceptionHandler {
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .orElse("Validation failed");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody(message));
+    }
+
+    // Routing/protocol errors (unknown route, wrong method, bad media type, missing parameter) carry
+    // their own status; without this the catch-all below turned them into 500s.
+    @ExceptionHandler({NoResourceFoundException.class, HttpRequestMethodNotSupportedException.class,
+            HttpMediaTypeNotSupportedException.class, HttpMediaTypeNotAcceptableException.class,
+            MissingServletRequestParameterException.class})
+    public ResponseEntity<ApiResponse<Void>> handleFrameworkError(Exception ex) {
+        ErrorResponse er = (ErrorResponse) ex;
+        HttpStatus status = HttpStatus.resolve(er.getStatusCode().value());
+        String message = status == null ? "Request failed" : status.getReasonPhrase();
+        return ResponseEntity.status(er.getStatusCode()).body(errorBody(message));
+    }
+
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ApiResponse<Void>> handleBadInput(Exception ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody("Malformed request"));
     }
 
     @ExceptionHandler(Exception.class)

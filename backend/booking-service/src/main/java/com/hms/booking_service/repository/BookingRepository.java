@@ -45,7 +45,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
 
     @Query("""
         SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b
-        WHERE b.status <> com.hms.booking_service.entity.BookingStatus.CANCELLED
+        WHERE b.status IN (com.hms.booking_service.entity.BookingStatus.CONFIRMED,
+                           com.hms.booking_service.entity.BookingStatus.CHECKED_IN,
+                           com.hms.booking_service.entity.BookingStatus.CHECKED_OUT)
           AND b.createdAt >= :start AND b.createdAt < :end
         """)
     BigDecimal sumRevenueBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
