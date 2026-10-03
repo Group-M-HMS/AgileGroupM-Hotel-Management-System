@@ -1,4 +1,4 @@
-import { auth } from "./firebase";
+import { bearerHeader } from "./authHeader";
 
 // Talks to booking-service directly, same as lib/checkout.ts (no BFF proxy layer).
 const BOOKING_SERVICE_URL =
@@ -48,13 +48,10 @@ export type DashboardBooking = {
   taxAmount: number;
 };
 
-/** Fetches the signed-in customer's bookings from booking-service (X-User-Id = Firebase UID). */
+/** Fetches the signed-in customer's bookings from booking-service (identity from the Firebase ID token). */
 export async function fetchMyBookings(): Promise<DashboardBooking[]> {
-  const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error("You must be signed in to view your bookings.");
-
   const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/my`, {
-    headers: { "X-User-Id": uid },
+    headers: await bearerHeader(),
   });
   const summaries = await unwrap<BookingSummaryDto[]>(res);
 
@@ -105,11 +102,8 @@ export type BookingDetail = {
 
 /** Fetches one of the signed-in customer's bookings by id (booking-service scopes it to the caller). */
 export async function fetchBookingDetail(bookingId: string | number): Promise<BookingDetail> {
-  const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error("You must be signed in to view this booking.");
-
   const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/my/${bookingId}`, {
-    headers: { "X-User-Id": uid },
+    headers: await bearerHeader(),
   });
   const d = await unwrap<BookingDetailDto>(res);
 
@@ -134,12 +128,9 @@ export async function cancelBooking(
   bookingId: string | number,
   reason: string
 ): Promise<BookingStatus> {
-  const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error("You must be signed in to cancel this booking.");
-
   const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}/cancel`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-User-Id": uid },
+    headers: { "Content-Type": "application/json", ...(await bearerHeader()) },
     body: JSON.stringify({ reason }),
   });
   const result = await unwrap<{ bookingId: number; status: BookingStatus }>(res);

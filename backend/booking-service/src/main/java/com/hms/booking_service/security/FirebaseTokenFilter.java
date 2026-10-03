@@ -34,8 +34,8 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
                 boolean isAdmin = Boolean.TRUE.equals(decodedToken.getClaims().get("admin"));
                 List<SimpleGrantedAuthority> authorities = isAdmin
-                        ? List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                        : Collections.emptyList();
+                        ? List.of(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        : List.of(new SimpleGrantedAuthority("ROLE_USER"));
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(decodedToken, null, authorities);

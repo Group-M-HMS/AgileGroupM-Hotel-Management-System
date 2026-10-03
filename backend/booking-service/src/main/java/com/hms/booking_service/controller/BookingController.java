@@ -1,6 +1,7 @@
 package com.hms.booking_service.controller;
 
 import com.hms.booking_service.dto.*;
+import com.google.firebase.auth.FirebaseToken;
 import com.hms.booking_service.exception.UnauthorizedException;
 import com.hms.booking_service.service.BookingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,10 +29,9 @@ public class BookingController {
     @PostMapping
     @Operation(summary = "Create a booking")
     public ResponseEntity<ApiResponse<CreateBookingResponse>> createBooking(
-            @RequestHeader(value = "X-User-Id", required = false) String customerId,
             @Valid @RequestBody CreateBookingRequest request) {
 
-        requireAuthenticated(customerId);
+        String customerId = currentUid();
         CreateBookingResponse response = bookingService.createBooking(customerId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Booking created successfully.", response));
@@ -37,39 +39,46 @@ public class BookingController {
 
     @GetMapping("/my")
     @Operation(summary = "Get the logged-in customer's bookings")
-    public ResponseEntity<ApiResponse<List<BookingSummary>>> getMyBookings(
-            @RequestHeader(value = "X-User-Id", required = false) String customerId) {
+    public ResponseEntity<ApiResponse<List<BookingSummary>>> getMyBookings() {
 
-        requireAuthenticated(customerId);
+        String customerId = currentUid();
         return ResponseEntity.ok(ApiResponse.ok(bookingService.getMyBookings(customerId)));
     }
 
     @GetMapping("/my/{bookingId}")
     @Operation(summary = "Get a specific booking's details")
     public ResponseEntity<ApiResponse<BookingDetailResponse>> getBookingDetails(
-            @RequestHeader(value = "X-User-Id", required = false) String customerId,
             @PathVariable Long bookingId) {
 
-        requireAuthenticated(customerId);
+        String customerId = currentUid();
         return ResponseEntity.ok(ApiResponse.ok(bookingService.getBookingDetail(customerId, bookingId)));
+    }
+
+    /** Owner-scoped amount/status lookup, called by payment-service with the customer's own token. */
+    @GetMapping("/my/{bookingId}/payable")
+    @Operation(summary = "Get id/owner/amount/status of one of the caller's bookings (for payment)")
+    public ResponseEntity<BookingInternalResponse> getPayable(@PathVariable Long bookingId) {
+        return ResponseEntity.ok(bookingService.getOwnedBookingForPayment(currentUid(), bookingId));
     }
 
     @PostMapping("/{bookingId}/cancel")
     @Operation(summary = "Cancel a booking")
     public ResponseEntity<ApiResponse<CancelBookingResponse>> cancelBooking(
-            @RequestHeader(value = "X-User-Id", required = false) String customerId,
             @PathVariable Long bookingId,
             @Valid @RequestBody CancelBookingRequest request) {
 
-        requireAuthenticated(customerId);
+        String customerId = currentUid();
         CancelBookingResponse response = bookingService.cancelBooking(customerId, bookingId, request);
         return ResponseEntity.ok(ApiResponse.ok("Booking cancelled successfully.", response));
     }
 
-    /** NIBM2-468: reject any booking-confirmation-adjacent request without an authenticated session. */
-    private void requireAuthenticated(String customerId) {
-        if (customerId == null || customerId.isBlank()) {
-            throw new UnauthorizedException("Authentication required");
+    /** The caller's Firebase UID from the verified ID token (set by FirebaseTokenFilter); 401 otherwise. */
+    private static String currentUid() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof FirebaseToken token
+                && token.getUid() != null && !token.getUid().isBlank()) {
+            return token.getUid();
         }
+        throw new UnauthorizedException("Authentication required");
     }
 }

@@ -36,12 +36,16 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) -> writeJsonError(response, 401, "Authentication required"))
                         .accessDeniedHandler((request, response, accessDeniedException) -> writeJsonError(response, 403, "Admin access required")))
                 .authorizeHttpRequests(auth -> auth
+                        // Service-to-service: guarded by X-Internal-Secret in the controller.
+                        .requestMatchers("/api/v1/bookings/internal/**").permitAll()
                         .requestMatchers(
                                 "/api/admin/**",
                                 "/api/v1/admin/**",
                                 "/api/search",
                                 "/api/v1/search")
                         .hasAuthority("ROLE_ADMIN")
+                        // Customer endpoints: identity comes from the verified Firebase token, never a header.
+                        .requestMatchers("/api/v1/bookings", "/api/v1/bookings/**").authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(new FirebaseTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 

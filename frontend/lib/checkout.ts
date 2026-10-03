@@ -1,5 +1,5 @@
 import type { Stripe, StripeCardElement } from "@stripe/stripe-js";
-import { auth } from "./firebase";
+import { bearerHeader } from "./authHeader";
 
 // The frontend talks to the booking/payment services directly, the same way the
 // dashboard and apiClient talk to room-service/user-service (no BFF proxy layer).
@@ -38,7 +38,7 @@ export type BookingPaymentResult = {
 
 /**
  * Runs the full checkout pipeline against the real backend services:
- *   1. booking-service   creates a PENDING booking (X-User-Id = Firebase UID)
+ *   1. booking-service   creates a PENDING booking (identity from the Firebase ID token)
  *   2. payment-service   creates a Stripe PaymentIntent, returns its clientSecret
  *   3. Stripe.js         confirms the card the customer entered (Stripe Elements)
  *   4. payment-service   verifies the intent succeeded and flips the booking to CONFIRMED
@@ -49,14 +49,13 @@ export async function submitBookingAndPayment(
   cardElement: StripeCardElement,
   onStep?: (step: CheckoutStep) => void
 ): Promise<BookingPaymentResult> {
-  const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error("You must be signed in to complete a booking.");
+  const authHeader = await bearerHeader();
 
   // 1. Create the booking (PENDING).
   onStep?.("processing");
   const bookingRes = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-User-Id": uid },
+    headers: { "Content-Type": "application/json", ...authHeader },
     body: JSON.stringify({
       roomId: Number(input.roomId),
       checkInDate: input.checkIn,
@@ -73,7 +72,7 @@ export async function submitBookingAndPayment(
   // 2. Create the Stripe PaymentIntent for that booking.
   const paymentRes = await fetch(`${PAYMENT_SERVICE_URL}/api/v1/payments/create`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeader },
     body: JSON.stringify({ bookingId, paymentMethod: "card" }),
   });
   const payment = await unwrap<{ paymentId: number; clientSecret: string }>(
@@ -97,7 +96,7 @@ export async function submitBookingAndPayment(
   onStep?.("saving");
   const confirmRes = await fetch(`${PAYMENT_SERVICE_URL}/api/v1/payments/confirm`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeader },
     body: JSON.stringify({
       paymentId: payment.paymentId,
       transactionReference: paymentIntent.id,

@@ -3,8 +3,10 @@ package com.hms.payment_service.client;
 import com.hms.payment_service.exception.StripeIntegrationException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.RefundCreateParams;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -53,6 +55,21 @@ public class StripePaymentClient {
             return PaymentIntent.retrieve(paymentIntentId);
         } catch (StripeException e) {
             throw new StripeIntegrationException("Failed to retrieve Stripe PaymentIntent", e);
+        }
+    }
+
+    /**
+     * Fully refunds a PaymentIntent. The idempotency key makes a retried refund a no-op instead
+     * of a second refund attempt.
+     */
+    public void refund(String paymentIntentId, String idempotencyKey) {
+        try {
+            RefundCreateParams params = RefundCreateParams.builder()
+                    .setPaymentIntent(paymentIntentId)
+                    .build();
+            Refund.create(params, RequestOptions.builder().setIdempotencyKey(idempotencyKey).build());
+        } catch (StripeException e) {
+            throw new StripeIntegrationException("Failed to refund Stripe PaymentIntent", e);
         }
     }
 }
