@@ -102,6 +102,35 @@ export async function updateRoom(roomId: string, room: RoomFormInput): Promise<R
   return toRoom(dto);
 }
 
+export interface RoomTypeFormInput {
+  title: string;
+  bedType: string;
+  price: number;
+  capacity: number;
+  sqm: number;
+  gallery: string[];
+  description: string;
+  amenities: string[];
+}
+
+/** Applies type-level fields to every room of the type (room number/status are untouched). */
+export async function updateRoomType(roomType: string, input: RoomTypeFormInput): Promise<void> {
+  await roomFetch<unknown>(`/api/rooms/types/${encodeURIComponent(roomType)}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      title: input.title,
+      shortDescription: input.description.slice(0, 140),
+      fullDescription: input.description,
+      pricePerNight: input.price,
+      maxOccupancy: input.capacity,
+      sizeSqm: input.sqm,
+      bedType: input.bedType,
+      gallery: input.gallery,
+      amenities: input.amenities,
+    }),
+  });
+}
+
 export async function deleteRoom(roomId: string): Promise<void> {
   await roomFetch<void>(`/api/rooms/${roomId}`, { method: 'DELETE' });
 }

@@ -14,7 +14,7 @@ import { moneyShort } from '../_lib/utils/format';
 
 const emptyForm = {
   title: '',
-  type: 'Room',
+  type: '',
   price: 200,
   capacity: 2,
   bedType: '1 Queen Bed',
@@ -40,7 +40,7 @@ const statusFilters: Array<{ key: RoomStatus | 'all'; label: string }> = [
 ];
 
 function AdminRoomsInner() {
-  const { rooms, addRoom, updateRoom, deleteRoom } = useHotel();
+  const { rooms, addRoom, updateRoom, updateRoomType, deleteRoom } = useHotel();
   const params = useSearchParams();
   const [search, setSearch] = useState(params.get('q') ?? '');
   const [statusFilter, setStatusFilter] = useState<RoomStatus | 'all'>('all');
@@ -49,11 +49,17 @@ function AdminRoomsInner() {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
   const [editing, setEditing] = useState<Room | null>(null);
-  const [editForm, setEditForm] = useState({
+  const [editNumber, setEditNumber] = useState('');
+  const [newTypeName, setNewTypeName] = useState('');
+  const [editingType, setEditingType] = useState<{ type: string; count: number } | null>(null);
+  const [typeForm, setTypeForm] = useState({
+    title: '',
     price: 0,
     description: '',
     bedType: '',
     capacity: 2,
+    sqm: 30,
+    amenities: '',
     gallery: ['', '', ''] as [string, string, string],
   });
   const [deleting, setDeleting] = useState<Room | null>(null);
@@ -79,21 +85,23 @@ function AdminRoomsInner() {
     [rooms, statusFilter, q, sort]
   );
 
-  /** Groups by room title (e.g. "Family Suite") so the page shows one summary card
-   * per room type, with its numbered instances tucked behind an expand toggle. */
+  /** Groups by room type (same rule as the backend: case-insensitive type, falling back to title)
+   * so the page shows one summary card per type, with its numbered rooms behind an expand toggle. */
   const groupedVisible = useMemo(() => {
     const groups = new Map<string, Room[]>();
     for (const room of visible) {
-      const group = groups.get(room.title);
+      const key = (room.type || room.title).trim().toLowerCase();
+      const group = groups.get(key);
       if (group) group.push(room);
-      else groups.set(room.title, [room]);
+      else groups.set(key, [room]);
     }
-    return Array.from(groups.entries()).map(([title, roomsInGroup]) => {
+    return Array.from(groups.entries()).map(([key, roomsInGroup]) => {
       const statusCounts = roomsInGroup.reduce<Record<RoomStatus, number>>(
         (acc, r) => ({ ...acc, [r.status]: (acc[r.status] ?? 0) + 1 }),
         { available: 0, occupied: 0, cleaning: 0, maintenance: 0 }
       );
-      return { title, rooms: roomsInGroup, representative: roomsInGroup[0], statusCounts };
+      const representative = roomsInGroup.reduce((a, b) => (b.price < a.price ? b : a));
+      return { key, title: representative.title, rooms: roomsInGroup, representative, statusCounts };
     });
   }, [visible]);
 
@@ -104,16 +112,32 @@ function AdminRoomsInner() {
     ['Cleaning Queue', rooms.filter((r) => r.status === 'cleaning').length, 'text-amber-700'],
   ] as const;
 
+  const NEW_TYPE = '__new__';
+  const typeOptions = useMemo(() => Array.from(new Set(rooms.map((r) => r.type).filter(Boolean))), [rooms]);
+  // Existing type by default; "new type" is the only case that needs the full type-level form.
+  const selectedType = form.type || typeOptions[0] || NEW_TYPE;
+  const isNewType = selectedType === NEW_TYPE;
+  const typeRep = isNewType
+    ? undefined
+    : rooms
+        .filter((r) => r.type === selectedType)
+        .reduce<Room | undefined>((best, r) => (!best || r.price < best.price ? r : best), undefined);
+
   const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: { [k: string]: string } = {};
-    if (form.title.trim().length < 3) next.title = 'Room title is required.';
     if (!/^\d{3}$/.test(form.number)) next.number = 'Use a 3-digit room number, e.g. 512.';
     if (rooms.some((r) => r.number === form.number)) next.number = 'That room number already exists.';
-    if (form.price <= 0) next.price = 'Enter a nightly rate.';
-    if (form.capacity < 1) next.capacity = 'At least one guest.';
-    if (form.gallery.some((url) => !url.trim())) next.gallery = 'All 3 photo URLs are required.';
-    if (form.description.trim().length < 20) next.description = 'Add a description of at least 20 characters.';
+    if (isNewType) {
+      const name = newTypeName.trim();
+      if (name.length < 3) next.newType = 'Enter a name for the new room type.';
+      else if (typeOptions.some((t) => t.toLowerCase() === name.toLowerCase())) next.newType = 'That room type already exists — pick it from the list.';
+      if (form.title.trim().length < 3) next.title = 'Room title is required.';
+      if (form.price <= 0) next.price = 'Enter a nightly rate.';
+      if (form.capacity < 1) next.capacity = 'At least one guest.';
+      if (form.gallery.some((url) => !url.trim())) next.gallery = 'All 3 photo URLs are required.';
+      if (form.description.trim().length < 20) next.description = 'Add a description of at least 20 characters.';
+    }
     setErrors(next);
     if (Object.keys(next).length) {
       toast.error('Check the highlighted fields.');
@@ -121,14 +145,25 @@ function AdminRoomsInner() {
     }
     setSaving(true);
     try {
-      await addRoom({
-        ...form,
-        image: form.gallery[0],
-        amenities: ['Free WiFi', 'Air Conditioning'],
-        guestName: undefined,
-      });
+      // An existing type copies its shared details, so the new room matches its siblings exactly.
+      const base = isNewType || !typeRep
+        ? { ...form, type: newTypeName.trim(), amenities: ['Free WiFi', 'Air Conditioning'] }
+        : {
+            title: typeRep.title,
+            type: typeRep.type,
+            price: typeRep.price,
+            capacity: typeRep.capacity,
+            bedType: typeRep.bedType,
+            sqm: typeRep.sqm,
+            number: form.number,
+            gallery: typeRep.gallery,
+            description: typeRep.description,
+            amenities: typeRep.amenities,
+          };
+      await addRoom({ ...base, number: form.number, image: base.gallery[0], guestName: undefined });
       setAddOpen(false);
       setForm(emptyForm);
+      setNewTypeName('');
       toast.success(`Room ${form.number} added to inventory`);
     } catch {
       toast.error('Could not add the room. Please try again.');
@@ -139,31 +174,67 @@ function AdminRoomsInner() {
 
   const openEdit = (room: Room) => {
     setEditing(room);
-    setEditForm({
-      price: room.price,
-      description: room.description,
-      bedType: room.bedType,
-      capacity: room.capacity,
-      gallery: toThreePhotos(room.gallery),
-    });
+    setEditNumber(room.number);
   };
 
+  /** Single-room edit: only unit-level data (room number). Everything else is type-level. */
   const saveEdit = async () => {
     if (!editing) return;
-    if (editForm.price <= 0) {
-      toast.error('Nightly rate must be above zero.');
+    if (!/^\d{3}$/.test(editNumber)) {
+      toast.error('Use a 3-digit room number, e.g. 512.');
       return;
     }
-    if (editForm.gallery.some((url) => !url.trim())) {
-      toast.error('All 3 photo URLs are required.');
+    if (rooms.some((r) => r.number === editNumber && r.id !== editing.id)) {
+      toast.error('That room number already exists.');
       return;
     }
     try {
-      await updateRoom(editing.id, { ...editForm, image: editForm.gallery[0] });
-      toast.success(`Room ${editing.number} updated`);
+      await updateRoom(editing.id, { number: editNumber });
+      toast.success(`Room ${editNumber} updated`);
       setEditing(null);
     } catch {
       toast.error('Could not save changes. Please try again.');
+    }
+  };
+
+  const openEditType = (rep: Room, count: number) => {
+    setEditingType({ type: rep.type || rep.title, count });
+    setTypeForm({
+      title: rep.title,
+      price: rep.price,
+      description: rep.description,
+      bedType: rep.bedType,
+      capacity: rep.capacity,
+      sqm: rep.sqm,
+      amenities: rep.amenities.join(', '),
+      gallery: toThreePhotos(rep.gallery),
+    });
+  };
+
+  const saveEditType = async () => {
+    if (!editingType) return;
+    if (typeForm.title.trim().length < 3) return void toast.error('Room type title is required.');
+    if (typeForm.price <= 0) return void toast.error('Nightly rate must be above zero.');
+    if (typeForm.capacity < 1) return void toast.error('At least one guest.');
+    if (typeForm.gallery.some((url) => !url.trim())) return void toast.error('All 3 photo URLs are required.');
+    setSaving(true);
+    try {
+      await updateRoomType(editingType.type, {
+        title: typeForm.title,
+        price: typeForm.price,
+        description: typeForm.description,
+        bedType: typeForm.bedType,
+        capacity: typeForm.capacity,
+        sqm: typeForm.sqm,
+        gallery: typeForm.gallery,
+        amenities: typeForm.amenities.split(',').map((a) => a.trim()).filter(Boolean),
+      });
+      toast.success(`${typeForm.title} updated across ${editingType.count} ${editingType.count === 1 ? 'room' : 'rooms'}`);
+      setEditingType(null);
+    } catch {
+      toast.error('Could not save the room type. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -237,15 +308,16 @@ function AdminRoomsInner() {
       </div>
 
       <div className="space-y-4">
-        {groupedVisible.map(({ title, rooms: roomsInGroup, representative, statusCounts }) => {
-          const isOpen = expanded.has(title);
+        {groupedVisible.map(({ key, title, rooms: roomsInGroup, representative, statusCounts }) => {
+          const isOpen = expanded.has(key);
           return (
-            <div key={title} className="overflow-hidden rounded-xl border border-sand bg-white">
+            <div key={key} className="overflow-hidden rounded-xl border border-sand bg-white">
+              <div className="flex items-center gap-2 pr-4 transition-colors duration-150 hover:bg-sand-light/50">
               <button
                 type="button"
-                onClick={() => toggleExpanded(title)}
+                onClick={() => toggleExpanded(key)}
                 aria-expanded={isOpen}
-                className="flex w-full items-center gap-4 p-4 text-left transition-colors duration-150 hover:bg-sand-light/50">
+                className="flex min-w-0 flex-1 items-center gap-4 p-4 text-left">
 
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={representative.image} alt={title} className="h-16 w-20 shrink-0 rounded-lg object-cover" />
@@ -279,6 +351,14 @@ function AdminRoomsInner() {
                   className={`h-4 w-4 shrink-0 text-jungle/45 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
                 />
               </button>
+              <button
+                type="button"
+                onClick={() => openEditType(representative, roomsInGroup.length)}
+                className="flex shrink-0 items-center gap-1.5 rounded-md border border-sand px-2.5 py-1.5 text-[11px] font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
+
+                <PencilIcon className="h-3.5 w-3.5" /> Edit room type
+              </button>
+              </div>
 
               {isOpen && (
                 <div className="grid gap-4 border-t border-sand bg-sand-light/40 p-4 md:grid-cols-2 xl:grid-cols-3">
@@ -358,78 +438,91 @@ function AdminRoomsInner() {
         }>
 
         <form id="add-room" onSubmit={submitAdd} className="grid gap-4 sm:grid-cols-2">
-          <Field label="Room title" error={errors.title} htmlFor="r-title" className="sm:col-span-2">
-            <input id="r-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass('dark', !!errors.title)} />
-          </Field>
           <Field label="Room number" error={errors.number} htmlFor="r-number">
             <input id="r-number" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} placeholder="512" className={inputClass('dark', !!errors.number)} />
           </Field>
           <Field label="Room type" htmlFor="r-type">
-            <select id="r-type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={inputClass()}>
-              {['Room', 'Suite', 'Villa', 'Loft', 'Cabana'].map((t) => (
-                <option key={t}>{t}</option>
+            <select id="r-type" value={selectedType} onChange={(e) => setForm({ ...form, type: e.target.value })} className={inputClass()}>
+              {typeOptions.map((t) => (
+                <option key={t} value={t}>{t}</option>
               ))}
+              <option value={NEW_TYPE}>+ New room type…</option>
             </select>
           </Field>
-          <Field label="Price / night (USD)" error={errors.price} htmlFor="r-price">
-            <input id="r-price" type="number" min={1} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className={inputClass('dark', !!errors.price)} />
-          </Field>
-          <Field label="Max occupancy" error={errors.capacity} htmlFor="r-cap">
-            <input id="r-cap" type="number" min={1} max={8} value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} className={inputClass('dark', !!errors.capacity)} />
-          </Field>
-          <Field label="Bed type" htmlFor="r-bed">
-            <select id="r-bed" value={form.bedType} onChange={(e) => setForm({ ...form, bedType: e.target.value })} className={inputClass()}>
-              {['1 King Bed', '1 Queen Bed', '2 Twin Beds', '1 King Bed + Daybed'].map((b) => (
-                <option key={b}>{b}</option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Size (m²)" htmlFor="r-sqm">
-            <input id="r-sqm" type="number" min={10} value={form.sqm} onChange={(e) => setForm({ ...form, sqm: Number(e.target.value) })} className={inputClass()} />
-          </Field>
-          <Field label="Photo 1 URL (cover)" error={errors.gallery} htmlFor="r-img-1" className="sm:col-span-2">
-            <input
-              id="r-img-1"
-              value={form.gallery[0]}
-              onChange={(e) => setForm({ ...form, gallery: [e.target.value, form.gallery[1], form.gallery[2]] })}
-              className={inputClass('dark', !!errors.gallery)}
-            />
-          </Field>
-          <Field label="Photo 2 URL" htmlFor="r-img-2">
-            <input
-              id="r-img-2"
-              value={form.gallery[1]}
-              onChange={(e) => setForm({ ...form, gallery: [form.gallery[0], e.target.value, form.gallery[2]] })}
-              className={inputClass()}
-            />
-          </Field>
-          <Field label="Photo 3 URL" htmlFor="r-img-3">
-            <input
-              id="r-img-3"
-              value={form.gallery[2]}
-              onChange={(e) => setForm({ ...form, gallery: [form.gallery[0], form.gallery[1], e.target.value] })}
-              className={inputClass()}
-            />
-          </Field>
-          <Field label="Description" error={errors.description} htmlFor="r-desc" className="sm:col-span-2">
-            <textarea
-              id="r-desc"
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className={`${inputClass('dark', !!errors.description)} resize-none`}
-            />
-
-          </Field>
+          {!isNewType && typeRep && (
+            <p className="rounded-lg border border-sand bg-sand-light px-3 py-2.5 text-xs text-jungle/70 sm:col-span-2">
+              This room will share the details of <span className="font-semibold text-jungle-dark">{typeRep.title}</span>{' '}
+              ({moneyShort(typeRep.price)} / night, sleeps {typeRep.capacity}). Change them for all rooms of the type with “Edit room type”.
+            </p>
+          )}
+          {isNewType && (
+            <>
+              <Field label="New room type name" error={errors.newType} htmlFor="r-newtype" className="sm:col-span-2">
+                <input id="r-newtype" value={newTypeName} onChange={(e) => setNewTypeName(e.target.value)} placeholder="e.g. Garden Suite" className={inputClass('dark', !!errors.newType)} />
+              </Field>
+              <Field label="Room title" error={errors.title} htmlFor="r-title" className="sm:col-span-2">
+                <input id="r-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass('dark', !!errors.title)} />
+              </Field>
+              <Field label="Price / night (USD)" error={errors.price} htmlFor="r-price">
+                <input id="r-price" type="number" min={1} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className={inputClass('dark', !!errors.price)} />
+              </Field>
+              <Field label="Max occupancy" error={errors.capacity} htmlFor="r-cap">
+                <input id="r-cap" type="number" min={1} max={8} value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} className={inputClass('dark', !!errors.capacity)} />
+              </Field>
+              <Field label="Bed type" htmlFor="r-bed">
+                <select id="r-bed" value={form.bedType} onChange={(e) => setForm({ ...form, bedType: e.target.value })} className={inputClass()}>
+                  {['1 King Bed', '1 Queen Bed', '2 Twin Beds', '1 King Bed + Daybed'].map((b) => (
+                    <option key={b}>{b}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Size (m²)" htmlFor="r-sqm">
+                <input id="r-sqm" type="number" min={10} value={form.sqm} onChange={(e) => setForm({ ...form, sqm: Number(e.target.value) })} className={inputClass()} />
+              </Field>
+              <Field label="Photo 1 URL (cover)" error={errors.gallery} htmlFor="r-img-1" className="sm:col-span-2">
+                <input
+                  id="r-img-1"
+                  value={form.gallery[0]}
+                  onChange={(e) => setForm({ ...form, gallery: [e.target.value, form.gallery[1], form.gallery[2]] })}
+                  className={inputClass('dark', !!errors.gallery)}
+                />
+              </Field>
+              <Field label="Photo 2 URL" htmlFor="r-img-2">
+                <input
+                  id="r-img-2"
+                  value={form.gallery[1]}
+                  onChange={(e) => setForm({ ...form, gallery: [form.gallery[0], e.target.value, form.gallery[2]] })}
+                  className={inputClass()}
+                />
+              </Field>
+              <Field label="Photo 3 URL" htmlFor="r-img-3">
+                <input
+                  id="r-img-3"
+                  value={form.gallery[2]}
+                  onChange={(e) => setForm({ ...form, gallery: [form.gallery[0], form.gallery[1], e.target.value] })}
+                  className={inputClass()}
+                />
+              </Field>
+              <Field label="Description" error={errors.description} htmlFor="r-desc" className="sm:col-span-2">
+                <textarea
+                  id="r-desc"
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className={`${inputClass('dark', !!errors.description)} resize-none`}
+                />
+              </Field>
+            </>
+          )}
         </form>
       </Modal>
 
-      {/* Edit popup */}
+      {/* Edit single room (unit-level only) */}
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}
-        title={editing ? `Edit ${editing.title}` : 'Edit room'}
-        description={editing ? `Room No. ${editing.number}` : undefined}
+        title={editing ? `Edit room ${editing.number}` : 'Edit room'}
+        description="Changes this room only. Price, photos, description and other shared details are edited per room type."
         footer={
           <>
             <button
@@ -449,71 +542,87 @@ function AdminRoomsInner() {
           </>
         }>
 
+        <Field label="Room number" htmlFor="e-number">
+          <input id="e-number" value={editNumber} onChange={(e) => setEditNumber(e.target.value)} className={inputClass()} />
+        </Field>
+      </Modal>
+
+      {/* Edit room type (applies to every room of the type) */}
+      <Modal
+        open={!!editingType}
+        onClose={() => setEditingType(null)}
+        title={editingType ? `Edit room type: ${editingType.type}` : 'Edit room type'}
+        description={
+          editingType
+            ? `Applies to all ${editingType.count} ${editingType.count === 1 ? 'room' : 'rooms'} of this type, including the nightly rate. Existing bookings keep the price they were made at.`
+            : undefined
+        }
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setEditingType(null)}
+              className="rounded-lg border border-sand px-4 py-2 text-sm font-semibold text-jungle transition-colors duration-150 hover:bg-sand">
+
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={saveEditType}
+              disabled={saving}
+              className="flex items-center gap-2 rounded-lg bg-jungle-dark px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-jungle disabled:opacity-70">
+
+              {saving && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+              Save to all rooms
+            </button>
+          </>
+        }>
+
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Price / night (USD)" htmlFor="e-price">
-            <input id="e-price" type="number" min={1} value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })} className={inputClass()} />
+          <Field label="Title" htmlFor="t-title" className="sm:col-span-2">
+            <input id="t-title" value={typeForm.title} onChange={(e) => setTypeForm({ ...typeForm, title: e.target.value })} className={inputClass()} />
           </Field>
-          <Field label="Max occupancy" htmlFor="e-cap">
-            <input id="e-cap" type="number" min={1} max={8} value={editForm.capacity} onChange={(e) => setEditForm({ ...editForm, capacity: Number(e.target.value) })} className={inputClass()} />
+          <Field label="Price / night (USD)" htmlFor="t-price">
+            <input id="t-price" type="number" min={1} value={typeForm.price} onChange={(e) => setTypeForm({ ...typeForm, price: Number(e.target.value) })} className={inputClass()} />
           </Field>
-          <Field label="Bed type" htmlFor="e-bed" className="sm:col-span-2">
-            <select id="e-bed" value={editForm.bedType} onChange={(e) => setEditForm({ ...editForm, bedType: e.target.value })} className={inputClass()}>
-              {['1 King Bed', '1 Queen Bed', '2 Twin Beds', '1 King Bed + Daybed'].map((b) => (
+          <Field label="Max occupancy" htmlFor="t-cap">
+            <input id="t-cap" type="number" min={1} max={8} value={typeForm.capacity} onChange={(e) => setTypeForm({ ...typeForm, capacity: Number(e.target.value) })} className={inputClass()} />
+          </Field>
+          <Field label="Bed type" htmlFor="t-bed">
+            <select id="t-bed" value={typeForm.bedType} onChange={(e) => setTypeForm({ ...typeForm, bedType: e.target.value })} className={inputClass()}>
+              {Array.from(new Set(['1 King Bed', '1 Queen Bed', '2 Twin Beds', '1 King Bed + Daybed', typeForm.bedType].filter(Boolean))).map((b) => (
                 <option key={b}>{b}</option>
               ))}
             </select>
           </Field>
-          <Field label="Photo 1 URL (cover)" htmlFor="e-img-1" className="sm:col-span-2">
-            <div className="flex items-center gap-3">
-              {editForm.gallery[0] && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={editForm.gallery[0]} alt="" className="h-11 w-14 shrink-0 rounded-md object-cover" />
-              )}
-              <input
-                id="e-img-1"
-                value={editForm.gallery[0]}
-                onChange={(e) => setEditForm({ ...editForm, gallery: [e.target.value, editForm.gallery[1], editForm.gallery[2]] })}
-                className={inputClass()}
-              />
-            </div>
+          <Field label="Size (m²)" htmlFor="t-sqm">
+            <input id="t-sqm" type="number" min={10} value={typeForm.sqm} onChange={(e) => setTypeForm({ ...typeForm, sqm: Number(e.target.value) })} className={inputClass()} />
           </Field>
-          <Field label="Photo 2 URL" htmlFor="e-img-2">
-            <div className="flex items-center gap-3">
-              {editForm.gallery[1] && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={editForm.gallery[1]} alt="" className="h-11 w-14 shrink-0 rounded-md object-cover" />
-              )}
-              <input
-                id="e-img-2"
-                value={editForm.gallery[1]}
-                onChange={(e) => setEditForm({ ...editForm, gallery: [editForm.gallery[0], e.target.value, editForm.gallery[2]] })}
-                className={inputClass()}
-              />
-            </div>
+          {([0, 1, 2] as const).map((i) => (
+            <Field key={i} label={i === 0 ? 'Photo 1 URL (cover)' : `Photo ${i + 1} URL`} htmlFor={`t-img-${i}`} className={i === 0 ? 'sm:col-span-2' : undefined}>
+              <div className="flex items-center gap-3">
+                {typeForm.gallery[i] && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={typeForm.gallery[i]} alt="" className="h-11 w-14 shrink-0 rounded-md object-cover" />
+                )}
+                <input
+                  id={`t-img-${i}`}
+                  value={typeForm.gallery[i]}
+                  onChange={(e) => {
+                    const gallery = [...typeForm.gallery] as [string, string, string];
+                    gallery[i] = e.target.value;
+                    setTypeForm({ ...typeForm, gallery });
+                  }}
+                  className={inputClass()}
+                />
+              </div>
+            </Field>
+          ))}
+          <Field label="Amenities (comma-separated)" htmlFor="t-amen" className="sm:col-span-2">
+            <input id="t-amen" value={typeForm.amenities} onChange={(e) => setTypeForm({ ...typeForm, amenities: e.target.value })} className={inputClass()} />
           </Field>
-          <Field label="Photo 3 URL" htmlFor="e-img-3">
-            <div className="flex items-center gap-3">
-              {editForm.gallery[2] && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={editForm.gallery[2]} alt="" className="h-11 w-14 shrink-0 rounded-md object-cover" />
-              )}
-              <input
-                id="e-img-3"
-                value={editForm.gallery[2]}
-                onChange={(e) => setEditForm({ ...editForm, gallery: [editForm.gallery[0], editForm.gallery[1], e.target.value] })}
-                className={inputClass()}
-              />
-            </div>
-          </Field>
-          <Field label="Description" htmlFor="e-desc" className="sm:col-span-2">
-            <textarea
-              id="e-desc"
-              rows={5}
-              value={editForm.description}
-              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-              className={`${inputClass()} resize-none`}
-            />
-
+          <Field label="Description" htmlFor="t-desc" className="sm:col-span-2">
+            <textarea id="t-desc" rows={5} value={typeForm.description} onChange={(e) => setTypeForm({ ...typeForm, description: e.target.value })} className={`${inputClass()} resize-none`} />
           </Field>
         </div>
       </Modal>

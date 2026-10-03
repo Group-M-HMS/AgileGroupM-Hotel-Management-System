@@ -95,6 +95,19 @@ public class RoomController {
     }
 
     /**
+     * Edit a whole room type: type-level fields (title, descriptions, price, occupancy, size, bed,
+     * photos, amenities) are applied to every room of the type. Admin only (PUT falls under the
+     * /api/rooms/** admin rule).
+     */
+    @Operation(summary = "Update a room type (applies to every room of that type)")
+    @PutMapping("/types/{roomType}")
+    public RoomTypeResponse updateRoomType(
+            @PathVariable String roomType,
+            @Valid @RequestBody RoomTypeUpdateRequest request) {
+        return roomService.updateRoomType(roomType, request);
+    }
+
+    /**
      * Soft-delete room from inventory.
      * Subtask: NIBM2-573, NIBM2-574
      */
