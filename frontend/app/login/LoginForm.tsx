@@ -154,6 +154,7 @@ function LoginFormContent() {
             type="email"
             placeholder="Email*"
             value={fields.email}
+            maxLength={254}
             onChange={(e) => set("email", e.target.value)}
             onBlur={() => touch("email")}
             className={fieldCls(err("email"))}
@@ -167,6 +168,7 @@ function LoginFormContent() {
               type={showPassword ? "text" : "password"}
               placeholder="Password*"
               value={fields.password}
+              maxLength={128}
               onChange={(e) => set("password", e.target.value)}
               onBlur={() => touch("password")}
               className={`${fieldCls(err("password"))} pr-[44px]`}

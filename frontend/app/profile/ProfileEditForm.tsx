@@ -116,6 +116,7 @@ export function ProfileEditForm({
             <input
               type="text"
               value={fields.firstName}
+              maxLength={50}
               onChange={(e) => set("firstName", e.target.value)}
               onBlur={() => touch("firstName")}
               className={fieldCls(err("firstName"))}
@@ -129,6 +130,7 @@ export function ProfileEditForm({
             <input
               type="text"
               value={fields.lastName}
+              maxLength={50}
               onChange={(e) => set("lastName", e.target.value)}
               onBlur={() => touch("lastName")}
               className={fieldCls(err("lastName"))}
@@ -144,6 +146,7 @@ export function ProfileEditForm({
           <input
             type="tel"
             value={fields.phone}
+            maxLength={20}
             onChange={(e) => set("phone", e.target.value)}
             onBlur={() => touch("phone")}
             className={fieldCls(err("phone"))}

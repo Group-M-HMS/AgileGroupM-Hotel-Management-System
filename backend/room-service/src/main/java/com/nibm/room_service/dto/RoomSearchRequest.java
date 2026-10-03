@@ -1,5 +1,6 @@
 package com.nibm.room_service.dto;
 
+import jakarta.validation.constraints.Max;
 import com.nibm.room_service.validation.ValidDateRange;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.FutureOrPresent;
@@ -23,6 +24,7 @@ public class RoomSearchRequest {
     @Schema(description = "Number of guests", example = "2")
     @NotNull(message = "Guest count is required")
     @Min(value = 1, message = "Guest count must be at least 1")
+    @Max(value = 20, message = "Guest count must be at most 20")
     private Integer guests;
 
     public LocalDate getCheckIn() { return checkIn; }

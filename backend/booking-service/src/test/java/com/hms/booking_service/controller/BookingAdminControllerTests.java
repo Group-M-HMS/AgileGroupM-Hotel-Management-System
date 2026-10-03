@@ -124,7 +124,7 @@ public class BookingAdminControllerTests {
     @Test
     public void createWalkInBooking_validRequest_succeeds() throws Exception {
         WalkInBookingRequest validRequest = new WalkInBookingRequest(
-                "John Doe", "john@example.com", "123", 2L, LocalDate.now(), LocalDate.now().plusDays(2), 2, "", true
+                "John Doe", "john@example.com", "+94771234567", 2L, LocalDate.now(), LocalDate.now().plusDays(2), 2, "", true
         );
         CreateBookingResponse response = new CreateBookingResponse(1L, BookingStatus.CONFIRMED, new BigDecimal("200.00"));
 

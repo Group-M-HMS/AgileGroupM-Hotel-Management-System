@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { StaySummaryCard } from "./BookingSummaryHeader";
 import { GuestInfoForm } from "./GuestInfoForm";
+import { cleanGuests, cleanId, cleanStay } from "@/lib/funnelParams";
 
 const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
 const PRICING_SERVICE_URL = process.env.NEXT_PUBLIC_PRICING_SERVICE_URL ?? "http://168.138.170.92:8083";
@@ -34,10 +35,6 @@ async function fetchQuote(roomId: string, checkIn: string, checkOut: string): Pr
   return response.json();
 }
 
-function parseParam(value: string | string[] | undefined): string {
-  return typeof value === "string" ? value : "";
-}
-
 export const metadata: Metadata = {
   title: "Checkout — River Nest Eco Villa",
 };
@@ -48,10 +45,15 @@ export default async function CheckoutPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const query = await searchParams;
-  const roomId = parseParam(query.roomId);
-  const checkIn = parseParam(query.checkIn);
-  const checkOut = parseParam(query.checkOut);
-  const guests = parseParam(query.guests);
+  // Every param is typed into the URL by the visitor: reduce each to a safe value, and treat a
+  // checkout link with an unusable room or stay as not found rather than guessing.
+  const roomId = cleanId(query.roomId);
+  const { checkIn, checkOut } = cleanStay(query.checkIn, query.checkOut);
+  const guests = String(cleanGuests(query.guests));
+
+  if (!roomId || !checkIn || !checkOut) {
+    notFound();
+  }
 
   const roomTitle = await fetchRoomTitle(roomId);
 
