@@ -20,17 +20,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
         SELECT r FROM Room r
         WHERE r.deleted = false
         AND r.maxOccupancy >= :guests
-        AND r.id NOT IN (
-            SELECT b.room.id FROM Booking b
-            WHERE b.status = com.nibm.room_service.entity.Booking$BookingStatus.CONFIRMED
-            AND b.checkIn < :checkOut AND b.checkOut > :checkIn
-        )
+        ORDER BY r.pricePerNight ASC, r.id ASC
         """)
-    List<Room> findAvailableRooms(
-            @Param("checkIn") LocalDate checkIn,
-            @Param("checkOut") LocalDate checkOut,
-            @Param("guests") Integer guests
-    );
+    List<Room> findBookableRooms(@Param("guests") Integer guests);
 
     @Query("""
         SELECT r FROM Room r

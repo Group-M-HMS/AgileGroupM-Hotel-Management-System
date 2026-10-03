@@ -9,7 +9,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/bookings/internal")
@@ -35,6 +41,17 @@ public class BookingInternalController {
         return ResponseEntity.ok(bookingService.getBookingInternal(bookingId));
     }
 
+    @GetMapping("/booked-room-ids")
+    @Operation(summary = "[internal] Room ids held by a non-cancelled booking overlapping [from, to), for Room Service search")
+    public ResponseEntity<List<Long>> getBookedRoomIds(
+            @RequestHeader(value = "X-Internal-Secret", required = false) String providedSecret,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+
+        requireValidInternalSecret(providedSecret);
+        return ResponseEntity.ok(bookingService.getBookedRoomIds(from, to));
+    }
+
     @PostMapping("/{bookingId}/confirm-payment")
     @Operation(summary = "[internal] Called by Payment Service once Stripe confirms payment succeeded")
     public ResponseEntity<BookingConfirmPaymentResponse> confirmPayment(
@@ -48,7 +65,11 @@ public class BookingInternalController {
 
     /** NIBM2-468 applied to the internal contract: reject unauthenticated service calls. */
     private void requireValidInternalSecret(String providedSecret) {
-        if (providedSecret == null || !providedSecret.equals(internalSecret)) {
+        // Fail closed on a blank configured secret, and compare in constant time.
+        if (internalSecret == null || internalSecret.isEmpty() || providedSecret == null
+                || !MessageDigest.isEqual(
+                        providedSecret.getBytes(StandardCharsets.UTF_8),
+                        internalSecret.getBytes(StandardCharsets.UTF_8))) {
             throw new UnauthorizedException("Missing or invalid internal service credentials");
         }
     }

@@ -6,6 +6,7 @@ import com.nibm.room_service.entity.Room;
 import com.nibm.room_service.entity.RoomAmenity;
 import com.nibm.room_service.entity.RoomImage;
 import com.nibm.room_service.entity.RoomStatus;
+import com.nibm.room_service.client.BookingAvailabilityClient;
 import com.nibm.room_service.exception.RoomNotFoundException;
 import com.nibm.room_service.repository.AdminAuditLogRepository;
 import com.nibm.room_service.repository.RoomAmenityRepository;
@@ -26,15 +27,18 @@ public class RoomService {
     private final RoomAmenityRepository roomAmenityRepository;
     private final RoomImageRepository roomImageRepository;
     private final AdminAuditLogRepository adminAuditLogRepository;
+    private final BookingAvailabilityClient bookingAvailabilityClient;
 
     public RoomService(RoomRepository roomRepository,
                        RoomAmenityRepository roomAmenityRepository,
                        RoomImageRepository roomImageRepository,
-                       AdminAuditLogRepository adminAuditLogRepository) {
+                       AdminAuditLogRepository adminAuditLogRepository,
+                       BookingAvailabilityClient bookingAvailabilityClient) {
         this.roomRepository = roomRepository;
         this.roomAmenityRepository = roomAmenityRepository;
         this.roomImageRepository = roomImageRepository;
         this.adminAuditLogRepository = adminAuditLogRepository;
+        this.bookingAvailabilityClient = bookingAvailabilityClient;
     }
 
     /**
@@ -44,8 +48,10 @@ public class RoomService {
         // Guests book a room type, not a specific unit, so show one card per type: the cheapest
         // available room (ties keep the first/lowest-id one). Rooms with no type stay distinct.
         Map<String, Room> cheapestByType = new java.util.LinkedHashMap<>();
-        for (Room room : roomRepository.findAvailableRooms(
-                request.getCheckIn(), request.getCheckOut(), request.getGuests())) {
+        // Bookings live in booking-service's DB, so ask it which rooms are already held.
+        Set<Long> held = bookingAvailabilityClient.bookedRoomIds(request.getCheckIn(), request.getCheckOut());
+        for (Room room : roomRepository.findBookableRooms(request.getGuests())) {
+            if (held.contains(room.getId())) continue;
             cheapestByType.merge(typeKey(room), room, (kept, candidate) ->
                     candidate.getPricePerNight().compareTo(kept.getPricePerNight()) < 0 ? candidate : kept);
         }

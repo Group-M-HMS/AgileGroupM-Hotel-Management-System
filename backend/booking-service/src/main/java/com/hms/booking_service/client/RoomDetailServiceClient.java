@@ -20,9 +20,11 @@ public class RoomDetailServiceClient {
 
     private final WebClient webClient;
     private final long timeoutMs;
+    private final String internalSecret;
 
     public RoomDetailServiceClient(WebClient roomDetailServiceWebClient, Environment env) {
         this.webClient = roomDetailServiceWebClient;
+        this.internalSecret = env.getProperty("internal.service-secret", "");
         this.timeoutMs = env.getProperty("room-detail-service.timeout-ms", Long.class, 3000L);
     }
 
@@ -57,7 +59,8 @@ public class RoomDetailServiceClient {
             }
 
             webClient.patch()
-                    .uri("/api/rooms/{id}/status", roomId)
+                    .uri("/api/internal/rooms/{id}/status", roomId)
+                    .header("X-Internal-Secret", internalSecret)
                     .bodyValue(payload)
                     .retrieve()
                     .toBodilessEntity()

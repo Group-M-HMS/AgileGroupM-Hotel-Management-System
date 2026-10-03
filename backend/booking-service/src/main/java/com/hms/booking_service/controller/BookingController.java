@@ -54,34 +54,6 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.ok(bookingService.getBookingDetail(customerId, bookingId)));
     }
 
-    /**
-     * Check-in guest for confirmed reservation.
-     * Subtask: NIBM2-558, NIBM2-609
-     */
-    @PostMapping("/{bookingId}/check-in")
-    @Operation(summary = "Check in a guest for a reservation")
-    public ResponseEntity<ApiResponse<CheckInOutResponse>> checkInGuest(
-            @PathVariable Long bookingId,
-            @RequestBody(required = false) CheckInRequest request) {
-
-        CheckInOutResponse response = bookingService.checkInBooking(bookingId, request);
-        return ResponseEntity.ok(ApiResponse.ok(response.message(), response));
-    }
-
-    /**
-     * Check-out guest and queue room for cleaning.
-     * Subtask: NIBM2-558, NIBM2-609
-     */
-    @PostMapping("/{bookingId}/check-out")
-    @Operation(summary = "Check out a guest from a reservation")
-    public ResponseEntity<ApiResponse<CheckInOutResponse>> checkOutGuest(
-            @PathVariable Long bookingId,
-            @RequestBody(required = false) CheckOutRequest request) {
-
-        CheckInOutResponse response = bookingService.checkOutBooking(bookingId, request);
-        return ResponseEntity.ok(ApiResponse.ok(response.message(), response));
-    }
-
     @PostMapping("/{bookingId}/cancel")
     @Operation(summary = "Cancel a booking")
     public ResponseEntity<ApiResponse<CancelBookingResponse>> cancelBooking(
