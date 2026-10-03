@@ -4,10 +4,6 @@ export const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? 'htt
 export const BOOKING_SERVICE_URL = process.env.NEXT_PUBLIC_BOOKING_SERVICE_URL ?? 'http://localhost:8085';
 export const USER_SERVICE_URL = process.env.NEXT_PUBLIC_USER_SERVICE_URL ?? 'http://localhost:8082';
 
-// TEMPORARY stopgap shared secret for admin-only endpoints on booking-service/room-service.
-// Mirrors the backend's own "replace with Firebase admin claim verification" TODO.
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? 'change-me-in-every-environment';
-
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -36,20 +32,44 @@ export async function rawFetch<T>(url: string, init: RequestInit = {}): Promise<
   return response.json();
 }
 
-/** room-service calls that don't require the admin secret (RoomController: list/create/update/delete/status/audit-logs). */
-export function roomFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  return rawFetch<T>(`${ROOM_SERVICE_URL}${path}`, init);
+/** Resolves the signed-in admin's Firebase ID token, waiting out the async session restore. */
+async function adminBearerToken(): Promise<string> {
+  await auth.authStateReady();
+  const token = await auth.currentUser?.getIdToken();
+  if (!token) throw new ApiError('Not authenticated', 401);
+  return token;
+}
+
+/**
+ * room-service calls for RoomController (list/create/update/delete/status/audit-logs) -
+ * all admin-only now. Attaches a bearer token when the caller is signed in.
+ */
+export async function roomFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  await auth.authStateReady();
+  const token = await auth.currentUser?.getIdToken();
+  const response = await fetch(`${ROOM_SERVICE_URL}${path}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init.headers ?? {}),
+    },
+  });
+  if (!response.ok) throw new ApiError(await parseError(response), response.status);
+  if (response.status === 204) return undefined as T;
+  return response.json();
 }
 
 type Envelope<T> = { success: boolean; message: string | null; data: T };
 
-/** Admin endpoints wrapped in { success, message, data } and gated by X-Admin-Secret. */
+/** Admin endpoints wrapped in { success, message, data } and gated by a Firebase admin claim. */
 async function adminEnvelopeFetch<T>(baseUrl: string, path: string, init: RequestInit = {}): Promise<T> {
+  const token = await adminBearerToken();
   const response = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      'X-Admin-Secret': ADMIN_SECRET,
+      Authorization: `Bearer ${token}`,
       ...(init.headers ?? {}),
     },
   });

@@ -26,11 +26,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody(ex.getMessage()));
     }
 
-    @ExceptionHandler(AdminUnauthorizedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAdminUnauthorized(AdminUnauthorizedException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody(ex.getMessage()));
-    }
-
     @ExceptionHandler(RoomNotAvailableException.class)
     public ResponseEntity<ApiResponse<Void>> handleRoomNotAvailable(RoomNotAvailableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody(ex.getMessage()));

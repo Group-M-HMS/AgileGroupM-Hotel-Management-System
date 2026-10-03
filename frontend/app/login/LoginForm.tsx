@@ -58,10 +58,11 @@ function EyeIcon({ open }: { open: boolean }) {
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
-  // 1. Extract return target or fallback to bookings
-  const redirectUrl = searchParams.get("redirect") || "/bookings";
+  // 1. Extract return target, else send admins to the console and everyone else to bookings.
+  const explicitRedirect = searchParams.get("redirect");
+  const redirectUrl = explicitRedirect || (isAdmin ? "/admin" : "/bookings");
 
   // 2. Preserve redirect URL when switching to Sign Up
   const signUpUrl = searchParams.get("redirect")
@@ -81,10 +82,11 @@ function LoginFormContent() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    // Wait for `loading` to clear so isAdmin has resolved before picking a default target.
+    if (!loading && user) {
       router.replace(redirectUrl);
     }
-  }, [user, router, redirectUrl]);
+  }, [loading, user, router, redirectUrl]);
 
   function set(field: keyof Fields, value: string | boolean) {
     const next = { ...fields, [field]: value };
@@ -119,9 +121,8 @@ function LoginFormContent() {
 
     try {
       await signInWithEmailAndPassword(auth, fields.email, fields.password);
-
-      // 3. Redirect user back to checkout with saved parameters
-      router.push(redirectUrl);
+      // Redirect happens in the effect above, once AuthContext resolves the signed-in
+      // user's profile and admin claim (redirectUrl depends on isAdmin).
     } catch (error: unknown) {
       setSubmitError(mapFirebaseAuthError(error, "Failed to log in. Please try again."));
     } finally {

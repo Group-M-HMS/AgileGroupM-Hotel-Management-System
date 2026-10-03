@@ -20,6 +20,8 @@ type ProfileUpdate = {
 
 type AuthContextValue = {
   user: AuthUser | null;
+  /** True when the signed-in Firebase account carries the "admin" custom claim. */
+  isAdmin: boolean;
   loading: boolean;
   logout: () => Promise<void>;
   /** Persist profile changes via the user-service and update the context. */
@@ -30,6 +32,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,17 +41,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(null);
         // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsAdmin(false);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(false);
         return;
       }
 
       try {
-        const profile = await fetchProfile();
+        const [profile, tokenResult] = await Promise.all([fetchProfile(), firebaseUser.getIdTokenResult()]);
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(profile);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsAdmin(tokenResult.claims.admin === true);
       } catch {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(null);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsAdmin(false);
       } finally {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(false);
@@ -66,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     await signOut(auth);
     setUser(null);
+    setIsAdmin(false);
   }
 
   async function updateProfile(data: ProfileUpdate): Promise<AuthUser> {
@@ -75,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

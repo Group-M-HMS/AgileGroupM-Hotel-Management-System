@@ -1,6 +1,7 @@
 package com.hms.booking_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hms.booking_service.config.SecurityConfig;
 import com.hms.booking_service.dto.*;
 import com.hms.booking_service.entity.BookingStatus;
 import com.hms.booking_service.entity.BookingSource;
@@ -8,8 +9,16 @@ import com.hms.booking_service.service.BookingAdminService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest; // Spring Boot 4.x package
+import org.springframework.context.annotation.Import;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,6 +33,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = BookingAdminController.class, excludeAutoConfiguration = FlywayAutoConfiguration.class)
+@ImportAutoConfiguration({SecurityAutoConfiguration.class, ServletWebSecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class})
+@Import(SecurityConfig.class)
 public class BookingAdminControllerTests {
 
     @Autowired
@@ -35,14 +46,16 @@ public class BookingAdminControllerTests {
     @MockitoBean
     private BookingAdminService bookingAdminService;
 
-    private static final String ADMIN_SECRET = "change-me-in-every-environment";
+    /** Stands in for the "admin" custom-claim principal FirebaseTokenFilter would normally set. */
+    private static org.springframework.test.web.servlet.request.RequestPostProcessor asAdmin() {
+        return SecurityMockMvcRequestPostProcessors.authentication(
+                new UsernamePasswordAuthenticationToken("test-admin-uid", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
+    }
 
     @Test
     public void searchBookings_unauthorized_fails() throws Exception {
         mockMvc.perform(get("/api/admin/bookings"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Missing or invalid admin credentials"));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -59,7 +72,7 @@ public class BookingAdminControllerTests {
                 .thenReturn(paged);
 
         mockMvc.perform(get("/api/admin/bookings")
-                        .header("X-Admin-Secret", ADMIN_SECRET)
+                        .with(asAdmin())
                         .param("q", "John")
                         .param("status", "CONFIRMED")
                         .param("page", "0")
@@ -76,7 +89,7 @@ public class BookingAdminControllerTests {
         Mockito.when(bookingAdminService.checkIn(1L)).thenReturn(response);
 
         mockMvc.perform(post("/api/admin/bookings/1/check-in")
-                        .header("X-Admin-Secret", ADMIN_SECRET))
+                        .with(asAdmin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("CHECKED_IN"));
@@ -88,7 +101,7 @@ public class BookingAdminControllerTests {
         Mockito.when(bookingAdminService.checkOut(1L)).thenReturn(response);
 
         mockMvc.perform(post("/api/admin/bookings/1/check-out")
-                        .header("X-Admin-Secret", ADMIN_SECRET))
+                        .with(asAdmin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("CHECKED_OUT"));
@@ -101,7 +114,7 @@ public class BookingAdminControllerTests {
         );
 
         mockMvc.perform(post("/api/admin/bookings/walk-in")
-                        .header("X-Admin-Secret", ADMIN_SECRET)
+                        .with(asAdmin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -119,7 +132,7 @@ public class BookingAdminControllerTests {
                 .thenReturn(response);
 
         mockMvc.perform(post("/api/admin/bookings/walk-in")
-                        .header("X-Admin-Secret", ADMIN_SECRET)
+                        .with(asAdmin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated())
