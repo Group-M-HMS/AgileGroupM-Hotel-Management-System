@@ -21,7 +21,7 @@ public class BookingServiceClient {
     public BookingServiceClient(WebClient bookingServiceWebClient, Environment env) {
         this.webClient = bookingServiceWebClient;
         this.timeoutMs = env.getProperty("booking-service.timeout-ms", Long.class, 5000L);
-        this.internalSecret = env.getProperty("internal.service-secret", "change-me-in-every-environment");
+        this.internalSecret = env.getProperty("internal.service-secret", "");
     }
 
     public BookingInfo getBooking(Long bookingId) {

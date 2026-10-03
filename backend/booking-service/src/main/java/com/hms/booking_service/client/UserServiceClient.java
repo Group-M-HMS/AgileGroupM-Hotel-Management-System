@@ -29,7 +29,7 @@ public class UserServiceClient {
     public UserServiceClient(WebClient userServiceWebClient, Environment env) {
         this.webClient = userServiceWebClient;
         this.timeoutMs = env.getProperty("user-service.timeout-ms", Long.class, 3000L);
-        this.internalSecret = env.getProperty("internal.service-secret", "change-me-in-every-environment");
+        this.internalSecret = env.getProperty("internal.service-secret", "");
     }
 
     /**

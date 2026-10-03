@@ -39,7 +39,8 @@ public class UserInternalController {
             @RequestHeader(value = "X-Internal-Secret", required = false) String providedSecret,
             @PathVariable String id) {
 
-        if (providedSecret == null || !constantTimeEquals(providedSecret, internalSecret)) {
+        if (internalSecret == null || internalSecret.isBlank() || providedSecret == null
+                || !constantTimeEquals(providedSecret, internalSecret)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid internal service credentials");
         }
 
@@ -66,7 +67,8 @@ public class UserInternalController {
             @RequestHeader(value = "X-Internal-Secret", required = false) String providedSecret,
             @RequestBody Map<String, String> body) {
 
-        if (providedSecret == null || !constantTimeEquals(providedSecret, internalSecret)) {
+        if (internalSecret == null || internalSecret.isBlank() || providedSecret == null
+                || !constantTimeEquals(providedSecret, internalSecret)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid internal service credentials");
         }
 
