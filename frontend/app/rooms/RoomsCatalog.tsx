@@ -5,40 +5,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Users, Ruler, BedDouble, X, CalendarCheck } from "lucide-react";
 import type { CatalogRoom } from "./rooms-catalog";
+import { fetchRoomTypes } from "./roomTypes";
 import { RoomCard } from "./RoomCard";
 import { RoomGalleryCompact } from "./RoomGalleryCompact";
-
-const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://localhost:8081";
-
-type ApiRoomType = {
-  roomType: string | null;
-  title: string;
-  shortDescription: string | null;
-  fullDescription: string | null;
-  pricePerNight: number;
-  maxOccupancy: number | null;
-  sizeSqm: number | null;
-  bedType: string | null;
-  gallery: string[];
-  amenities: string[];
-};
-
-function toCatalogRoom(t: ApiRoomType, index: number): CatalogRoom {
-  return {
-    id: `${t.roomType ?? t.title}-${index}`,
-    title: t.title,
-    tagline: t.roomType ?? "Room",
-    images: t.gallery,
-    pricePerNight: t.pricePerNight,
-    maxOccupancy: t.maxOccupancy ?? 1,
-    sizeSqm: t.sizeSqm ?? 0,
-    bedType: t.bedType ?? "",
-    amenities: t.amenities,
-    summary: t.shortDescription ?? "",
-    description: t.fullDescription || t.shortDescription || "",
-    featured: false,
-  };
-}
 
 export default function RoomsCatalog() {
   const [selected, setSelected] = useState<CatalogRoom | null>(null);
@@ -47,14 +16,10 @@ export default function RoomsCatalog() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${ROOM_SERVICE_URL}/api/rooms/types`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Room types failed with status ${res.status}`);
-        return res.json() as Promise<ApiRoomType[]>;
-      })
+    fetchRoomTypes()
       .then((types) => {
         if (cancelled) return;
-        setRooms(types.map(toCatalogRoom));
+        setRooms(types);
         setStatus("ready");
       })
       .catch(() => {
