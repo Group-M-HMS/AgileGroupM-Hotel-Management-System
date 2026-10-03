@@ -159,6 +159,15 @@ public class BookingService {
                 booking.getStatus().name());
     }
 
+    /** Owner-scoped: someone else's booking is a 404, never revealed. Used by payment-service. */
+    @Transactional(readOnly = true)
+    public BookingInternalResponse getOwnedBookingForPayment(String customerId, Long bookingId) {
+        Booking booking = bookingRepository.findByIdAndCustomerId(bookingId, customerId)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
+        return new BookingInternalResponse(
+                booking.getId(), booking.getCustomerId(), booking.getTotalAmount(), booking.getStatus().name());
+    }
+
     /** Room-service search uses this so it never offers a room another booking already holds. */
     @Transactional(readOnly = true)
     public List<Long> getBookedRoomIds(LocalDate from, LocalDate to) {

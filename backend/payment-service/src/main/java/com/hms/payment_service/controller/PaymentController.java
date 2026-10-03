@@ -9,7 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
+/**
+ * Callers authenticate with their Firebase ID token ({@code Authorization: Bearer}); it is forwarded
+ * to booking-service, which decides whether the booking belongs to them. There is deliberately no
+ * payment-history endpoint here: it used to trust a caller-supplied X-User-Id and nothing used it.
+ */
 @RestController
 @RequestMapping("/api/v1/payments")
 @Tag(name = "Payment Service", description = "Handles all payments via Stripe")
@@ -22,13 +26,13 @@ public class PaymentController {
     }
 
     @PostMapping("/create")
-    @Operation(summary = "Create a Stripe PaymentIntent for a booking")
+    @Operation(summary = "Create a Stripe PaymentIntent for one of the caller's bookings")
     public ResponseEntity<ApiResponse<CreatePaymentResponse>> createPayment(
             @Valid @RequestBody CreatePaymentRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
 
-            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
-
-        CreatePaymentResponse response = paymentService.createPayment(request, idempotencyKey);
+        CreatePaymentResponse response = paymentService.createPayment(request, idempotencyKey, authorization);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(response));
     }
@@ -36,18 +40,10 @@ public class PaymentController {
     @PostMapping("/confirm")
     @Operation(summary = "Confirm a Stripe payment and complete the booking")
     public ResponseEntity<ApiResponse<ConfirmPaymentResponse>> confirmPayment(
-            @Valid @RequestBody ConfirmPaymentRequest request) {
+            @Valid @RequestBody ConfirmPaymentRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
 
-        ConfirmPaymentResponse response = paymentService.confirmPayment(request);
+        ConfirmPaymentResponse response = paymentService.confirmPayment(request, authorization);
         return ResponseEntity.ok(ApiResponse.ok("Payment successful.", response));
-    }
-
-    @GetMapping("/history")
-    @Operation(summary = "Get the logged-in customer's payment history")
-    public ResponseEntity<ApiResponse<java.util.List<PaymentHistoryItem>>> getPaymentHistory(
-
-            @RequestHeader("X-User-Id") String customerId) {
-
-        return ResponseEntity.ok(ApiResponse.ok(paymentService.getPaymentHistory(customerId)));
     }
 }
