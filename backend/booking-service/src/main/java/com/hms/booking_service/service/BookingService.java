@@ -9,6 +9,8 @@ import com.hms.booking_service.entity.BookingStatus;
 import com.hms.booking_service.entity.RequestKind;
 import com.hms.booking_service.exception.*;
 import com.hms.booking_service.repository.BookingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import java.util.Map;
 
 @Service
 public class BookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
     /** The hotel's calendar day decides refund and past-date rules, not the server's (UTC) clock. */
     private static final ZoneId HOTEL_ZONE = ZoneId.of("Asia/Colombo");
@@ -176,8 +180,10 @@ public class BookingService {
      * inventory happens automatically - the exclusion constraint only
      * blocks overlaps against non-CANCELLED rows (V1 migration WHERE
      * clause), so flipping status to CANCELLED is the release.
+     *
+     * Deliberately not @Transactional: the refund is a slow external call and must not hold a
+     * database transaction open. The load and the final save are each their own short transaction.
      */
-    @Transactional
     public CancelBookingResponse cancelBooking(String customerId, Long bookingId, CancelBookingRequest request) {
         Booking booking = bookingRepository.findByIdAndCustomerId(bookingId, customerId)
                 .orElseThrow(() -> new BookingNotFoundException(bookingId));
@@ -207,7 +213,17 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancellationReason(request.reason());
-        bookingRepository.save(booking);
+        try {
+            bookingRepository.save(booking);
+        } catch (RuntimeException ex) {
+            if (refunded) {
+                // Money is back with the customer but the stay is still CONFIRMED. A repeat cancel is
+                // safe (the refund is idempotent) and finishes the job; the log makes it findable.
+                log.error("Booking {} was REFUNDED but could not be marked CANCELLED; retry the cancel or cancel it manually",
+                        booking.getId(), ex);
+            }
+            throw ex;
+        }
 
         return new CancelBookingResponse(booking.getId(), booking.getStatus(), refunded, message);
     }
