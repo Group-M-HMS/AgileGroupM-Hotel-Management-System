@@ -27,7 +27,7 @@ services:
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
       FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-service-account.json
       BOOKING_SERVICE_URL: http://booking-service:8085
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:?INTERNAL_SERVICE_SECRET must be set in .env}
     ports:
       - "8081:8081"
     volumes:
@@ -49,7 +49,7 @@ services:
       ROOM_SERVICE_URL: http://room-service:8081
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
       FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-service-account.json
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:?INTERNAL_SERVICE_SECRET must be set in .env}
     ports:
       - "8082:8082"
     volumes:
@@ -92,7 +92,7 @@ services:
       ROOM_DETAIL_SERVICE_URL: http://room-service:8081
       PRICING_SERVICE_URL: http://pricing-service:8083
       USER_SERVICE_URL: http://user-service:8082
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:?INTERNAL_SERVICE_SECRET must be set in .env}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
       FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-service-account.json
     ports:
@@ -119,7 +119,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       BOOKING_SERVICE_URL: http://booking-service:8085
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_REPLACE_ME}
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-change-me-in-every-environment}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:?INTERNAL_SERVICE_SECRET must be set in .env}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
     ports:
       - "8084:8084"
