@@ -5,6 +5,7 @@ import com.hms.booking_service.entity.BookingStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -56,7 +57,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
         """)
     List<Booking> findScheduleBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    List<Booking> findByStatusAndExpiresAtBefore(BookingStatus status, LocalDateTime cutoff);
+    /**
+     * Atomically cancels expired unpaid holds. The status check runs inside the UPDATE, so a
+     * booking confirmed a moment earlier is never touched. Returns the number released.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Booking b
+        SET b.status = com.hms.booking_service.entity.BookingStatus.CANCELLED,
+            b.cancellationReason = 'Payment not completed in time',
+            b.updatedAt = :now
+        WHERE b.status = com.hms.booking_service.entity.BookingStatus.PENDING
+          AND b.expiresAt IS NOT NULL
+          AND b.expiresAt < :now
+        """)
+    int cancelExpiredPending(@Param("now") LocalDateTime now);
 
     /** Rooms whose stay overlaps [from, to) and still holds the room (anything not cancelled). */
     @Query("""

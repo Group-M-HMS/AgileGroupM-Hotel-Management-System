@@ -25,16 +25,19 @@ public class RoomServiceClient {
 
     private final WebClient webClient;
     private final long timeoutMs;
+    private final String internalSecret;
 
     public RoomServiceClient(WebClient roomServiceWebClient, Environment env) {
         this.webClient = roomServiceWebClient;
+        this.internalSecret = env.getProperty("internal.service-secret", "");
         this.timeoutMs = env.getProperty("room-service.timeout-ms", Long.class, 3000L);
     }
 
     public void updateRoomStatus(Long roomId, String status) {
         try {
             webClient.patch()
-                    .uri("/api/admin/rooms/{id}/status", roomId)
+                    .uri("/api/internal/rooms/{id}/status", roomId)
+                    .header("X-Internal-Secret", internalSecret)
                     .bodyValue(new RoomStatusUpdateRequest(status))
                     .retrieve()
                     .toBodilessEntity()
@@ -51,19 +54,21 @@ public class RoomServiceClient {
      */
     public List<SearchRoomResult> searchRooms(String query) {
         try {
-            List<Map<String, Object>> response = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/api/rooms")
-                            .queryParam("q", query)
-                            .build())
+            List<Map<String, Object>> all = webClient.get()
+                    .uri("/api/internal/rooms")
+                    .header("X-Internal-Secret", internalSecret)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
                     .block(Duration.ofMillis(timeoutMs));
 
-            if (response == null) return List.of();
+            if (all == null) return List.of();
 
+            // The internal endpoint lists every room; filter here like the old ?q= did.
+            String needle = query == null ? "" : query.toLowerCase();
             List<SearchRoomResult> results = new ArrayList<>();
-            for (Map<String, Object> r : response) {
+            for (Map<String, Object> r : all) {
+                String haystack = (str(r, "title") + " " + str(r, "roomNumber") + " " + str(r, "bedType") + " " + str(r, "roomType")).toLowerCase();
+                if (!haystack.contains(needle)) continue;
                 Long id = r.get("id") != null ? Long.valueOf(r.get("id").toString()) : null;
                 String number = r.get("roomNumber") != null ? r.get("roomNumber").toString() : (r.get("number") != null ? r.get("number").toString() : "");
                 String title = r.get("title") != null ? r.get("title").toString() : "Room";
@@ -92,7 +97,8 @@ public class RoomServiceClient {
 
         try {
             List<Map<String, Object>> rooms = webClient.get()
-                    .uri("/api/rooms")
+                    .uri("/api/internal/rooms")
+                    .header("X-Internal-Secret", internalSecret)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
                     .block(Duration.ofMillis(timeoutMs));
@@ -110,10 +116,18 @@ public class RoomServiceClient {
             }
         } catch (Exception e) {
             log.warn("Failed to fetch room operational status from Room Service: {}", e.getMessage());
-            available = 50; // Fallback default
+            // Don't invent numbers: zeros make a Room Service outage visibly not "50 free rooms".
+            available = 0;
+            occupied = 0;
+            cleaning = 0;
+            maintenance = 0;
         }
 
         return new RoomStatusCounts(available, occupied, cleaning, maintenance);
+    }
+
+    private static String str(Map<String, Object> r, String key) {
+        return r.get(key) != null ? r.get(key).toString() : "";
     }
 
     private record RoomStatusUpdateRequest(String status) {
