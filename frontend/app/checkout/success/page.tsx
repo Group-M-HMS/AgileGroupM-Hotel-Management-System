@@ -139,13 +139,13 @@ export default async function BookingSuccessPage({
           <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/bookings"
-              className="btn-primary text-center sm:px-8"
+              className="btn-primary text-center sm:!w-auto sm:px-8"
             >
               View My Bookings
             </Link>
             <Link
               href="/"
-              className="rounded-md border-2 border-sand px-6 py-3 text-center font-jakarta text-sm text-jungle transition-colors hover:border-sage"
+              className="flex items-center justify-center whitespace-nowrap rounded-full border-2 border-sand px-8 py-3 text-center font-jakarta text-sm text-jungle transition-colors hover:border-sage"
             >
               Back to Home
             </Link>
