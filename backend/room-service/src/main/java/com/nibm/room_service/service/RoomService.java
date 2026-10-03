@@ -41,9 +41,18 @@ public class RoomService {
      * Search available rooms for booking dates and guest capacity.
      */
     public List<RoomResponse> searchAvailableRooms(RoomSearchRequest request) {
-        List<Room> rooms = roomRepository.findAvailableRooms(
-                request.getCheckIn(), request.getCheckOut(), request.getGuests()
-        );
+        // Guests book a room type, not a specific unit, so show one card per type: the cheapest
+        // available room (ties keep the first/lowest-id one). Rooms with no type stay distinct.
+        Map<String, Room> cheapestByType = new java.util.LinkedHashMap<>();
+        for (Room room : roomRepository.findAvailableRooms(
+                request.getCheckIn(), request.getCheckOut(), request.getGuests())) {
+            String key = room.getRoomType() != null && !room.getRoomType().isBlank()
+                    ? "type:" + room.getRoomType().trim().toLowerCase()
+                    : "id:" + room.getId();
+            cheapestByType.merge(key, room, (kept, candidate) ->
+                    candidate.getPricePerNight().compareTo(kept.getPricePerNight()) < 0 ? candidate : kept);
+        }
+        List<Room> rooms = List.copyOf(cheapestByType.values());
 
         List<Long> roomIds = rooms.stream().map(Room::getId).toList();
         Map<Long, List<String>> amenitiesByRoom = roomAmenityRepository.findByRoomIdIn(roomIds).stream()
