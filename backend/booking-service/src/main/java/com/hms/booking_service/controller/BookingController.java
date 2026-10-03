@@ -69,7 +69,7 @@ public class BookingController {
 
         String customerId = currentUid();
         CancelBookingResponse response = bookingService.cancelBooking(customerId, bookingId, request);
-        return ResponseEntity.ok(ApiResponse.ok("Booking cancelled successfully.", response));
+        return ResponseEntity.ok(ApiResponse.ok(response.message(), response));
     }
 
     /** The caller's Firebase UID from the verified ID token (set by FirebaseTokenFilter); 401 otherwise. */

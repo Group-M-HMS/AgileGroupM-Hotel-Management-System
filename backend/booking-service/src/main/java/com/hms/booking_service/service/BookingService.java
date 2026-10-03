@@ -1,5 +1,6 @@
 package com.hms.booking_service.service;
 
+import com.hms.booking_service.client.PaymentServiceClient;
 import com.hms.booking_service.client.PricingServiceClient;
 import com.hms.booking_service.client.RoomDetailServiceClient;
 import com.hms.booking_service.dto.*;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +24,15 @@ import java.util.Map;
 @Service
 public class BookingService {
 
+    /** The hotel's calendar day decides refund and past-date rules, not the server's (UTC) clock. */
+    private static final ZoneId HOTEL_ZONE = ZoneId.of("Asia/Colombo");
+
     private final BookingRepository bookingRepository;
     private final PricingServiceClient pricingServiceClient;
     private final RoomDetailServiceClient roomDetailServiceClient;
     private final BookingReferenceGenerator referenceGenerator;
     private final GuestRequestService guestRequestService;
+    private final PaymentServiceClient paymentServiceClient;
 
     /** How long an unpaid online booking holds its room before the expiry job releases it. */
     @Value("${booking.pending-hold-minutes:15}")
@@ -36,12 +42,14 @@ public class BookingService {
                           PricingServiceClient pricingServiceClient,
                           RoomDetailServiceClient roomDetailServiceClient,
                           BookingReferenceGenerator referenceGenerator,
-                          GuestRequestService guestRequestService) {
+                          GuestRequestService guestRequestService,
+                          PaymentServiceClient paymentServiceClient) {
         this.bookingRepository = bookingRepository;
         this.pricingServiceClient = pricingServiceClient;
         this.roomDetailServiceClient = roomDetailServiceClient;
         this.referenceGenerator = referenceGenerator;
         this.guestRequestService = guestRequestService;
+        this.paymentServiceClient = paymentServiceClient;
     }
 
     /**
@@ -56,7 +64,7 @@ public class BookingService {
         // Confirms the room exists and gets its nightly rate indirectly through Pricing Service.
         RoomDetailInfo room = roomDetailServiceClient.getRoomDetail(request.roomId());
 
-        if (request.checkInDate().isBefore(LocalDate.now())) {
+        if (request.checkInDate().isBefore(LocalDate.now(HOTEL_ZONE))) {
             throw new InvalidBookingStateException("Check-in date cannot be in the past");
         }
         if (!request.checkOutDate().isAfter(request.checkInDate())) {
@@ -182,11 +190,26 @@ public class BookingService {
                     "A stay that has started or finished cannot be cancelled online; please contact the front desk");
         }
 
+        // Policy: a paid booking is refunded in full when cancelled up to the day before check-in
+        // (hotel calendar); from the check-in day on it is cancelled without a refund. The refund runs
+        // first, so a failed refund leaves the booking intact and the customer can retry.
+        boolean refunded = false;
+        String message = "Booking cancelled successfully.";
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+            if (LocalDate.now(HOTEL_ZONE).isBefore(booking.getCheckInDate())) {
+                paymentServiceClient.refundBooking(booking.getId());
+                refunded = true;
+                message = "Booking cancelled. Your payment has been refunded in full.";
+            } else {
+                message = "Booking cancelled. No refund applies within one day of check-in.";
+            }
+        }
+
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancellationReason(request.reason());
         bookingRepository.save(booking);
 
-        return new CancelBookingResponse(booking.getId(), booking.getStatus());
+        return new CancelBookingResponse(booking.getId(), booking.getStatus(), refunded, message);
     }
 
     // --- Internal endpoints, called by Payment Service ---

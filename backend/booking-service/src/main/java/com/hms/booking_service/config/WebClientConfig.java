@@ -24,6 +24,11 @@ public class WebClientConfig {
     }
 
     @Bean
+    public WebClient paymentServiceWebClient(@Value("${payment-service.base-url:http://localhost:8084}") String baseUrl) {
+        return WebClient.builder().baseUrl(baseUrl).build();
+    }
+
+    @Bean
     public WebClient userServiceWebClient(@Value("${user-service.base-url:http://localhost:8082}") String baseUrl) {
         return WebClient.builder().baseUrl(baseUrl).build();
     }

@@ -146,6 +146,27 @@ public class PaymentService {
                 bookingResult.status(), bookingResult.bookingReference());
     }
 
+    /**
+     * Refunds the paid charge for a booking in full. Idempotent: a repeat call (e.g. the booking
+     * cancel was retried after the refund went through) reports REFUNDED without a second refund,
+     * and Stripe's idempotency key covers a retry after a timeout. A Stripe failure propagates and
+     * leaves the payment PAID so the caller can try again.
+     */
+    @Transactional
+    public RefundBookingResponse refundBooking(Long bookingId) {
+        List<Payment> payments = paymentRepository.findByBookingId(bookingId);
+        var paid = payments.stream().filter(p -> p.getStatus() == PaymentStatus.PAID).findFirst();
+        if (paid.isEmpty()) {
+            boolean alreadyRefunded = payments.stream().anyMatch(p -> p.getStatus() == PaymentStatus.REFUNDED);
+            return new RefundBookingResponse(bookingId, alreadyRefunded ? "REFUNDED" : "NO_PAYMENT");
+        }
+        Payment payment = paid.get();
+        stripePaymentClient.refund(payment.getStripePaymentIntentId(), "refund-payment-" + payment.getId());
+        payment.setStatus(PaymentStatus.REFUNDED);
+        paymentRepository.save(payment);
+        return new RefundBookingResponse(bookingId, "REFUNDED");
+    }
+
     private ConfirmPaymentResponse refundAndFail(Payment payment, PaymentIntent intent, RuntimeException cause) {
         log.warn("Booking {} could not be confirmed after Stripe success ({}); refunding payment {}",
                 payment.getBookingId(), cause.getMessage(), payment.getId());

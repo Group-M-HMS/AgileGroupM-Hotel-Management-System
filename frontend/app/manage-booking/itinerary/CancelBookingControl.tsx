@@ -17,6 +17,7 @@ export function CancelBookingControl({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showBanner, setShowBanner] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
 
   useEffect(() => {
     if (!showBanner) return;
@@ -33,8 +34,9 @@ export function CancelBookingControl({
     setSubmitting(true);
     setError(null);
     try {
-      const newStatus = await cancelBooking(bookingId, trimmed);
-      setStatus(newStatus);
+      const result = await cancelBooking(bookingId, trimmed);
+      setStatus(result.status);
+      setResultMessage(result.message);
       setModalOpen(false);
       setReason("");
       setShowBanner(true);
@@ -67,7 +69,7 @@ export function CancelBookingControl({
       {showBanner && (
         <div className="no-print w-full rounded-input border border-green-200 bg-green-50 px-4 py-3 font-jakarta text-meta text-green-700">
           <div className="flex items-center justify-between gap-3">
-            <span>Your booking has been canceled successfully.</span>
+            <span>{resultMessage || "Your booking has been canceled successfully."}</span>
             <button
               type="button"
               onClick={() => setShowBanner(false)}
@@ -87,8 +89,8 @@ export function CancelBookingControl({
           <div className="flex w-full max-w-sm flex-col gap-4 rounded-3xl bg-white p-6 shadow-soft-lg">
             <h2 className="font-fraunces text-[20px] font-medium text-jungle-dark">Cancel this booking?</h2>
             <div className="rounded-input border border-red-200 bg-red-50 px-4 py-3 font-jakarta text-[13px] text-red-700">
-              This action is final and cannot be undone. Your reservation will be canceled
-              immediately.
+              This action is final and cannot be undone. Paid bookings are refunded in full when
+              cancelled up to the day before check-in; no refund applies from the check-in day on.
             </div>
             <div className="flex flex-col gap-[4px]">
               <label htmlFor="cancel-reason" className="font-jakarta text-[13px] font-medium text-jungle-dark">
