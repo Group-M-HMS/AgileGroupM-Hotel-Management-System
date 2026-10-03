@@ -9,7 +9,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/bookings/internal")
@@ -33,6 +37,17 @@ public class BookingInternalController {
 
         requireValidInternalSecret(providedSecret);
         return ResponseEntity.ok(bookingService.getBookingInternal(bookingId));
+    }
+
+    @GetMapping("/booked-room-ids")
+    @Operation(summary = "[internal] Room ids held by a non-cancelled booking overlapping [from, to), for Room Service search")
+    public ResponseEntity<List<Long>> getBookedRoomIds(
+            @RequestHeader(value = "X-Internal-Secret", required = false) String providedSecret,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+
+        requireValidInternalSecret(providedSecret);
+        return ResponseEntity.ok(bookingService.getBookedRoomIds(from, to));
     }
 
     @PostMapping("/{bookingId}/confirm-payment")

@@ -8,10 +8,12 @@ import com.hms.booking_service.entity.BookingStatus;
 import com.hms.booking_service.entity.RequestKind;
 import com.hms.booking_service.exception.*;
 import com.hms.booking_service.repository.BookingRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,6 +25,10 @@ public class BookingService {
     private final RoomDetailServiceClient roomDetailServiceClient;
     private final BookingReferenceGenerator referenceGenerator;
     private final GuestRequestService guestRequestService;
+
+    /** How long an unpaid online booking holds its room before the expiry job releases it. */
+    @Value("${booking.pending-hold-minutes:15}")
+    private long pendingHoldMinutes;
 
     public BookingService(BookingRepository bookingRepository,
                           PricingServiceClient pricingServiceClient,
@@ -61,6 +67,7 @@ public class BookingService {
         booking.setTermsAccepted(request.termsAccepted());
         booking.setTotalAmount(quote.total());
         booking.setStatus(BookingStatus.PENDING);
+        booking.setExpiresAt(LocalDateTime.now().plusMinutes(pendingHoldMinutes));
 
         try {
             bookingRepository.saveAndFlush(booking);
@@ -120,85 +127,6 @@ public class BookingService {
     }
 
     /**
-     * Check in a guest for a confirmed booking.
-     * Subtask: NIBM2-558, NIBM2-609
-     */
-    @Transactional
-    public CheckInOutResponse checkInBooking(Long bookingId, CheckInRequest request) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException(bookingId));
-
-        if (booking.getStatus() == BookingStatus.CHECKED_IN) {
-            throw new InvalidBookingStateException("Booking is already checked in");
-        }
-        if (booking.getStatus() == BookingStatus.CHECKED_OUT) {
-            throw new InvalidBookingStateException("Cannot check in a completed booking");
-        }
-        if (booking.getStatus() == BookingStatus.CANCELLED) {
-            throw new InvalidBookingStateException("Cannot check in a cancelled booking");
-        }
-
-        booking.setStatus(BookingStatus.CHECKED_IN);
-        booking.setCheckedInAt(LocalDateTime.now());
-        Booking saved = bookingRepository.save(booking);
-
-        // Update room operational status to OCCUPIED
-        String operator = request != null && request.checkedBy() != null ? request.checkedBy() : "FRONT_DESK";
-        String remarks = request != null && request.remarks() != null ? request.remarks() : "Guest checked in for booking " + saved.getBookingReference();
-        String guestName = request != null && request.guestName() != null ? request.guestName() : saved.getCustomerId();
-        roomDetailServiceClient.updateRoomStatus(saved.getRoomId(), "OCCUPIED", operator, remarks, guestName);
-
-        return new CheckInOutResponse(
-                saved.getId(),
-                saved.getBookingReference(),
-                saved.getRoomId(),
-                saved.getStatus(),
-                "OCCUPIED",
-                saved.getCheckedInAt(),
-                "Guest checked in successfully"
-        );
-    }
-
-    /**
-     * Check out a guest for an active stay.
-     * Subtask: NIBM2-558, NIBM2-609
-     */
-    @Transactional
-    public CheckInOutResponse checkOutBooking(Long bookingId, CheckOutRequest request) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException(bookingId));
-
-        if (booking.getStatus() == BookingStatus.CHECKED_OUT) {
-            throw new InvalidBookingStateException("Booking is already checked out");
-        }
-        if (booking.getStatus() == BookingStatus.CANCELLED) {
-            throw new InvalidBookingStateException("Cannot check out a cancelled booking");
-        }
-        if (booking.getStatus() != BookingStatus.CHECKED_IN && booking.getStatus() != BookingStatus.CONFIRMED) {
-            throw new InvalidBookingStateException("Booking must be in confirmed or checked-in status to check out");
-        }
-
-        booking.setStatus(BookingStatus.CHECKED_OUT);
-        booking.setCheckedOutAt(LocalDateTime.now());
-        Booking saved = bookingRepository.save(booking);
-
-        // Update room operational status to CLEANING queue
-        String operator = request != null && request.checkedBy() != null ? request.checkedBy() : "FRONT_DESK";
-        String remarks = request != null && request.remarks() != null ? request.remarks() : "Guest checked out, room queued for cleaning";
-        roomDetailServiceClient.updateRoomStatus(saved.getRoomId(), "CLEANING", operator, remarks, null);
-
-        return new CheckInOutResponse(
-                saved.getId(),
-                saved.getBookingReference(),
-                saved.getRoomId(),
-                saved.getStatus(),
-                "CLEANING",
-                saved.getCheckedOutAt(),
-                "Guest checked out successfully, room queued for cleaning"
-        );
-    }
-
-    /**
      * POST /bookings/{id}/cancel. NIBM2-314: releasing the dates back to
      * inventory happens automatically - the exclusion constraint only
      * blocks overlaps against non-CANCELLED rows (V1 migration WHERE
@@ -231,6 +159,12 @@ public class BookingService {
                 booking.getStatus().name());
     }
 
+    /** Room-service search uses this so it never offers a room another booking already holds. */
+    @Transactional(readOnly = true)
+    public List<Long> getBookedRoomIds(LocalDate from, LocalDate to) {
+        return bookingRepository.findBookedRoomIds(from, to);
+    }
+
     /**
      * NIBM2-271 (generate reference), NIBM2-274 (store it), NIBM2-330
      * (update status, return confirmed result) all meet here. Called by
@@ -254,6 +188,7 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setExpiresAt(null);
         booking.setBookingReference(referenceGenerator.generate());
         bookingRepository.save(booking);
 

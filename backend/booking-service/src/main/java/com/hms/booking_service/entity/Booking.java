@@ -85,6 +85,10 @@ public class Booking {
     @Column(name = "checked_out_at")
     private LocalDateTime checkedOutAt;
 
+    /** When an unpaid PENDING hold is released by PendingBookingExpiryJob; null = never. */
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

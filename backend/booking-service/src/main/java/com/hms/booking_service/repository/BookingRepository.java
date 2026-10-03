@@ -56,6 +56,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
         """)
     List<Booking> findScheduleBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
+    List<Booking> findByStatusAndExpiresAtBefore(BookingStatus status, LocalDateTime cutoff);
+
+    /** Rooms whose stay overlaps [from, to) and still holds the room (anything not cancelled). */
+    @Query("""
+        SELECT DISTINCT b.roomId FROM Booking b
+        WHERE b.status <> com.hms.booking_service.entity.BookingStatus.CANCELLED
+          AND b.checkInDate < :to
+          AND b.checkOutDate > :from
+        """)
+    List<Long> findBookedRoomIds(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
     @Query(value = "SELECT pg_advisory_xact_lock(hashtext(CAST(:roomId AS text)))", nativeQuery = true)
     void lockRoomForBooking(@Param("roomId") Long roomId);
 
