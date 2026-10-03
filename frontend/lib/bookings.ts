@@ -127,14 +127,14 @@ export async function fetchBookingDetail(bookingId: string | number): Promise<Bo
 export async function cancelBooking(
   bookingId: string | number,
   reason: string
-): Promise<BookingStatus> {
+): Promise<{ status: BookingStatus; message: string }> {
   const res = await fetch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}/cancel`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(await bearerHeader()) },
     body: JSON.stringify({ reason }),
   });
-  const result = await unwrap<{ bookingId: number; status: BookingStatus }>(res);
-  return result.status;
+  const result = await unwrap<{ bookingId: number; status: BookingStatus; refunded: boolean; message: string }>(res);
+  return { status: result.status, message: result.message };
 }
 
 /** First room photo for a room, or null. Same shape the itinerary page reads. */

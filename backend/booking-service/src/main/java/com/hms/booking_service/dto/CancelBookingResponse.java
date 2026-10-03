@@ -5,6 +5,8 @@ import com.hms.booking_service.entity.BookingStatus;
 
 public record CancelBookingResponse(
         Long bookingId,
-        BookingStatus status
+        BookingStatus status,
+        boolean refunded,
+        String message
 ) {
 }

@@ -92,6 +92,7 @@ services:
       ROOM_DETAIL_SERVICE_URL: http://room-service:8081
       PRICING_SERVICE_URL: http://pricing-service:8083
       USER_SERVICE_URL: http://user-service:8082
+      PAYMENT_SERVICE_URL: http://payment-service:8084
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:?INTERNAL_SERVICE_SECRET must be set in .env}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
       FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-service-account.json

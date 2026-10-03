@@ -44,6 +44,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody(ex.getMessage()));
     }
 
+    @ExceptionHandler(RefundFailedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRefundFailed(RefundFailedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(errorBody(
+                "We couldn't process your refund right now, so the booking was not cancelled. Please try again."));
+    }
+
     @ExceptionHandler(PricingServiceException.class)
     public ResponseEntity<ApiResponse<Void>> handlePricingError(PricingServiceException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(errorBody(ex.getMessage()));
