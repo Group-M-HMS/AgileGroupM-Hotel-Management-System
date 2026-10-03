@@ -6,10 +6,13 @@ import { ChevronDown, User } from "lucide-react";
 
 export function ProfileMenu({
   firstName,
+  isAdmin = false,
   onSignOut,
   darkText = false,
 }: {
   firstName: string;
+  // Shows an "Admin Console" link; the real access check is still server-side + AdminAuthGate.
+  isAdmin?: boolean;
   onSignOut: () => void;
   // When the nav is transparent over a light page-top, the trigger needs dark
   // text instead of the default light-on-dark colour.
@@ -65,6 +68,15 @@ export function ProfileMenu({
           >
             My Bookings
           </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 font-jakarta text-sm font-medium text-jungle-dark hover:bg-sand-light"
+            >
+              Admin Console
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => {

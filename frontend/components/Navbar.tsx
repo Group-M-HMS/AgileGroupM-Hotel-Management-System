@@ -10,7 +10,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   // Track scroll position so the bar can go transparent at the very top.
   useEffect(() => {
@@ -116,7 +116,7 @@ export function Navbar() {
               </Link>
             )}
             {user ?
-            <ProfileMenu firstName={user.firstName} onSignOut={handleSignOut} darkText={darkText} /> :
+            <ProfileMenu firstName={user.firstName} isAdmin={isAdmin} onSignOut={handleSignOut} darkText={darkText} /> :
 
             <Link
               href="/login"
@@ -179,6 +179,15 @@ export function Navbar() {
 
                   My Bookings
                 </Link>
+              {isAdmin &&
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-sand-light hover:text-sage hover:bg-jungle/50">
+
+                  Admin Console
+                </Link>
+              }
               <button
                 type="button"
                 onClick={handleSignOut}
