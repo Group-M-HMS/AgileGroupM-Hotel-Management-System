@@ -15,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class BookingService {
@@ -53,6 +55,17 @@ public class BookingService {
     public CreateBookingResponse createBooking(String customerId, CreateBookingRequest request) {
         // Confirms the room exists and gets its nightly rate indirectly through Pricing Service.
         RoomDetailInfo room = roomDetailServiceClient.getRoomDetail(request.roomId());
+
+        if (request.checkInDate().isBefore(LocalDate.now())) {
+            throw new InvalidBookingStateException("Check-in date cannot be in the past");
+        }
+        if (!request.checkOutDate().isAfter(request.checkInDate())) {
+            throw new InvalidBookingStateException("Check-out must be after check-in");
+        }
+        if (room.maxOccupancy() != null && request.numberOfGuests() > room.maxOccupancy()) {
+            throw new InvalidBookingStateException(
+                    "This room sleeps at most " + room.maxOccupancy() + " guests");
+        }
 
         PricingQuote quote = pricingServiceClient.getQuote(
                 request.roomId(), request.checkInDate(), request.checkOutDate());
@@ -122,8 +135,9 @@ public class BookingService {
      */
     @Transactional(readOnly = true)
     public List<BookingSummary> getMyBookings(String customerId) {
+        Map<Long, RoomDetailInfo> rooms = new HashMap<>();
         return bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream()
-                .map(this::toSummary)
+                .map(b -> toSummary(b, rooms.computeIfAbsent(b.getRoomId(), roomDetailServiceClient::getRoomDetail)))
                 .toList();
     }
 
@@ -162,6 +176,10 @@ public class BookingService {
 
         if (booking.getStatus() == BookingStatus.CANCELLED) {
             throw new InvalidBookingStateException("Booking is already cancelled");
+        }
+        if (booking.getStatus() == BookingStatus.CHECKED_IN || booking.getStatus() == BookingStatus.CHECKED_OUT) {
+            throw new InvalidBookingStateException(
+                    "A stay that has started or finished cannot be cancelled online; please contact the front desk");
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
@@ -228,8 +246,7 @@ public class BookingService {
                 booking.getId(), booking.getStatus(), booking.getBookingReference());
     }
 
-    private BookingSummary toSummary(Booking booking) {
-        RoomDetailInfo room = roomDetailServiceClient.getRoomDetail(booking.getRoomId());
+    private BookingSummary toSummary(Booking booking, RoomDetailInfo room) {
         return new BookingSummary(
                 booking.getId(),
                 room.name(),
