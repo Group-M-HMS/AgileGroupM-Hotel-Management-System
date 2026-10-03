@@ -41,6 +41,15 @@ export function SearchEditBar({
 
   const minCheckOutDate = getMinCheckOutDate();
 
+  // Upper bounds that mirror the backend: bookings open 2 years ahead, stays up to 30 nights.
+  function addDays(iso: string, days: number) {
+    const date = new Date(`${iso}T00:00:00`);
+    date.setDate(date.getDate() + days);
+    return date.toLocaleDateString("en-CA");
+  }
+  const maxCheckInDate = addDays(today, 730);
+  const maxCheckOutDate = addDays(checkIn || maxCheckInDate, 30);
+
   function handleSearch() {
     if (!checkIn) {
       setError({ field: "checkIn", message: "Please select a check-in date to search." });
@@ -92,6 +101,7 @@ export function SearchEditBar({
               value={checkIn}
               aria-invalid={error?.field === "checkIn"}
               min={today}
+              max={maxCheckInDate}
               onChange={(e) => {
                 const selectedDate = e.target.value;
                 setCheckIn(selectedDate);
@@ -122,6 +132,7 @@ export function SearchEditBar({
               value={checkOut}
               aria-invalid={error?.field === "checkOut"}
               min={minCheckOutDate}
+              max={maxCheckOutDate}
               onChange={(e) => {
                 setCheckOut(e.target.value);
                 setError(null);

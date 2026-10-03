@@ -202,6 +202,7 @@ function SignUpFormContent() {
               type="text"
               placeholder="First Name*"
               value={fields.firstName}
+              maxLength={50}
               onChange={(e) => set("firstName", e.target.value)}
               onBlur={() => touch("firstName")}
               className={fieldCls(err("firstName"))}
@@ -213,6 +214,7 @@ function SignUpFormContent() {
               type="text"
               placeholder="Last Name*"
               value={fields.lastName}
+              maxLength={50}
               onChange={(e) => set("lastName", e.target.value)}
               onBlur={() => touch("lastName")}
               className={fieldCls(err("lastName"))}
@@ -228,6 +230,7 @@ function SignUpFormContent() {
               type="email"
               placeholder="Email*"
               value={fields.email}
+              maxLength={254}
               onChange={(e) => set("email", e.target.value)}
               onBlur={() => touch("email")}
               className={fieldCls(err("email"))}
@@ -239,6 +242,7 @@ function SignUpFormContent() {
               type="tel"
               placeholder="Phone Number*"
               value={fields.phoneNumber}
+              maxLength={20}
               onChange={(e) => set("phoneNumber", e.target.value)}
               onBlur={() => touch("phoneNumber")}
               className={fieldCls(err("phoneNumber"))}
@@ -255,6 +259,7 @@ function SignUpFormContent() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password*"
                 value={fields.password}
+                maxLength={128}
                 onChange={(e) => set("password", e.target.value)}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => touch("password")}
@@ -280,6 +285,7 @@ function SignUpFormContent() {
                 type={showConfirm ? "text" : "password"}
                 placeholder="Confirm Password*"
                 value={fields.confirmPassword}
+                maxLength={128}
                 onChange={(e) => set("confirmPassword", e.target.value)}
                 onBlur={() => touch("confirmPassword")}
                 className={`${fieldCls(err("confirmPassword"))} pr-[44px]`}

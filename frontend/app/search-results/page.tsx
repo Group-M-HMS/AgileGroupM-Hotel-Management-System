@@ -2,19 +2,11 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SearchResultsView } from "./SearchResultsView";
+import { cleanGuests, cleanStay } from "@/lib/funnelParams";
 
 export const metadata: Metadata = {
   title: "Search Results — River Nest Eco Villa",
 };
-
-function parseGuests(value: string | string[] | undefined): number {
-  const parsed = Number(Array.isArray(value) ? value[0] : value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
-}
-
-function parseDateParam(value: string | string[] | undefined): string {
-  return typeof value === "string" ? value : "";
-}
 
 // Human-readable summary of the current search, e.g.
 // "Aug 11 – Aug 14, 2026 · 3 nights · 2 guests". Dates are optional; falls
@@ -46,9 +38,8 @@ export default async function SearchResultsPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const guests = parseGuests(params.guests);
-  const checkIn = parseDateParam(params.checkIn);
-  const checkOut = parseDateParam(params.checkOut);
+  const guests = cleanGuests(params.guests);
+  const { checkIn, checkOut } = cleanStay(params.checkIn, params.checkOut);
   const staySummary = formatStaySummary(checkIn, checkOut, guests);
 
   return (

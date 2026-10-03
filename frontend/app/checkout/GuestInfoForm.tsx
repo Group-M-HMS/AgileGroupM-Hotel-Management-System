@@ -331,6 +331,7 @@ function GuestInfoFormInner({
               aria-label="First Name"
               aria-invalid={!!err("firstName")}
               value={resolvedFields.firstName}
+              maxLength={50}
               onChange={(e) => set("firstName", e.target.value)}
               onBlur={() => touch("firstName")}
               className={fieldCls(err("firstName"))}
@@ -350,6 +351,7 @@ function GuestInfoFormInner({
               aria-label="Last Name"
               aria-invalid={!!err("lastName")}
               value={resolvedFields.lastName}
+              maxLength={50}
               onChange={(e) => set("lastName", e.target.value)}
               onBlur={() => touch("lastName")}
               className={fieldCls(err("lastName"))}
@@ -371,6 +373,7 @@ function GuestInfoFormInner({
               aria-label="Email Address"
               aria-invalid={!!err("email")}
               value={resolvedFields.email}
+              maxLength={254}
               onChange={(e) => set("email", e.target.value)}
               onBlur={() => touch("email")}
               className={fieldCls(err("email"))}
@@ -390,6 +393,7 @@ function GuestInfoFormInner({
               aria-label="Phone Number"
               aria-invalid={!!err("phone")}
               value={resolvedFields.phone}
+              maxLength={20}
               onChange={(e) => set("phone", e.target.value)}
               onBlur={() => touch("phone")}
               className={fieldCls(err("phone"))}

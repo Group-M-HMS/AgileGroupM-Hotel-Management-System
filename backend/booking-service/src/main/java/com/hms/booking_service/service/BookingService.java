@@ -30,6 +30,8 @@ public class BookingService {
 
     /** The hotel's calendar day decides refund and past-date rules, not the server's (UTC) clock. */
     private static final ZoneId HOTEL_ZONE = ZoneId.of("Asia/Colombo");
+    private static final long MAX_NIGHTS = 30;
+    private static final long MAX_ADVANCE_DAYS = 730;
 
     private final BookingRepository bookingRepository;
     private final PricingServiceClient pricingServiceClient;
@@ -73,6 +75,13 @@ public class BookingService {
         }
         if (!request.checkOutDate().isAfter(request.checkInDate())) {
             throw new InvalidBookingStateException("Check-out must be after check-in");
+        }
+        long nights = java.time.temporal.ChronoUnit.DAYS.between(request.checkInDate(), request.checkOutDate());
+        if (nights > MAX_NIGHTS) {
+            throw new InvalidBookingStateException("Stays are limited to " + MAX_NIGHTS + " nights");
+        }
+        if (request.checkInDate().isAfter(LocalDate.now(HOTEL_ZONE).plusDays(MAX_ADVANCE_DAYS))) {
+            throw new InvalidBookingStateException("Bookings can be made at most 2 years ahead");
         }
         if (room.maxOccupancy() != null && request.numberOfGuests() > room.maxOccupancy()) {
             throw new InvalidBookingStateException(

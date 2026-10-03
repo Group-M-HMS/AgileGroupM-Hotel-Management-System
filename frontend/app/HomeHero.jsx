@@ -63,6 +63,15 @@ export default function HomeHero() {
 
   const minCheckOutDate = getMinCheckOutDate();
 
+  // Upper bounds that mirror the backend: bookings open 2 years ahead, stays up to 30 nights.
+  function addDays(iso, days) {
+    const date = new Date(`${iso}T00:00:00`);
+    date.setDate(date.getDate() + days);
+    return date.toLocaleDateString("en-CA");
+  }
+  const maxCheckInDate = addDays(today, 730);
+  const maxCheckOutDate = addDays(checkIn || maxCheckInDate, 30);
+
   // Handle room search — validate and surface a message instead of no-op.
   function handleSearch() {
     if (!checkIn) {
@@ -272,6 +281,7 @@ export default function HomeHero() {
 
                     // Disable all past dates
                     min={today}
+                    max={maxCheckInDate}
 
                     onChange={(e) => {
                       const selectedDate = e.target.value;
@@ -324,6 +334,7 @@ export default function HomeHero() {
 
                     // Checkout must be after check-in
                     min={minCheckOutDate}
+                    max={maxCheckOutDate}
 
                     onChange={(e) => {
                       setCheckOut(e.target.value);

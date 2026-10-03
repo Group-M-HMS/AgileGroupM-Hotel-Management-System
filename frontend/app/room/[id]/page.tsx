@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { RoomGallery } from "@/app/room/RoomGallery";
 import { AmenityList } from "@/app/room/AmenityList";
 import { BookingCard } from "@/app/room/BookingCard";
+import { cleanGuests, cleanId, cleanStay } from "@/lib/funnelParams";
 
 const ROOM_SERVICE_URL = process.env.NEXT_PUBLIC_ROOM_SERVICE_URL ?? "http://168.138.170.92:8081";
 
@@ -25,18 +26,13 @@ type RoomDetail = {
 
 // Next.js dedupes identical fetch() calls within a single render, so calling
 // this from both generateMetadata and the page component costs one request.
-async function fetchRoomDetail(id: string): Promise<RoomDetail | null> {
+async function fetchRoomDetail(rawId: string): Promise<RoomDetail | null> {
+  // The id comes straight from the URL and is interpolated into a backend path: digits only.
+  const id = cleanId(rawId);
+  if (!id) return null;
   const response = await fetch(`${ROOM_SERVICE_URL}/api/rooms/${id}`);
   if (!response.ok) return null;
   return response.json();
-}
-
-function parseDateParam(value: string | string[] | undefined): string {
-  return typeof value === "string" ? value : "";
-}
-
-function parseGuestsParam(value: string | string[] | undefined): string {
-  return typeof value === "string" ? value : "";
 }
 
 export async function generateMetadata({
@@ -68,9 +64,9 @@ export default async function RoomDetailsPage({
   const amenities = Object.fromEntries(room.amenities.map(name => [name, true]));
 
   const query = await searchParams;
-  const checkIn = parseDateParam(query.checkIn);
-  const checkOut = parseDateParam(query.checkOut);
-  const guests = parseGuestsParam(query.guests);
+  const { checkIn, checkOut } = cleanStay(query.checkIn, query.checkOut);
+  const guestCount = cleanGuests(query.guests, 0);
+  const guests = guestCount ? String(guestCount) : "";
 
   const backToResultsHref = `/search-results?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${encodeURIComponent(guests)}`;
 

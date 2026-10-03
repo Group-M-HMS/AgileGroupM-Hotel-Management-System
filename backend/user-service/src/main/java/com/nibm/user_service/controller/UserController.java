@@ -94,7 +94,7 @@ public class UserController {
      * Sync authenticated user profile from client auth state.
      */
     @PostMapping("/sync")
-    public UserResponse syncProfile(@RequestBody ProfileSyncRequest request) {
+    public UserResponse syncProfile(@Valid @RequestBody ProfileSyncRequest request) {
         FirebaseToken token = currentToken();
         User user = userService.syncProfile(token, request);
         return toResponse(user);
