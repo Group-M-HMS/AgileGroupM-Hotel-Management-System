@@ -66,7 +66,8 @@ public class RoomInternalController {
     }
 
     private void requireValidInternalSecret(String provided) {
-        if (provided == null
+        // Fail closed: a blank configured secret must never match a blank header.
+        if (internalSecret.length == 0 || provided == null
                 || !MessageDigest.isEqual(provided.getBytes(StandardCharsets.UTF_8), internalSecret)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid internal service credentials");
         }
