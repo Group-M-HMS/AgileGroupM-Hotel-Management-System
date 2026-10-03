@@ -7,9 +7,11 @@ import { cancelBooking, type BookingStatus } from "@/lib/bookings";
 export function CancelBookingControl({
   bookingId,
   initialStatus,
+  checkIn,
 }: {
   bookingId: number;
   initialStatus: BookingStatus;
+  checkIn: string; // ISO date
 }) {
   const [status, setStatus] = useState<BookingStatus>(initialStatus);
   const [modalOpen, setModalOpen] = useState(false);
@@ -49,8 +51,10 @@ export function CancelBookingControl({
     }
   }
 
-  // Only a confirmed (paid) or still-pending booking can be cancelled.
-  const cancellable = status === "CONFIRMED" || status === "PENDING";
+  // Only a confirmed (paid) or still-pending booking can be cancelled, and only before its check-in
+  // day. "Today" is the hotel's calendar day (Asia/Colombo), matching the backend refund rule.
+  const hotelToday = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" });
+  const cancellable = (status === "CONFIRMED" || status === "PENDING") && checkIn > hotelToday;
 
   return (
     <>

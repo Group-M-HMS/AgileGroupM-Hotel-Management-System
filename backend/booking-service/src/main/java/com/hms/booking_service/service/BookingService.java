@@ -196,19 +196,19 @@ public class BookingService {
                     "A stay that has started or finished cannot be cancelled online; please contact the front desk");
         }
 
-        // Policy: a paid booking is refunded in full when cancelled up to the day before check-in
-        // (hotel calendar); from the check-in day on it is cancelled without a refund. The refund runs
-        // first, so a failed refund leaves the booking intact and the customer can retry.
+        // Policy: customers can cancel only before the check-in day (hotel calendar); from the check-in
+        // day on, the front desk handles it. A paid booking is refunded in full. The refund runs first,
+        // so a failed refund leaves the booking intact and the customer can retry.
+        if (!LocalDate.now(HOTEL_ZONE).isBefore(booking.getCheckInDate())) {
+            throw new InvalidBookingStateException(
+                    "Bookings can only be cancelled online up to the day before check-in; please contact the front desk");
+        }
         boolean refunded = false;
         String message = "Booking cancelled successfully.";
         if (booking.getStatus() == BookingStatus.CONFIRMED) {
-            if (LocalDate.now(HOTEL_ZONE).isBefore(booking.getCheckInDate())) {
-                paymentServiceClient.refundBooking(booking.getId());
-                refunded = true;
-                message = "Booking cancelled. Your payment has been refunded in full.";
-            } else {
-                message = "Booking cancelled. No refund applies within one day of check-in.";
-            }
+            paymentServiceClient.refundBooking(booking.getId());
+            refunded = true;
+            message = "Booking cancelled. Your payment has been refunded in full.";
         }
 
         booking.setStatus(BookingStatus.CANCELLED);

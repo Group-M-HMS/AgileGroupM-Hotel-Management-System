@@ -130,7 +130,11 @@ export function ItineraryContent() {
             <h1 className="font-fraunces text-heading-sm font-normal text-jungle-dark sm:text-[32px]">
               {booking.roomName || "Room details unavailable"}
             </h1>
-            <CancelBookingControl bookingId={booking.bookingId} initialStatus={booking.status} />
+            <CancelBookingControl
+              bookingId={booking.bookingId}
+              initialStatus={booking.status}
+              checkIn={booking.checkIn}
+            />
           </div>
           {room && room.amenities.length > 0 && (
             <div className="flex flex-wrap gap-x-4 gap-y-1">
