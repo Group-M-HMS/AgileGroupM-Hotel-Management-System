@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -63,7 +65,11 @@ public class BookingInternalController {
 
     /** NIBM2-468 applied to the internal contract: reject unauthenticated service calls. */
     private void requireValidInternalSecret(String providedSecret) {
-        if (providedSecret == null || !providedSecret.equals(internalSecret)) {
+        // Fail closed on a blank configured secret, and compare in constant time.
+        if (internalSecret == null || internalSecret.isEmpty() || providedSecret == null
+                || !MessageDigest.isEqual(
+                        providedSecret.getBytes(StandardCharsets.UTF_8),
+                        internalSecret.getBytes(StandardCharsets.UTF_8))) {
             throw new UnauthorizedException("Missing or invalid internal service credentials");
         }
     }
